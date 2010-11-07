@@ -1,3 +1,6 @@
+#ifndef YUNABE_PRACTICE_PYTHON_C_AUTO_PYOBJ_H_
+#define YUNABE_PRACTICE_PYTHON_C_AUTO_PYOBJ_H_
+
 class auto_pyobj {
 public:
   auto_pyobj() : obj_(NULL) { };
@@ -26,3 +29,5 @@ public:
 private:
   PyObject* obj_;
 };
+
+#endif  // YUNABE_PRACTICE_PYTHON_C_AUTO_PYOBJ_H_

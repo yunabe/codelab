@@ -88,9 +88,6 @@ static PyObject* pyc_reduce(PyObject* self, PyObject* args) {
       result = item;
       continue;
     }
-    // Do we need this? -> We need this.
-    Py_INCREF(result.get());
-    Py_INCREF(item.get());
     auto_pyobj func_args(Py_BuildValue("(OO)", result.get(), item.get()));
     if (func_args.get() == NULL) {
       return NULL;
