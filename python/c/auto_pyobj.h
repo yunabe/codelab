@@ -7,11 +7,14 @@ public:
 
   explicit auto_pyobj(PyObject* obj) : obj_(obj) { };
 
-  auto_pyobj(auto_pyobj& o) : obj_(o.get()) {
-    o.obj_ = NULL;
+  auto_pyobj(auto_pyobj& o) : obj_(o.release()) { };
+  
+  auto_pyobj& operator= (auto_pyobj& o) {
+    reset(o.release());
+    return *this;
   };
 
-  ~auto_pyobj() { Py_XDECREF(obj_); }
+  ~auto_pyobj() { Py_XDECREF(obj_); };
 
   PyObject* get() { return obj_; };
 
