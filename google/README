@@ -1,0 +1,10 @@
+Prerequisite
+
+1. Install google-gflags (http://code.google.com/p/google-gflags/)
+
+cd ~/local/src
+svn checkout http://google-gflags.googlecode.com/svn/trunk/ google-gflags
+cd google-gflags
+./configure
+make
+sudo make install
