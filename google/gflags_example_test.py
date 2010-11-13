@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 
+
 class TestGflagsCppProgram(unittest.TestCase):
   def testDefault(self):
     self.assertEqual('Hello world.',
@@ -31,7 +32,6 @@ class TestGflagsCppProgram(unittest.TestCase):
     self.assertEqual('Hello %s.' % os.getlogin(),
                      commands.getoutput('./gflags_example '
                                         '--overwrite_name=true'))
-
     self.assertEqual('Hello %s.' % os.getlogin(),
                      commands.getoutput('./gflags_example '
                                         '--overwrite_name=yes'))
@@ -87,6 +87,15 @@ class TestGflagsCppProgram(unittest.TestCase):
     self.assertEqual('Hello %s.' % os.getlogin(),
                      commands.getoutput('./gflags_example '
                                         '--overwrite_name=yEs'))
+
+  def testFlagValidator(self):
+    self.assertEqual('Hello 0123456789.',
+                     commands.getoutput('./gflags_example '
+                                        '--name=0123456789'))
+    output = commands.getoutput('./gflags_example '
+                                '--name=01234567890')
+    self.assertTrue('Value for --name: 01234567890 is too long.' in output)
+
 
 if __name__ == '__main__':
   unittest.main()
