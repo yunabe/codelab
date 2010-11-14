@@ -2,9 +2,22 @@ Prerequisite
 
 1. Install google-gflags (http://code.google.com/p/google-gflags/)
 
-cd ~/local/src
-svn checkout http://google-gflags.googlecode.com/svn/trunk/ google-gflags
-cd google-gflags
-./configure
-make
-sudo make install
+ cd ~/local/src
+ svn checkout http://google-gflags.googlecode.com/svn/trunk/ google-gflags
+ cd google-gflags
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig
+
+2. Install google-glog (http://code.google.com/p/google-glog/)
+   Please make sure google-glags has been installed before you install
+   google-glog as google-glags will be used to control behavior of glog.
+
+ cd ~/local/src
+ svn checkout http://google-glog.googlecode.com/svn/trunk/ google-glog
+ cd google-glog
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig
