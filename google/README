@@ -34,7 +34,7 @@ Prerequisite
  sudo make install
  sudo ldconfig
 
-4. Install re2
+4. Install re2 (http://code.google.com/p/re2/)
 
  cd ~/local/src
  # You can install hg by sudo apt-get install mercurial.
@@ -44,4 +44,13 @@ Prerequisite
  make test
  sudo make install
  make testinstall
+ sudo ldconfig
+
+5. Install googletest (http://code.google.com/p/googletest/)
+
+ curl -O http://googletest.googlecode.com/files/gtest-1.5.0.tar.bz2
+ bzip2 -dc gtest-1.5.0.tar.bz2 | tar xvf -
+ cd gtest-1.5.0
+ make
+ sudo make install
  sudo ldconfig
