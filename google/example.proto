@@ -1,0 +1,25 @@
+package example;
+
+message Birthday {
+  optional int32 year = 1;
+  optional int32 month = 2;
+  optional int32 day = 3;
+}
+
+message Person {
+  optional string name = 1;
+  optional int32 id = 2;
+  optional Gender gender = 3;
+  optional Birthday birthday = 4;
+  repeated Attribute attribute = 5;
+
+  enum Gender {
+    MALE = 0;
+    FEMALE = 1;
+  }
+
+  message Attribute {
+    optional string name = 1;
+    optional string value = 2;
+  }
+};

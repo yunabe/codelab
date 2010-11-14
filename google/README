@@ -1,0 +1,56 @@
+Prerequisite
+
+1. Install google-gflags (http://code.google.com/p/google-gflags/)
+
+ cd ~/local/src
+ svn checkout http://google-gflags.googlecode.com/svn/trunk/ google-gflags
+ cd google-gflags
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig
+
+2. Install google-glog (http://code.google.com/p/google-glog/)
+   Please make sure google-glags has been installed before you install
+   google-glog as google-glags will be used to control behavior of glog.
+
+ cd ~/local/src
+ svn checkout http://google-glog.googlecode.com/svn/trunk/ google-glog
+ cd google-glog
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig
+
+3. Install protobuf (http://code.google.com/p/protobuf/)
+
+ cd ~/local/src
+ curl -O http://protobuf.googlecode.com/files/protobuf-2.3.0.tar.bz2
+ bzip2 -dc protobuf-2.3.0.tar.bz2 | tar xvf -
+ cd protobuf-2.3.0
+ ./configure
+ make
+ make check
+ sudo make install
+ sudo ldconfig
+
+4. Install re2 (http://code.google.com/p/re2/)
+
+ cd ~/local/src
+ # You can install hg by sudo apt-get install mercurial.
+ hg clone https://re2.googlecode.com/hg re2
+ cd re2
+ make
+ make test
+ sudo make install
+ make testinstall
+ sudo ldconfig
+
+5. Install googletest (http://code.google.com/p/googletest/)
+
+ curl -O http://googletest.googlecode.com/files/gtest-1.5.0.tar.bz2
+ bzip2 -dc gtest-1.5.0.tar.bz2 | tar xvf -
+ cd gtest-1.5.0
+ make
+ sudo make install
+ sudo ldconfig
