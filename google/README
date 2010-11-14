@@ -33,3 +33,15 @@ Prerequisite
  make check
  sudo make install
  sudo ldconfig
+
+4. Install re2
+
+ cd ~/local/src
+ # You can install hg by sudo apt-get install mercurial.
+ hg clone https://re2.googlecode.com/hg re2
+ cd re2
+ make
+ make test
+ sudo make install
+ make testinstall
+ sudo ldconfig

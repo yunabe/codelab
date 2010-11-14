@@ -34,5 +34,9 @@ protobuf_example.o: protobuf_example.cc example.pb.h
 protobuf_example: protobuf_example.o example.pb.o
 	g++ protobuf_example.o example.pb.o -o protobuf_example -lprotobuf -lpthread
 
+re2_example: re2_example.cc
+	g++ re2_example.cc -o re2_example -lre2
+
 clean:
-	rm -f *.o *.pb.h *.pb.cc gflags_example glog_example protobuf_example
+	rm -f *.o *.pb.h *.pb.cc gflags_example glog_example protobuf_example \
+	re2_example
