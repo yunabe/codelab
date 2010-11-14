@@ -21,5 +21,18 @@ glog_example.o: glog_example.cc
 glog_example: glog_example.o glog_example_lib.o
 	g++ glog_example.o glog_example_lib.o -o glog_example -lglog -lgflags
 
+example.pb.cc example.pb.h: example.proto
+	protoc example.proto --cpp_out=.
+
+example.pb.o: example.pb.cc example.pb.h
+	g++ example.pb.cc -c -o example.pb.o
+
+protobuf_example.o: protobuf_example.cc example.pb.h
+	g++ protobuf_example.cc -c -o protobuf_example.o
+
+# -lpthread is required to link protobuf library.
+protobuf_example: protobuf_example.o example.pb.o
+	g++ protobuf_example.o example.pb.o -o protobuf_example -lprotobuf -lpthread
+
 clean:
-	rm -f *.o gflags_example glog_example
+	rm -f *.o *.pb.h *.pb.cc gflags_example glog_example protobuf_example

@@ -21,3 +21,15 @@ Prerequisite
  make
  sudo make install
  sudo ldconfig
+
+3. Install protobuf (http://code.google.com/p/protobuf/)
+
+ cd ~/local/src
+ curl -O http://protobuf.googlecode.com/files/protobuf-2.3.0.tar.bz2
+ bzip2 -dc protobuf-2.3.0.tar.bz2 | tar xvf -
+ cd protobuf-2.3.0
+ ./configure
+ make
+ make check
+ sudo make install
+ sudo ldconfig
