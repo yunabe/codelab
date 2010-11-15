@@ -54,3 +54,13 @@ Prerequisite
  make
  sudo make install
  sudo ldconfig
+
+6. Install google-ctemplate
+
+ cd ~/local/src
+ svn checkout http://google-ctemplate.googlecode.com/svn/trunk/ google-ctemplate
+ cd google-ctemplate
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig

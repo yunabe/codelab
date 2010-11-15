@@ -1,6 +1,15 @@
 test: gflags_example_test googletest_example
 	./googletest_example
 
+example_template.tpl.varnames.h: example_template.tpl
+	make_tpl_varnames_h example_template.tpl
+
+example_subtemplate.tpl.varnames.h: example_subtemplate.tpl
+	make_tpl_varnames_h example_subtemplate.tpl
+
+ctemplate_example: ctemplate_example.cc example_template.tpl.varnames.h example_subtemplate.tpl.varnames.h
+	g++ ctemplate_example.cc -o ctemplate_example -lctemplate -lpthread
+
 gflags_example: gflags_example.o gflags_example_lib.o
 	g++ gflags_example.o gflags_example_lib.o -o gflags_example -lgflags
 
@@ -43,4 +52,4 @@ re2_example: re2_example.cc
 
 clean:
 	rm -f *.o *.pb.h *.pb.cc gflags_example glog_example protobuf_example \
-	re2_example googletest_example
+	re2_example googletest_example *.varnames.h ctemplate_example
