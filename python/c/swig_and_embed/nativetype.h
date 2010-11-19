@@ -1,3 +1,6 @@
+#ifndef YUNABE_PRACTICE_PYTHON_C_SWIG_AND_EMBED_NATIVETYPE_H_
+#define YUNABE_PRACTICE_PYTHON_C_SWIG_AND_EMBED_NATIVETYPE_H_
+
 class Root;
 class Leaf;
 
@@ -18,3 +21,4 @@ class Leaf {
  private:
   const int value_;
 };
+#endif  // YUNABE_PRACTICE_PYTHON_C_SWIG_AND_EMBED_NATIVETYPE_H_
