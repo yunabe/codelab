@@ -107,7 +107,7 @@ class AutoPropertyTest(unittest.TestCase):
     c.value = 'apple'
     self.assertEqual('[apple]', c.value)
 
-  def testNoProperty(self):
+  def testNotAccessor(self):
     class C(object):
       __metaclass__ = auto_property.auto_property
 
