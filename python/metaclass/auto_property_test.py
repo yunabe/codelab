@@ -107,5 +107,37 @@ class AutoPropertyTest(unittest.TestCase):
     c.value = 'apple'
     self.assertEqual('[apple]', c.value)
 
+  def testNoProperty(self):
+    class C(object):
+      __metaclass__ = auto_property.auto_property
+
+      def __init__(self):
+        self.c_internal = None
+        self.d_internal = None
+
+      @auto_property.not_accessor
+      def getA(self):
+        return 321
+
+      def getB(self):
+        return 777
+
+      @auto_property.not_accessor
+      def setC(self, value):
+        self.c_internal = value
+
+      def setD(self, value):
+        self.d_internal = value
+
+    c = C()
+    self.assertFalse(hasattr(c, 'a'))
+    self.assertTrue(hasattr(c, 'b'))
+    self.assertEqual(777,
+                     c.b)
+    c.c = 10
+    self.assertEqual(None, c.c_internal)
+    c.d = 20
+    self.assertEqual(20, c.d_internal)
+
 if __name__ == '__main__':
   unittest.main()
