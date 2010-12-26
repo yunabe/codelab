@@ -27,7 +27,8 @@ bool GetFunctionNames(const string& library,
   asymbol* store = bfd_make_empty_symbol(abfd);
   void* minisyms;
   size_t size;
-  int symcount = bfd_read_minisymbols(abfd, 0, &minisyms, &size);
+  int symcount = bfd_read_minisymbols(abfd, 0, &minisyms,
+                                      (unsigned int*)(&size));
   bfd_byte* from = (bfd_byte*)minisyms;
   bfd_byte* fromend = from + symcount * size;
   for (; from < fromend; from += size) {

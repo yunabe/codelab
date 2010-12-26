@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     printf("s.method() = %d\n", s.method());
     printf("s.virtual_method() = %d\n", s.virtual_method());
     string error;
-    if (!UpdateLibrary("./new_sample.so", &error)) {
+    if (!HotpatchSharedLibrary("./new_sample.so", &error)) {
       printf("Failed to UpdateLibrary: %s\n", error.c_str());
     }
     sleep(2);
