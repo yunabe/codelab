@@ -47,6 +47,8 @@ bool GetFunctionNames(const string& library,
 
 bool DivertFunctionCall(char *dst, char* code, string* error) {
   // TODO: This implementation is too simple.
+  // Is there any way to guarantee that each function has more than 5
+  // (12 for x86_64) bytes?
   int pagesize = sysconf(_SC_PAGE_SIZE);
   char* head = (char *)((unsigned long)dst / pagesize * pagesize);
   int size = dst - head + 5;
@@ -54,10 +56,25 @@ bool DivertFunctionCall(char *dst, char* code, string* error) {
     *error = "Failed to mprotect.";
     return false;
   }
+#if defined(__i386__)
   int diff = code - dst - 5;
+  if (code != dst + 5 + diff) {
+    return false;
+  }
   dst[0] = 0xe9;
   dst++;
   *((int *)dst) = diff;
+#endif
+#if defined(__x86_64__)
+  // movq $0x<64bit addr>, %rax
+  // jmp *%rax
+  // I feel there might be more efficient way that consume less than 12 bytes.
+  dst[0] = 0x48;
+  dst[1] = 0xb8;
+  *(void **)(dst + 2) = code;
+  dst[10] = 0xff;
+  dst[11] = 0xe0;
+#endif
   return true;
 }
 }
