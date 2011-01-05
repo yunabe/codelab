@@ -1,0 +1,32 @@
+The library (hotpatch.o) to make a program hotpatchable.
+
+## Prerequisite ##
+
+* google-gflags and google-glogs.
+
+ How to install:
+   https://github.com/yunabe/practice/blob/master/google/README
+
+## How to run an example program ##
+
+ 1. make example
+
+ 2. ./example --logtostderr --hotpatch_library_dir=./
+
+    The example shows pid at first.
+    Then it shows outputs of "int func(int)" in example_lib.cc
+
+ 3. Change the behavior of "func" in example_lib.cc
+
+ 4. make example.so
+
+ 5. Send SIGALRM to make the process load a new shared library.
+
+    kill -ALRM <pid>
+
+ 6. "func" in the process is updated and outputs change.
+
+
+## Misc ##
+Note that os.cc, os.h and strutil.h were copied from
+https://github.com/yunabe/util/tree/master/cpp
