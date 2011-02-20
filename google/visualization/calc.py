@@ -163,15 +163,19 @@ def get_area_chart_column_defs(max_age):
   return o.getvalue()
 
 
-def export_population_row(year, max_age, men, women):
+def export_population_or_ratio_row(year, max_age, men, women, is_ratio):
   o = StringIO.StringIO()
   total = sum(map(lambda x: x.population, men + women))
+  if is_ratio:
+    normalizer = 1 / total
+  else:
+    normalizer = 1.0
   age = 0
   o.write('["%d"' % year)
   while True:
     if age > max_age:
       break
-    o.write(', %f' % total)
+    o.write(', %f' % (total * normalizer))
     total -= sum(map(lambda x: x.population, men[age:age + kAgeInterval]))
     total -= sum(map(lambda x: x.population, women[age:age + kAgeInterval]))
     age += kAgeInterval
@@ -179,12 +183,13 @@ def export_population_row(year, max_age, men, women):
   return o.getvalue()
 
 
-def export_population(men, women):
+def export_population_or_ratio(men, women, is_ratio):
   max_age = max(len(men) - 1, len(women) - 1)
   column_defs = get_area_chart_column_defs(max_age)
   rows = StringIO.StringIO()
   for year in xrange(kStartYear, kEndYear):
-    rows.write(export_population_row(year, max_age, men, women))
+    rows.write(export_population_or_ratio_row(
+        year, max_age, men, women, is_ratio))
     next_step(men, women)
   return kAreaChartTemplate % (column_defs, rows.getvalue().rstrip(','))
 
@@ -196,7 +201,9 @@ def main():
   if mode == 'pyramid':
     print export_pyramid(men, women)
   elif mode == 'population':
-    print export_population(men, women)
+    print export_population_or_ratio(men, women, False)
+  elif mode == 'ratio':
+    print export_population_or_ratio(men, women, True)
   else:
     print >> sys.stderr, 'Invalid mode:', mode
     sys.exit(1)
