@@ -139,6 +139,7 @@ kAreaChartTemplate = '''
 
         var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
         chart.draw(data, {width: 900, height: 600, title: 'Company Performance',
+                          vAxis: {minValue: 0},
                           hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}}
                          });
       }
@@ -150,16 +151,15 @@ kAreaChartTemplate = '''
 </html>
 '''
 
-kAgeInterval = 5
+kImportantAges = [0, 15, 65]
 
 def get_area_chart_column_defs(max_age):
   o = StringIO.StringIO()
   age = 0
-  while True:
+  for age in kImportantAges:
     if age > max_age:
       break
     o.write('data.addColumn("number", "%d <=");' % age)
-    age += kAgeInterval
   return o.getvalue()
 
 
@@ -172,13 +172,15 @@ def export_population_or_ratio_row(year, max_age, men, women, is_ratio):
     normalizer = 1.0
   age = 0
   o.write('["%d"' % year)
-  while True:
+  for i in xrange(len(kImportantAges)):
+    age = kImportantAges[i]
     if age > max_age:
       break
     o.write(', %f' % (total * normalizer))
-    total -= sum(map(lambda x: x.population, men[age:age + kAgeInterval]))
-    total -= sum(map(lambda x: x.population, women[age:age + kAgeInterval]))
-    age += kAgeInterval
+    if i < len(kImportantAges) - 1:
+      next_age = kImportantAges[i + 1]
+      total -= sum(map(lambda x: x.population, men[age:next_age]))
+      total -= sum(map(lambda x: x.population, women[age:next_age]))
   o.write('],')
   return o.getvalue()
 
