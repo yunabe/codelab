@@ -21,7 +21,7 @@ var partial = function(fn, var_args) {
   }
 };
 
-var deleteResource(resource_id) {
+var deleteResource = function(resource_id) {
   var feed = bgpage.DOCLIST_FEED + resource_id.replace(':', '%3A');
   var req = {
     'method': 'DELETE',
