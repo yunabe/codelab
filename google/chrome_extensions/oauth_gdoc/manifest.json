@@ -1,0 +1,16 @@
+{
+  "name": "Google Document List Viewer",
+  "version": "0.0.1",
+  "description": "Demonstrates how to use OAuth to connect the Google Documents List Data API.",
+  "background_page": "background.html",
+  "browser_action": {
+    "popup": "popup.html"
+  },
+  "permissions": [
+    "tabs",
+    "https://docs.google.com/feeds/*",
+    "https://www.google.com/accounts/OAuthGetRequestToken",
+    "https://www.google.com/accounts/OAuthAuthorizeToken",
+    "https://www.google.com/accounts/OAuthGetAccessToken"
+  ]
+}
