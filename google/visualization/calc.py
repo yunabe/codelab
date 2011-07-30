@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2010 Yu Watanabe. All Rights Reserved.
 
 import StringIO
@@ -77,6 +78,7 @@ def next_step(men, women):
 kPyramidTemplate = '''
 <html>
   <head>
+    <title>日本の人口ピラミッドの予測</title>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
       google.load('visualization', '1', {'packages':['motionchart']});
@@ -98,6 +100,17 @@ kPyramidTemplate = '''
   </head>
 
   <body>
+    <div style="width:600px">
+      2009年の年齢別の人口・出生率・死亡率にもとづく，日本の人口ピラミッドの変化の予測．
+      Google Visualization API を使ってアニメーション化．
+      ソースコードは
+      <a href="https://github.com/yunabe/practice/tree/master/google/visualization/data">こちら</a>．
+
+      <ul>
+       <li><a href="population.html">日本の人口数の予測</a></li>
+       <li><a href="ratio.html">日本の人口比率の予測</a></li>
+      </ul>
+    </div>
     <div id="chart_div" style="width: 900px; height: 600px;"></div>
   </body>
 </html>
