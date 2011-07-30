@@ -16,3 +16,6 @@ func_mul.o: func_mul.cc
 
 func_mul.so: func_mul.o
 	g++ -shared -o func_mul.so func_mul.o
+
+clean:
+	rm -f *.o *.so main
