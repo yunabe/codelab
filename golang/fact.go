@@ -38,6 +38,13 @@ func play_with_slice() {
 
 	// slice
 	var slice []int
+	fmt.Println("initial value of slice <")
+	fmt.Print("  slice == ")
+	fmt.Println(slice)
+	fmt.Printf("  len(slice) == %d\n", len(slice))
+	fmt.Printf("  cap(slice) == %d\n", cap(slice))
+	fmt.Println(">")
+	
 	slice = array[:]
 	fmt.Printf("len(slice) = %d\n", len(slice))
 	fmt.Printf("cap(slice) = %d\n", cap(slice))
@@ -46,7 +53,7 @@ func play_with_slice() {
 	fmt.Printf("len(slice) = %d\n", len(slice))
 	fmt.Printf("cap(slice) = %d\n", cap(slice))
 	fmt.Printf("slice[0] = %d\n", slice[0])
-
+	
 	// slice literal
 	slice = []int{1, 3, 5}
 	fmt.Println(slice)
@@ -78,6 +85,28 @@ func play_with_pointer() {
 	fmt.Printf("*p == %d\n", *p)
 	p = nil
 	fmt.Println(p)
+	fmt.Println(p == nil)
+}
+
+func play_with_map() {
+  fmt.Println("### play_with_map ###")
+	// Equivalent to m := make(map[string]float64)
+	var m map[string]float64 = make(map[string]float64)
+	m["foo"] = 10.0
+	var m2 = m
+	m2["foo"] = 20.0
+	fmt.Println(m["foo"])  // Shows 20.0. map is a thin object like slice or pointer.
+
+	m2 = nil  // nil is an default initial value.
+	fmt.Println(m2)
+	fmt.Println(m2 == nil)
+
+	m3 := map[string]float64{"foo": 1, "bar": 3}  // map literal
+	fmt.Println(m3)
+	var value = m3["piyo"]  // No exception. value is set to 'zero'.
+	fmt.Printf("value == %f\n", value)
+	value, ok := m3["piyo"]  // ok is set true if a map has a key.
+	fmt.Println("value, ok =", value, ok)
 }
 
 func main() {
@@ -86,4 +115,5 @@ func main() {
   play_with_array()
 	play_with_slice()
 	play_with_pointer()
+	play_with_map()
 }
