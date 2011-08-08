@@ -1,4 +1,4 @@
-all: fact func
+all: fact func oop
 
 fact: fact.8
 	8l -o fact fact.8
@@ -12,5 +12,11 @@ func: func.8
 func.8: func.go
 	8g func.go
 
+oop: oop.8
+	8l -o oop oop.8
+
+oop.8: oop.go
+	8g oop.go
+
 clean:
-	rm -rf *.8 fact func
+	rm -rf *.8 fact func oop

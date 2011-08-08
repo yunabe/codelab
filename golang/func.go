@@ -1,3 +1,6 @@
+// Note:
+//   - overload is not supported.
+
 package main
 
 import "fmt"
