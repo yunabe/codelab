@@ -112,6 +112,64 @@ func play_with_map() {
 	fmt.Println(m3)
 }
 
+func play_with_if() {
+	fmt.Println("### play_with_if ###")
+	n := 2
+	m := 3
+	if n % 2 == 1 {
+		fmt.Println("cond0")
+	} else if m == 3 {
+		fmt.Println("cond1")
+	} else {
+		fmt.Println("cond2")
+	}
+
+	// multiline condition
+	if n == 2 &&
+		m == 3 {
+		// n == 2
+		// && m == 3 -> syntax error: unexpected &&, expecting {
+	}
+
+	// We can use 1 initialization sentence with ;
+	// Of course, vars defined here are visible only from inside of if-sentence.
+	if tmp := n * m; tmp == 6 {
+		// var tmp = ... is not valid.
+	}
+}
+
+func play_with_for() {
+	fmt.Println("### play_with_for ###")
+	for i := 0; i < 3; i++ {
+		fmt.Printf("usual for: i == %d\n", i)
+	}
+	var count int
+	count = 0
+	for count < 3 {
+		fmt.Printf("while loop: count == %d\n", count)
+		count++
+	}
+	count = 0
+	for {
+		fmt.Printf("infinite loop: count == %d\n", count)
+		count++
+		if count > 3 {
+			break
+		}
+	}
+}
+
+func play_with_foreach() {
+	array := [...]string{"foo", "bar", "baz"}
+	for i, v := range array {
+		fmt.Printf("for range with array: %d - %s\n", i, v)
+	}
+	dict := map[string]int{"foo": 3, "bar": 4}
+	for key, value := range dict {
+		fmt.Printf("for range with map: %s - %d\n", key, value)
+	}
+}
+
 func main() {
   n := 5
   fmt.Printf("fact(%d) = %d\n", n, fact(n))
@@ -119,4 +177,7 @@ func main() {
 	play_with_slice()
 	play_with_pointer()
 	play_with_map()
+	play_with_if()
+	play_with_for()
+	play_with_foreach()
 }
