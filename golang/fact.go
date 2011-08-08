@@ -160,6 +160,7 @@ func play_with_for() {
 }
 
 func play_with_foreach() {
+	fmt.Println("### play_with_foreach ###")	
 	array := [...]string{"foo", "bar", "baz"}
 	for i, v := range array {
 		fmt.Printf("for range with array: %d - %s\n", i, v)
@@ -167,6 +168,48 @@ func play_with_foreach() {
 	dict := map[string]int{"foo": 3, "bar": 4}
 	for key, value := range dict {
 		fmt.Printf("for range with map: %s - %d\n", key, value)
+	}
+}
+
+func play_with_switch() {
+	fmt.Println("### play_with_switch ###")
+	for i := 0; i < 4; i++ {
+		fmt.Println("** i ==", i, "**")
+		switch i {
+		case 0:
+			fmt.Println("i is 0.")
+			fallthrough
+		case 1, 2:
+			fmt.Println("i is 0, 1 or 2.")
+		default:
+			fmt.Println("i is not either 0, 1 or 2.")
+		}
+	}
+	// In golang, we can switch instead of if-else.
+	for i := -1; i <= 1; i++ {
+		fmt.Println("** i ==", i, "**")
+		switch {
+		case i < 0:
+			fmt.Println("i is negative.")
+		case i == 0: // Do nothing
+		default:
+			fmt.Println("i is positive.")
+		}
+	}
+
+	// With initialization
+	switch value := 10; value % 2 {
+	case 0:
+		fmt.Println("value is even.")
+	case 1:
+		fmt.Println("value is odd.")
+	}
+	// Hmm..., I feel it is slightly confusing...
+	switch value := 7; {
+	case value % 2 == 0:
+		fmt.Println("value is even.")
+	default:
+		fmt.Println("value is odd.")
 	}
 }
 
@@ -180,4 +223,5 @@ func main() {
 	play_with_if()
 	play_with_for()
 	play_with_foreach()
+	play_with_switch()
 }
