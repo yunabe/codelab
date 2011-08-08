@@ -213,6 +213,19 @@ func play_with_switch() {
 	}
 }
 
+func play_with_label() {
+	fmt.Println("play_with_label")
+  OuterLoop: for i := 0;; i++ {
+	  for j := 0; j <= i; j++ {
+		  fmt.Println("i =", i, ", j =", j)
+		  if i * j == 6 {
+				fmt.Println("break!")
+			  break OuterLoop
+		  }
+	  }
+  }
+}
+
 func main() {
   n := 5
   fmt.Printf("fact(%d) = %d\n", n, fact(n))
@@ -224,4 +237,5 @@ func main() {
 	play_with_for()
 	play_with_foreach()
 	play_with_switch()
+	play_with_label()
 }
