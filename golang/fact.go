@@ -204,6 +204,7 @@ func play_with_switch() {
 		switch i {
 		case 0:
 			fmt.Println("i is 0.")
+			// fall through is not default behavior of switch in golang.
 			fallthrough
 		case 1, 2:
 			fmt.Println("i is 0, 1 or 2.")
@@ -237,6 +238,7 @@ func play_with_switch() {
 	default:
 		fmt.Println("value is odd.")
 	}
+	// Also, we can use "type switch" in golang. See ooo.go for details.
 }
 
 func play_with_label() {

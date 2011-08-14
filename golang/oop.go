@@ -75,7 +75,64 @@ func play_with_method() {
 	fmt.Printf("p.Abs() == %f\n", p.Abs())
 }
 
+type AbsInterface interface {
+	Abs() float64
+}
+
+type Point2 struct {
+	x float64
+	y float64
+}
+
+func (p Point2) Abs() float64 {
+	return math.Sqrt(p.x * p.x + p.y * p.y)
+}
+
+func play_with_interface() {
+	fmt.Println("### play_with_interface ###")
+	var ai AbsInterface
+	p := Point{3, 4}
+	ai = &p
+	fmt.Println(ai)
+	p2 := Point2{3, 4}
+	ai = p2
+	p2.x = 100
+	fmt.Println(ai)
+}
+
+func play_with_type_assertion() {
+	fmt.Println("### play_with_type_assertion ###")
+	var any interface {}
+	any = int(100)
+
+	x := any.(int)
+	// x := any.(float64)  // runtime error
+	fmt.Println("x =", x)
+
+	// No runtime error
+	if f, ok := any.(float64); ok {
+		fmt.Println(f, ok)
+	}
+
+	// type switch
+	switch t := any.(type) {
+	case int:
+		// t is "int" here
+		var z int = t
+		fmt.Println("int:", z)
+	case string:
+		// t is "string" here
+		var s string = t
+		fmt.Println("string:", s)
+	default:
+		// t is interface {} here
+		fmt.Println("others:", t)
+	}
+}
+
 func main() {
 	play_with_struct()
 	play_with_method()
+	play_with_interface()
+	play_with_type_assertion()
 }
