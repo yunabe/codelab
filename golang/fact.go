@@ -31,6 +31,7 @@ func play_with_array() {
 }
 
 func play_with_slice() {
+	fmt.Println("### play_with_slice ###")
 	var array [10]int;
 	array[0] = 0
 	array[1] = 1
@@ -74,6 +75,31 @@ func play_with_slice() {
 	slice = slice[:20]
 	fmt.Printf("slice[15] = %d\n", slice[15])
 	// slice = slice[:100]  // index out of range
+}
+
+func play_with_append() {
+	// There is a special function "append" in golang.
+	// "apend" is special as types of return values are changed by args of
+	// "append". We can not define such kind of functions in golang.
+	//
+	//    C++        :    Go
+	// --------------------------------
+	// vector<T> v   : var v T[]
+	// v.append(e)   : v = append(v, e)
+	// v.size()      : len(v)
+	// v[i]          : v[i]
+	// vector<T>*  p : var p *T[]
+
+	fmt.Println("### play_with_append ###")
+	ia := []int{1, 2, 3}
+	fmt.Println("ia =", ia)
+	ia = append(ia, 4, 5, 6)
+	fmt.Println("ia =", ia)
+
+	sa := []string{"foo", "bar"}
+	fmt.Println("sa =", sa)
+	sa = append(sa, "hoge", "piyo")
+	fmt.Println("sa =", sa)
 }
 
 func play_with_pointer() {
@@ -231,6 +257,7 @@ func main() {
   fmt.Printf("fact(%d) = %d\n", n, fact(n))
   play_with_array()
 	play_with_slice()
+  play_with_append()
 	play_with_pointer()
 	play_with_map()
 	play_with_if()
