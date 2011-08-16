@@ -100,6 +100,24 @@ func play_with_interface() {
 	fmt.Println(ai)
 }
 
+type FooInterface interface {
+	Foo()
+}
+
+type BarInterface interface {
+	Bar()
+}
+
+type FooBar struct {
+}
+
+// Not func Foo (*FooBar) ()...
+func (*FooBar) Foo () {
+}
+
+func (*FooBar) Bar () {
+}
+
 func play_with_type_assertion() {
 	fmt.Println("### play_with_type_assertion ###")
 	var any interface {}
@@ -128,6 +146,11 @@ func play_with_type_assertion() {
 		// t is interface {} here
 		fmt.Println("others:", t)
 	}
+
+	foobar := &FooBar{}
+	foo := FooInterface(foobar)
+	bar := foo.(BarInterface)  // It is allowed.
+	fmt.Println("bar (foobar) =", bar)
 }
 
 func main() {

@@ -41,9 +41,9 @@ func play_with_slice() {
 	var slice []int
 	fmt.Println("initial value of slice <")
 	fmt.Print("  slice == ")
-	fmt.Println(slice)
-	fmt.Printf("  len(slice) == %d\n", len(slice))
-	fmt.Printf("  cap(slice) == %d\n", cap(slice))
+	fmt.Println(slice)  // an empty slice
+	fmt.Printf("  len(slice) == %d\n", len(slice))  // 0
+	fmt.Printf("  cap(slice) == %d\n", cap(slice))  // 0
 	fmt.Println(">")
 	
 	slice = array[:]
@@ -61,6 +61,7 @@ func play_with_slice() {
 
 	// alloc arbitrary size array to slice
 	slice = make([]int, 20)
+	fmt.Println("** slice = make([]int, 20) **")
 	fmt.Printf("len(slice) == %d\n", len(slice))
 	fmt.Printf("cap(slice) == %d\n", cap(slice))
 
@@ -82,13 +83,13 @@ func play_with_append() {
 	// "apend" is special as types of return values are changed by args of
 	// "append". We can not define such kind of functions in golang.
 	//
-	//    C++        :    Go
+	//     C++        :     Go
 	// --------------------------------
-	// vector<T> v   : var v T[]
-	// v.append(e)   : v = append(v, e)
-	// v.size()      : len(v)
-	// v[i]          : v[i]
-	// vector<T>*  p : var p *T[]
+	// vector<T> v    : var v T[]
+	// v.push_back(e) : v = append(v, e)
+	// v.size()       : len(v)
+	// v[i]           : v[i]
+	// vector<T>*  p  : var p *T[]
 
 	fmt.Println("### play_with_append ###")
 	ia := []int{1, 2, 3}
