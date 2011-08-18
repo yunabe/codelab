@@ -1,4 +1,4 @@
-all: basic func oop
+all: basic func oop concurrency
 
 basic: basic.8
 	8l -o basic basic.8
@@ -18,5 +18,11 @@ oop: oop.8
 oop.8: oop.go
 	8g oop.go
 
+concurrency: concurrency.8
+	8l -o concurrency concurrency.8
+
+concurrency.8: concurrency.go
+	8g concurrency.go
+
 clean:
-	rm -rf *.8 basic func oop
+	rm -rf *.8 basic func oop concurrency
