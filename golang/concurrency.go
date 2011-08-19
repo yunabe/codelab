@@ -92,6 +92,7 @@ func play_with_channel() {
 func channnel_and_deadlock(casenum int) {
 	switch casenum {
 	case 0:
+		// No buffer or reciever
 		ich := make(chan int)
 		ich <- 0
 
@@ -132,10 +133,45 @@ func channnel_and_deadlock(casenum int) {
 		<- done
 		<- done
 	}
+}
 
+func unidirectional_sender(ch chan<- int) {
+	// <- ch  // invalid operation: receive from send-only type chan<-
+	for i := 1; i < 4; i++ {
+		ch <- i * i
+	}
+	close(ch)
+}
+
+func unidirectional_reciever(ch <-chan int) {
+	// ch <- 0  // invalid operation: send to receive-only type <-chan
+	// close(ch)  // Actually, it is allowed. Why?
+	for num := range ch {
+		fmt.Println("num from sender:", num)
+	}
+}
+
+func play_with_unidirectional_channel() {
+	fmt.Println("### play_with_unidirectional_channel ###")
+	ch := make(chan int)
+	var rch <-chan int = ch
+	var wch chan<- int = ch
+
+	done := make(chan bool)
+	go func() {
+		unidirectional_reciever(rch)
+		done <- true
+	}()
+	go func() {
+		unidirectional_sender(wch)
+		done <- true
+	}()
+	<- done
+	<- done
 }
 
 func main() {
 	play_with_channel()
+	play_with_unidirectional_channel()
 	// channnel_and_deadlock(2)
 }
