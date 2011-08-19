@@ -89,6 +89,53 @@ func play_with_channel() {
 	}
 }
 
+func channnel_and_deadlock(casenum int) {
+	switch casenum {
+	case 0:
+		ich := make(chan int)
+		ich <- 0
+
+	case 1:
+		ich := make(chan int)
+
+		go func() {
+			// Deadlock occurs if you forget to close a channel.
+			// defer close(ich)
+			for i := 1; i < 5; i++ {
+				ich <- i * i
+			}
+		}()
+
+		for num := range ich {
+			fmt.Println("num =", num)
+		}
+
+	case 2:
+		// Starvation
+		ch0 := make(chan int, 1)
+		ch1 := make(chan int, 1)
+		done := make(chan bool, 2)
+
+		go func() {
+			// No starvation if read and write are swapped.
+			fmt.Println("Recieved from ch1:", <- ch1)
+			ch0 <- 0
+			done <- true
+		}()
+		go func() {
+			fmt.Println("Recieved from ch0:", <- ch0)
+			ch1 <- 1
+			done <- true
+		}()
+
+		// Wait
+		<- done
+		<- done
+	}
+
+}
+
 func main() {
 	play_with_channel()
+	// channnel_and_deadlock(2)
 }
