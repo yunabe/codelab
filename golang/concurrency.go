@@ -6,7 +6,7 @@ import (
 )
 
 func child_routine(n int, ch chan bool) {
-	time.Sleep(1e9)
+	time.Sleep(1e8)
 	if n >= 0 {
 		fmt.Println("child_routine: OK")
 		ch <- true
@@ -20,7 +20,7 @@ func channel_as_return_value(loop int) chan string {
 	ch := make(chan string)
 	go func() {
 		for i := 0; i < loop; i++ {
-			time.Sleep(0.2e9)
+			time.Sleep(0.2e8)
 			ch <- fmt.Sprintf("A message from a go routine: %d", i)
 		}
 		close(ch)
@@ -73,12 +73,12 @@ func play_with_channel() {
 			fmt.Println("The channel was closed.")
 			break
 		}
-		fmt.Printf("Recieved with for  : %s\n", message)
+		fmt.Printf("Received with for  : %s\n", message)
 	}
 
 	sch = channel_as_return_value(5)
 	for message := range sch {
-		fmt.Printf("Recieved with range: %s\n", message)
+		fmt.Printf("Received with range: %s\n", message)
 	}
 
 	cc := channel_of_channnel()
@@ -92,7 +92,7 @@ func play_with_channel() {
 func channnel_and_deadlock(casenum int) {
 	switch casenum {
 	case 0:
-		// No buffer or reciever
+		// No buffer or receiver
 		ich := make(chan int)
 		ich <- 0
 
@@ -119,12 +119,12 @@ func channnel_and_deadlock(casenum int) {
 
 		go func() {
 			// No starvation if read and write are swapped.
-			fmt.Println("Recieved from ch1:", <- ch1)
+			fmt.Println("Received from ch1:", <- ch1)
 			ch0 <- 0
 			done <- true
 		}()
 		go func() {
-			fmt.Println("Recieved from ch0:", <- ch0)
+			fmt.Println("Received from ch0:", <- ch0)
 			ch1 <- 1
 			done <- true
 		}()
@@ -143,7 +143,7 @@ func unidirectional_sender(ch chan<- int) {
 	close(ch)
 }
 
-func unidirectional_reciever(ch <-chan int) {
+func unidirectional_receiver(ch <-chan int) {
 	// ch <- 0  // invalid operation: send to receive-only type <-chan
 	// close(ch)  // Actually, it is allowed. Why?
 	for num := range ch {
@@ -159,7 +159,7 @@ func play_with_unidirectional_channel() {
 
 	done := make(chan bool)
 	go func() {
-		unidirectional_reciever(rch)
+		unidirectional_receiver(rch)
 		done <- true
 	}()
 	go func() {
@@ -170,8 +170,39 @@ func play_with_unidirectional_channel() {
 	<- done
 }
 
+func play_with_select() {
+	fmt.Println("### play_with_unidirectional_channel ###")
+	cs := make(chan string, 1)
+	ci := make(chan int, 1)
+	cs <- "foo"
+	ci <- 8
+  Loop: for {
+		select {
+		case v := <- cs:
+			fmt.Printf("received '%s' from cs.\n", v)
+		case v := <- ci:
+			fmt.Printf("received %d from ci.\n", v)
+		default:
+			// No blocking if there is a default clause.
+			// Otherwise, select blocks until one channel is ready.
+			fmt.Printf("No channel is ready.\n")
+			break Loop
+		}
+	}
+
+	// How to implement timeout.
+	select {
+	case v := <- ci:
+		fmt.Printf("received %d from ci.\n", v)
+	case <- time.After(1 * 1e8):
+		// func After(ns int64) <-chan int64
+		fmt.Println("timed out after 0.1 sec.")
+	}
+}
+
 func main() {
 	play_with_channel()
 	play_with_unidirectional_channel()
+	play_with_select()
 	// channnel_and_deadlock(2)
 }
