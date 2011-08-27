@@ -1,0 +1,11 @@
+package example;
+
+message Person {
+  optional string name = 1;
+  optional int32 age = 2;
+  repeated Pet pet = 3;
+}
+
+message Pet {
+  optional string name = 1;
+}

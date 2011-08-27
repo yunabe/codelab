@@ -1,4 +1,4 @@
-all: basic func oop concurrency websocket
+all: basic func oop concurrency websocket protobuf
 
 basic: basic.8
 	8l -o basic basic.8
@@ -30,5 +30,17 @@ websocket: websocket.8
 websocket.8: websocket.go
 	8g websocket.go
 
+protobuf: protobuf.8
+	8l -o protobuf protobuf.8
+
+protobuf.8: protobuf.go example_pb.8
+	8g protobuf.go
+
+example.pb.go: example.proto
+	protoc --go_out=. example.proto
+
+example_pb.8: example.pb.go
+	8g -o example_pb.8 example.pb.go
+
 clean:
-	rm -rf *.8 basic func oop concurrency websocket
+	rm -rf *.8 *.pb.go basic func oop concurrency websocket protobuf
