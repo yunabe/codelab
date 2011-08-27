@@ -1,4 +1,4 @@
-all: basic func oop concurrency
+all: basic func oop concurrency websocket
 
 basic: basic.8
 	8l -o basic basic.8
@@ -24,5 +24,11 @@ concurrency: concurrency.8
 concurrency.8: concurrency.go
 	8g concurrency.go
 
+websocket: websocket.8
+	8l -o websocket websocket.8
+
+websocket.8: websocket.go
+	8g websocket.go
+
 clean:
-	rm -rf *.8 basic func oop concurrency
+	rm -rf *.8 basic func oop concurrency websocket
