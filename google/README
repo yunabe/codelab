@@ -25,9 +25,9 @@ Prerequisite
 3. Install protobuf (http://code.google.com/p/protobuf/)
 
  cd ~/local/src
- curl -O http://protobuf.googlecode.com/files/protobuf-2.3.0.tar.bz2
- bzip2 -dc protobuf-2.3.0.tar.bz2 | tar xvf -
- cd protobuf-2.3.0
+ curl -O http://protobuf.googlecode.com/files/protobuf-2.4.1.tar.bz2
+ bzip2 -dc protobuf-2.4.1.tar.bz2 | tar xvf -
+ cd protobuf-2.4.1
  ./configure
  make
  make check
@@ -48,8 +48,8 @@ Prerequisite
 
 5. Install googletest (http://code.google.com/p/googletest/)
 
- curl -O http://googletest.googlecode.com/files/gtest-1.5.0.tar.bz2
- bzip2 -dc gtest-1.5.0.tar.bz2 | tar xvf -
+ curl -O http://googletest.googlecode.com/files/gtest-1.6.0.zip
+ unzip gtest-1.6.0.zip
  cd gtest-1.5.0
  make
  sudo make install
