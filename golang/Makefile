@@ -1,46 +1,48 @@
+include $(GOROOT)/src/Make.inc
+
 all: basic func oop concurrency websocket protobuf
 
-basic: basic.8
-	8l -o basic basic.8
+basic: basic.$(O)
+	$(LD) -o basic basic.$(O)
 
-basic.8: basic.go
-	8g basic.go
+basic.$(O): basic.go
+	$(GC) basic.go
 
-func: func.8
-	8l -o func func.8
+func: func.$(O)
+	$(LD) -o func func.$(O)
 
-func.8: func.go
-	8g func.go
+func.$(O): func.go
+	$(GC) func.go
 
-oop: oop.8
-	8l -o oop oop.8
+oop: oop.$(O)
+	$(LD) -o oop oop.$(O)
 
-oop.8: oop.go
-	8g oop.go
+oop.$(O): oop.go
+	$(GC) oop.go
 
-concurrency: concurrency.8
-	8l -o concurrency concurrency.8
+concurrency: concurrency.$(O)
+	$(LD) -o concurrency concurrency.$(O)
 
-concurrency.8: concurrency.go
-	8g concurrency.go
+concurrency.$(O): concurrency.go
+	$(GC) concurrency.go
 
-websocket: websocket.8
-	8l -o websocket websocket.8
+websocket: websocket.$(O)
+	$(LD) -o websocket websocket.$(O)
 
-websocket.8: websocket.go
-	8g websocket.go
+websocket.$(O): websocket.go
+	$(GC) websocket.go
 
-protobuf: protobuf.8
-	8l -o protobuf protobuf.8
+protobuf: protobuf.$(O)
+	$(LD) -o protobuf protobuf.$(O)
 
-protobuf.8: protobuf.go example_pb.8
-	8g protobuf.go
+protobuf.$(O): protobuf.go example_pb.$(O)
+	$(GC) protobuf.go
 
 example.pb.go: example.proto
 	protoc --go_out=. example.proto
 
-example_pb.8: example.pb.go
-	8g -o example_pb.8 example.pb.go
+example_pb.$(O): example.pb.go
+	$(GC) -o example_pb.$(O) example.pb.go
 
 clean:
-	rm -rf *.8 *.pb.go basic func oop concurrency websocket protobuf
+	rm -rf *.$(O) *.pb.go basic func oop concurrency websocket protobuf
