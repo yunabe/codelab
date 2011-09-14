@@ -33,6 +33,9 @@ Prerequisite
  make check
  sudo make install
  sudo ldconfig
+ cd python
+ python setup.py test
+ sudo python setup.py install
 
 4. Install re2 (http://code.google.com/p/re2/)
 

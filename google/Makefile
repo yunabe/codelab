@@ -1,4 +1,6 @@
-test: gflags_example_test googletest_example
+all: example_pb2.py test
+
+test: gflags_example_test googletest_example gflags_example
 	./googletest_example
 
 example_template.tpl.varnames.h: example_template.tpl
@@ -37,11 +39,17 @@ googletest_example: googletest_example.cc
 example.pb.cc example.pb.h: example.proto
 	protoc example.proto --cpp_out=.
 
+example_pb2.py: example.proto
+	protoc example.proto --python_out=.
+
 example.pb.o: example.pb.cc example.pb.h
 	g++ example.pb.cc -c -o example.pb.o
 
 protobuf_example.o: protobuf_example.cc example.pb.h
 	g++ protobuf_example.cc -c -o protobuf_example.o
+
+protobuf_py_test: example_pb2.py
+	python protobuf_test.py
 
 # -lpthread is required to link protobuf library.
 protobuf_example: protobuf_example.o example.pb.o
@@ -51,5 +59,6 @@ re2_example: re2_example.cc
 	g++ re2_example.cc -o re2_example -lre2
 
 clean:
-	rm -f *.o *.pb.h *.pb.cc gflags_example glog_example protobuf_example \
-	re2_example googletest_example *.varnames.h ctemplate_example
+	rm -f *.o *.pb.h *.pb.cc *_pb2.py gflags_example glog_example \
+  protobuf_example re2_example googletest_example *.varnames.h \
+  ctemplate_example
