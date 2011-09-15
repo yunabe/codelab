@@ -1,0 +1,9 @@
+package main;
+
+message Request {
+  optional string name = 1;
+}
+
+message Response {
+  optional string name = 1;
+}
