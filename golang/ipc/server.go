@@ -9,56 +9,61 @@ import (
 	"os"
 
 	"goprotobuf.googlecode.com/hg/proto"
-	)
+)
 
+func ReceiveRequest(reader io.Reader) (*Request, os.Error) {
+	req := new(Request)
+	if err := ReceiveProtoBuf(reader, req); err != nil {
+		return nil, err
+	}
+	return req, nil
+}
 
-func ReceiveRequest(reader io.Reader) *Request {
+func ReceiveProtoBuf(reader io.Reader, pb interface{}) os.Error {
 	fmt.Println("ReceiveRequest...")
 	var size uint64;
 	if err := binary.Read(reader, binary.LittleEndian, &size); err != nil {
-		fmt.Println("Failed to read size:", err)
-		return nil
+		return err
 	}		
 	fmt.Println("size =", size)
 	buf := make([]byte, size)
 	if _, err := io.ReadFull(reader, buf); err != nil {
-		fmt.Println("Failed to data.")
-		return nil
+		return err
 	}
-	req := new(Request)
-	if err := proto.Unmarshal(buf, req); err != nil {
-		fmt.Println("Failed to unmarshal")
-		return nil
-	}
-	return req
+	return proto.Unmarshal(buf, pb)
 }
 
-func SendResponse(res *Response, writer io.Writer) {
+func SendResponse(writer io.Writer, res *Response) os.Error {
+	return SendProtobuf(writer, res)
+}
+
+func SendProtobuf(writer io.Writer, pb interface{}) os.Error {
 	var data []byte
 	var err os.Error
-	if data, err = proto.Marshal(res); err != nil {
-		fmt.Println("Failed to marshal...")
+	if data, err = proto.Marshal(pb); err != nil {
+		return err
 	}
 	size := uint64(len(data))
-	fmt.Println("size =", size)
 	binary.Write(writer, binary.LittleEndian, size)
-	n, err := writer.Write(data)
-	fmt.Println(n, err)
+	_, err = writer.Write(data)
+	return err
 }
 
-func handleConnection(conn *net.UnixConn) {
+func HandleConnection(conn *net.UnixConn) {
 	defer conn.Close()
 	defer fmt.Println("closing...")
 	r := bufio.NewReader(conn)
 	w := bufio.NewWriter(conn)
 
-	req := ReceiveRequest(r)
+	req, err := ReceiveRequest(r)
 	if req != nil {
 		fmt.Println("req.Name =", *req.Name)
 		res := new(Response)
 		res.Name = proto.String("hello hello!")
-		SendResponse(res, w)
+		SendResponse(w, res)
 		w.Flush()
+	} else {
+		fmt.Println("Failed to receive a request:", err)
 	}
 }
 
@@ -73,6 +78,6 @@ func main() {
 	for {
 		c, _ := listener.AcceptUnix()
 		fmt.Println("accepted...")
-		go handleConnection(c)
+		go HandleConnection(c)
 	}
 }
