@@ -25,4 +25,11 @@ func main() {
 	fmt.Println(p.String())
 	fmt.Println("-- MarshalText --")
 	fmt.Print(PrintToString(&p))  // not compact
+
+	fmt.Println("-- Marshal --")
+	m, _ := proto.Marshal(&p)
+	fmt.Println(m)
+
+	fmt.Println("-- CompactTextString --")
+	fmt.Println(proto.CompactTextString(&p))
 }
