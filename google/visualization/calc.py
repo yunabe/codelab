@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright 2010 Yu Watanabe. All Rights Reserved.
 
+import copy
 import StringIO
 import sys
 
 kStartYear = 2009
-kEndYear = 2074
+kEndYear = 2080
 
 
 class Stat(object):
@@ -209,6 +210,72 @@ def export_population_or_ratio(men, women, is_ratio):
   return kAreaChartTemplate % (column_defs, rows.getvalue().rstrip(','))
 
 
+kLineChartTemplate = '''
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Year');
+        %s
+        data.addRows(%d);
+        %s
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, {width: 900, height: 600, title: 'Eligibility Age',
+                          vAxis: {minValue: 55},
+                          hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}}
+                         });
+      }
+    </script>
+  </head>
+  <body>
+    <div id="chart_div"></div>
+  </body>
+</html>
+'''
+
+def calc_eligibility_age(men, women, start_age, num):
+  population = sum(map(lambda m:m.population, men + women))
+  young_population = sum(
+    map(lambda m:m.population, men[:start_age] + women[:start_age]))
+  young_rate = 1.0 * young_population / population
+
+  setvalues = []
+  for year in xrange(kStartYear, kEndYear):
+    population = sum(map(lambda m:m.population, men + women))
+    young_population = 0
+    for i in xrange(len(men)):
+      pop_i = men[i].population + women[i].population
+      if population * young_rate > young_population + pop_i:
+        young_population += pop_i
+      else:
+        age = i + (population * young_rate - young_population) / pop_i
+        break
+    setvalues.append(
+      'data.setValue(%d, %d, %f);' % (year - kStartYear, num, age))
+    next_step(men, women)
+  return setvalues
+
+
+def export_eligibility_age(men, women):
+  ages = [55, 60, 65,]
+  setvalues = []
+  for year in xrange(kStartYear, kEndYear):
+    setvalues.append('data.setValue(%d, 0, "%d");' % (year - kStartYear, year))
+  addcolumns = []
+  for i, age in enumerate(ages):
+    setvalues.extend(calc_eligibility_age(
+        copy.deepcopy(men), copy.deepcopy(women), age, i + 1))
+    addcolumns.append('data.addColumn("number", "%d");' % age)
+
+  return kLineChartTemplate % ('\n'.join(addcolumns),
+                               len(setvalues) / (len(ages) + 1),
+                               '\n'.join(setvalues))
+
+
 def main():
   assert len(sys.argv) == 2
   mode = sys.argv[1]
@@ -219,6 +286,8 @@ def main():
     print export_population_or_ratio(men, women, False)
   elif mode == 'ratio':
     print export_population_or_ratio(men, women, True)
+  elif mode == 'eligibility':
+    print export_eligibility_age(men, women)
   else:
     print >> sys.stderr, 'Invalid mode:', mode
     sys.exit(1)
