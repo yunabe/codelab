@@ -257,23 +257,27 @@ def calc_eligibility_age(men, women, start_age, num):
     setvalues.append(
       'data.setValue(%d, %d, %f);' % (year - kStartYear, num, age))
     next_step(men, women)
-  return setvalues
+  return young_rate, setvalues
 
 
 def export_eligibility_age(men, women):
-  ages = [55, 60, 65,]
-  setvalues = []
+  ages = [65, 60, 55,]
+  allsetvalues = []
   for year in xrange(kStartYear, kEndYear):
-    setvalues.append('data.setValue(%d, 0, "%d");' % (year - kStartYear, year))
+    allsetvalues.append('data.setValue(%d, 0, "%d");' % (year - kStartYear,
+                                                         year))
   addcolumns = []
   for i, age in enumerate(ages):
-    setvalues.extend(calc_eligibility_age(
-        copy.deepcopy(men), copy.deepcopy(women), age, i + 1))
-    addcolumns.append('data.addColumn("number", "%d");' % age)
+    young_rate, setvalues = calc_eligibility_age(
+      copy.deepcopy(men), copy.deepcopy(women), age, i + 1)
+    allsetvalues.extend(setvalues)
+    label = 'Top %.2f - (%d years old in %d)' % (100 - 100.0 * young_rate,
+                                               age, kStartYear)
+    addcolumns.append('data.addColumn("number", "%s");' % label)
 
   return kLineChartTemplate % ('\n'.join(addcolumns),
-                               len(setvalues) / (len(ages) + 1),
-                               '\n'.join(setvalues))
+                               len(allsetvalues) / (len(ages) + 1),
+                               '\n'.join(allsetvalues))
 
 
 def main():
