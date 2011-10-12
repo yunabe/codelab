@@ -271,7 +271,7 @@ def export_eligibility_age(men, women):
     young_rate, setvalues = calc_eligibility_age(
       copy.deepcopy(men), copy.deepcopy(women), age, i + 1)
     allsetvalues.extend(setvalues)
-    label = 'Top %.2f - (%d years old in %d)' % (100 - 100.0 * young_rate,
+    label = 'Top %.2f%% - (%d years old in %d)' % (100 - 100.0 * young_rate,
                                                age, kStartYear)
     addcolumns.append('data.addColumn("number", "%s");' % label)
 
