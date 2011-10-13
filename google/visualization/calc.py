@@ -79,6 +79,7 @@ def next_step(men, women):
 kPyramidTemplate = '''
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>日本の人口ピラミッドの予測</title>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
@@ -139,6 +140,7 @@ def export_pyramid_row(year, men, women):
 kAreaChartTemplate = '''
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
@@ -213,6 +215,7 @@ def export_population_or_ratio(men, women, is_ratio):
 kLineChartTemplate = '''
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
