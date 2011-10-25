@@ -10,6 +10,8 @@ import os
 
 nacl_env = make_nacl_env.NaClEnvironment(use_c_plus_plus_libs=True)
 
-sources = ['naive_fib.cc']
+sources = ['naive_fib.cc', 'fib.cc']
 
 nacl_env.AllNaClModules(sources, 'naive_fib')
+
+Program('main', ['fib.cc', 'main.cc'], CCFLAGS='-O3')

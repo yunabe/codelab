@@ -4,6 +4,8 @@
 #include "ppapi/cpp/module.h"
 #include "ppapi/cpp/var.h"
 
+int fib(int n);
+
 /// The Instance class.  One of these exists for each instance of your NaCl
 /// module on the web page.
 class NaiveFibInstance : public pp::Instance {
@@ -20,14 +22,6 @@ class NaiveFibInstance : public pp::Instance {
     }
     pp::Var reply(result);
     PostMessage(reply);
-  }
-
-  int fib(int n) {
-    if (n < 2) {
-      return 1;
-    } else {
-      return fib(n - 1) + fib(n - 2);
-    }
   }
 };
 
