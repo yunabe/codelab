@@ -7,20 +7,9 @@
 
 #include <string>
 
-using std::string;
+#include "shared.h"
 
-void send_message(int sockfd, const string& msg) {
-  int offset = 0;
-  while (offset <= msg.size()) {
-    int size = send(sockfd, msg.c_str() + offset, msg.size() + 1 - offset, 0);
-    if (size <= 0) {
-      printf("Failed to send message: size = %d\n", size);
-    } else {
-      printf("Sent message: size = %d\n", size);
-    }
-    offset += size;
-  }
-}
+using std::string;
 
 int main(int argc, char** argv) {
   int port = 9898;
