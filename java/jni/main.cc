@@ -27,5 +27,17 @@ int main(int argc, char** argv) {
   int y = 13;
   jint result = env->CallStaticIntMethod(cls, mid, x, y);
   printf("Calc.sum(%d, %d) == %d\n", x, y, result);
+
+  mid = env->GetStaticMethodID(cls, "throw_exception", "()V");
+  if (mid == NULL) {
+    printf("Failed to find throw_exception.\n");
+  }
+  env->CallStaticVoidMethod(cls, mid);
+  jthrowable exception = env->ExceptionOccurred();
+  if (exception != NULL) {
+    env->ExceptionDescribe();
+    printf("Exception occurred.\n");
+    env->ExceptionClear();
+  }
   return 0;
 }
