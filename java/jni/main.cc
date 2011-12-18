@@ -35,9 +35,33 @@ int main(int argc, char** argv) {
   env->CallStaticVoidMethod(cls, mid);
   jthrowable exception = env->ExceptionOccurred();
   if (exception != NULL) {
-    env->ExceptionDescribe();
+    env->ExceptionDescribe();  // Clear is called implicitly?
     printf("Exception occurred.\n");
     env->ExceptionClear();
+  }
+
+  cls = env->FindClass("Data");
+  if (cls == NULL) {
+    printf("Failed to find Data.\n");
+    return 1;
+  }
+  // ';'!
+  mid = env->GetStaticMethodID(cls, "create", "(I)LData;");
+  if (mid == NULL) {
+    printf("Failed to find create.\n");
+    return 1;
+  }    
+  for (int i = 0; i < 1000; ++i) {
+    // Memory leak if PushLocalFrame ans PopLocalFrame are not called.
+    env->PushLocalFrame(10);
+    env->CallStaticObjectMethod(cls, mid, 1000 * 1000);
+    jthrowable exception = env->ExceptionOccurred();
+    if (exception != NULL) {
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      break;
+    }
+    env->PopLocalFrame(NULL);
   }
   return 0;
 }

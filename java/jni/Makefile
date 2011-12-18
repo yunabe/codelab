@@ -1,7 +1,10 @@
-all: main bad_example Calc.class
+all: main bad_example Calc.class Data.class
 
 Calc.class: Calc.java
 	javac Calc.java
+
+Data.class: Data.java
+	javac Data.java
 
 main: main.o
 	g++ -o main main.o -L /usr/lib/jvm/java-6-openjdk/jre/lib/amd64/server -ljvm
