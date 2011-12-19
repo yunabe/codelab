@@ -63,5 +63,29 @@ int main(int argc, char** argv) {
     }
     env->PopLocalFrame(NULL);
   }
+
+  cls = env->FindClass("Calc");
+  if (cls == NULL) {
+    printf("Failed to find Calc.\n");
+    return 1;
+  }
+  int native_array[] = {7, 3, 21, 10, 2};
+  int size = sizeof(native_array) / sizeof(int);
+  mid = env->GetStaticMethodID(cls, "reverseIntArray", "([I)[I");
+  jintArray array = env->NewIntArray(size);
+  env->SetIntArrayRegion(array, 0, size, native_array);
+  jintArray returnedArray =
+      (jintArray)env->CallStaticObjectMethod(cls, mid, array);
+
+  int returned_size = env->GetArrayLength(returnedArray);
+  jboolean isCopy;
+  int* returned_native_array = env->GetIntArrayElements(returnedArray,
+                                                        &isCopy);
+  printf("isCopy == %d\n", isCopy);
+  for (int i = 0; i < returned_size; ++i) {
+    printf("returnedArray[%d] = %d\n", i, returned_native_array[i]);
+  }
+  // TODO: Understand what happens if we don't call release.
+  env->ReleaseIntArrayElements(returnedArray, returned_native_array, 0);
   return 0;
 }

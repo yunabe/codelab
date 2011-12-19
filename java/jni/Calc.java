@@ -10,4 +10,13 @@ public class Calc {
   private static void throw_exception_internal() {
     throw new RuntimeException("Hello exception!");
   }
+
+  public static int[] reverseIntArray(int[] array) {
+    int[] result = new int[array.length];
+    for (int i = 0; i < array.length; ++i) {
+      result[array.length - 1 - i] = array[i];
+    }
+    return result;
+  }
 }
+
