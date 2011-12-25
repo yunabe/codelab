@@ -2,6 +2,7 @@ package com.yunabe.main;
 
 import com.yunabe.BasicModule;
 import com.yunabe.Lib;
+import com.yunabe.MyClass;
 
 public class Main {
   public static void main(String[] args) {
@@ -16,5 +17,8 @@ public class Main {
     list[0] = 9;
     BasicModule.dbl(list);
     System.out.printf("list[0] == %d\n", list[0]);
+
+    MyClass myclass = new MyClass(34);
+    System.out.printf("myclass.getX() == %d\n", myclass.getX());
   }
 }

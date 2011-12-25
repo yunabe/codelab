@@ -19,4 +19,12 @@ int Lib::int_mul(int x, int y) {
   return x * y;
 }
 
+MyClass::MyClass(int x) {
+  x_ = x;
+}
+
+int MyClass::get_x() {
+  return x_;
+}
+
 }  // namespace yunabe

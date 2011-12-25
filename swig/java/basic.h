@@ -13,4 +13,14 @@ class Lib {
   static int int_mul(int x, int y);
 };
 
+class MyClass {
+ public:
+  MyClass(int x);
+
+  int get_x();
+
+ private:
+  int x_;
+};
+
 }  // namespace yunabe

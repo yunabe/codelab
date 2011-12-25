@@ -16,5 +16,13 @@ class Lib {
  public:
   static int int_mul(int x, int y);
 };
- 
+
+class MyClass {
+ public:
+  MyClass(int x);
+
+  %rename("getX") get_x();
+  int get_x();
+};
+
 }  // namespace yunabe
