@@ -1,5 +1,10 @@
+#include <string>
+#include <vector>
+
 namespace yunabe {
 int int_sum(int x, int y);
+
+std::string get_hello();
 
 class Lib {
  public:
