@@ -22,5 +22,13 @@ object Collection {
     for (x <- list) {
       println(x)
     }
+    println(reverseList(List(1, 2, 3)))
+  }
+
+  def reverseList[A](list: List[A]) : List[A] = {
+    list match {
+      case e :: es => reverseList(es) ::: List(e)
+      case Nil => List()
+    }
   }
 }
