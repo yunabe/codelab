@@ -1,0 +1,13 @@
+go version: release.r60.3
+
+goprotobuf version: go.r60
+
+-- how to install goprotobuf --
+
+# goinstall code.google.com/p/goprotobuf/proto does not work
+# though it's written in http://code.google.com/p/goprotobuf/
+
+export GOPATH=/home/yunabe/local/src/gocode
+goinstall code.google.com/p/goprotobuf/hg/proto
+cd $GOPATH/src/goprotobuf.googlecode.com/hg/compiler
+make install
