@@ -135,7 +135,7 @@ func play_with_map() {
 	value, ok := m3["piyo"]  // ok is set true if a map has a key.
 	fmt.Println("value, ok =", value, ok)
 
-	m3["foo"] = 0, false  // Removes an element. The first arg is ignored?
+	delete(m3, "foo")  // Removes an element.
 	fmt.Println(m3)
 }
 

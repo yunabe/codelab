@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"http"
+	"net/http"
 	"log"
 	"time"
 	"websocket"
@@ -64,7 +64,7 @@ func HtmlResponseServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func NotFoundServer(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("Not found")
+	fmt.Println("Not found:", req.URL.String())
 	w.WriteHeader(404)
 	io.WriteString(w, "Not found\n")
 }
@@ -113,8 +113,8 @@ func main() {
 	http.HandleFunc("/", NotFoundServer)
 	http.HandleFunc("/test", HtmlResponseServer)
 	http.Handle("/ws", websocket.Handler(WebSocketServer))
-	err := http.ListenAndServe(":12345", nil)
+	err := http.ListenAndServe(":8888", nil)
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err.String())
+		log.Fatal("ListenAndServe: ", err)
 	}
 }

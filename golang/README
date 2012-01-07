@@ -1,6 +1,6 @@
-go version: release.r60.3
+go version: weekly.2011-12-22
 
-goprotobuf version: go.r60
+goprotobuf version: go.weekly.2011-12-06
 
 -- how to install goprotobuf --
 
@@ -10,4 +10,5 @@ goprotobuf version: go.r60
 export GOPATH=/home/yunabe/local/src/gocode
 goinstall code.google.com/p/goprotobuf/hg/proto
 cd $GOPATH/src/goprotobuf.googlecode.com/hg/compiler
+hg update -r go.weekly.2011-12-06 -C
 make install
