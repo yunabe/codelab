@@ -1,12 +1,22 @@
 package com.yunabe.main;
 
 import com.yunabe.BasicModule;
+import com.yunabe.DirectorRoot;
 import com.yunabe.Lib;
 import com.yunabe.MyClass;
+import com.yunabe.NoDirectorRoot;
+
+class Child0 extends DirectorRoot {
+  @Override
+  public void PrintName() {
+    System.out.println("I'm Child0.");
+  }
+}
 
 public class Main {
   public static void main(String[] args) {
     System.loadLibrary("BasicModule");
+    System.loadLibrary("DirectorModule");
     int x = 3;
     int y = 4;
     System.out.printf("BasicModule.int_sum(%d, %d) == %d\n", x, y, BasicModule.int_sum(x, y));
@@ -20,5 +30,30 @@ public class Main {
 
     MyClass myclass = new MyClass(34);
     System.out.printf("myclass.getX() == %d\n", myclass.getX());
+
+    System.out.println("--------- Director ------------");
+
+    DirectorRoot director = new DirectorRoot() {
+        @Override
+        public void PrintName() {
+          System.out.println("I'm a child of DirectorRoot in Java!");
+        }
+      };
+    // Overrided Java code are executed.
+    director.PrintName();
+    // Overrided Java code are executed from C++
+    // because it is declared as "director" in swig.
+    DirectorRoot.CallPrintName(director);
+
+    NoDirectorRoot nodirector = new NoDirectorRoot() {
+        @Override
+        public void PrintName() {
+          System.out.println("I'm a child of NoDirectorRoot in Java!");
+        }
+      };
+    // Overrided Java code are executed.
+    nodirector.PrintName();
+    // Unfortunately, C++ codes of base class is called here.
+    NoDirectorRoot.CallPrintName(nodirector);
   }
 }

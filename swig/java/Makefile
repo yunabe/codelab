@@ -1,4 +1,4 @@
-run: libBasicModule.so BasicModule.jar
+run: libBasicModule.so libDirectorModule.so BasicModule.jar
 	java -Djava.library.path=`pwd` -classpath BasicModule.jar com.yunabe.main.Main
 
 basic_java_wrap.cc javafiles/com/yunabe/BasicModule.java  javafiles/com/yunabe/BasicModuleJNI.java  javafiles/com/yunabe/Lib.java: basic.i
@@ -13,8 +13,20 @@ basic_java_wrap.o: basic_java_wrap.cc
 libBasicModule.so: basic.o basic_java_wrap.o
 	g++ -shared basic.o basic_java_wrap.o -o libBasicModule.so
 
-BasicModule.jar: javafiles/com/yunabe/BasicModule.java  javafiles/com/yunabe/BasicModuleJNI.java  javafiles/com/yunabe/Lib.java javafiles/com/yunabe/main/Main.java
+BasicModule.jar: javafiles/com/yunabe/BasicModule.java  javafiles/com/yunabe/BasicModuleJNI.java  javafiles/com/yunabe/Lib.java javafiles/com/yunabe/DirectorModuleJNI.java javafiles/com/yunabe/main/Main.java
 	cd javafiles && javac `find com/yunabe/ | grep "\.java$""` && jar cvf ../BasicModule.jar com
 
+director_java_wrap.cc javafiles/com/yunabe/DirectorModuleJNI.java: director.i
+	swig -c++ -java -package com.yunabe -outdir javafiles/com/yunabe -o director_java_wrap.cc -module DirectorModule director.i
+
+director.o: director.cc director.h
+	g++ -fPIC -c director.cc -o director.o
+
+director_java_wrap.o: director_java_wrap.cc director_java_wrap.h
+	g++ -fPIC -c director_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/ -I.
+
+libDirectorModule.so: director.o director_java_wrap.o
+	g++ -shared director.o director_java_wrap.o -o libDirectorModule.so
+
 clean:
-	rm -rf *.o *.jar *_wrap.cc *.class *.so javafiles/com/yunabe/*.java javafiles/com/yunabe/*.class *.jar
+	rm -rf *.o *.jar *_wrap.cc *_wrap.h *.class *.so javafiles/com/yunabe/*.java javafiles/com/yunabe/*.class *.jar
