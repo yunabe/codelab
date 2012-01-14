@@ -8,7 +8,7 @@ basic.o: basic.cc basic.h
 	g++ -fPIC -c basic.cc -o basic.o
 
 basic_java_wrap.o: basic_java_wrap.cc
-	g++ -fPIC -c basic_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/ -I.
+	g++ -fPIC -c basic_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/
 
 libBasicModule.so: basic.o basic_java_wrap.o
 	g++ -shared basic.o basic_java_wrap.o -o libBasicModule.so
@@ -23,7 +23,7 @@ director.o: director.cc director.h
 	g++ -fPIC -c director.cc -o director.o
 
 director_java_wrap.o: director_java_wrap.cc director_java_wrap.h
-	g++ -fPIC -c director_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/ -I.
+	g++ -fPIC -c director_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/
 
 libDirectorModule.so: director.o director_java_wrap.o
 	g++ -shared director.o director_java_wrap.o -o libDirectorModule.so
