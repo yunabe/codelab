@@ -6,6 +6,9 @@ import com.yunabe.Lib;
 import com.yunabe.MyClass;
 import com.yunabe.NoDirectorRoot;
 
+import com.yunabe.TimeModule;
+import com.yunabe.time.Time;
+
 class Child0 extends DirectorRoot {
   @Override
   public void PrintName() {
@@ -17,6 +20,7 @@ public class Main {
   public static void main(String[] args) {
     System.loadLibrary("BasicModule");
     System.loadLibrary("DirectorModule");
+    System.loadLibrary("TimeModule");
     int x = 3;
     int y = 4;
     System.out.printf("BasicModule.int_sum(%d, %d) == %d\n", x, y, BasicModule.int_sum(x, y));
@@ -55,5 +59,10 @@ public class Main {
     nodirector.PrintName();
     // Unfortunately, C++ codes of base class is called here.
     NoDirectorRoot.CallPrintName(nodirector);
+
+    System.out.println("--------- Typemap ------------");
+    Time t0 = new Time(1, 20, 30);
+    Time t1 = new Time(2, 40, 30);
+    System.out.println(TimeModule.sumTimeAsValue(t0, t1));
   }
 }
