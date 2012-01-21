@@ -9,5 +9,9 @@
 #include "include_and_import.h"
 %}
 
+// The return value of createMyClass must be released by caller.
+// http://www.swig.org/Doc1.3/Customization.html#ownership
+%newobject yunabe::createMyClass;
+
 // Expand "include_and_import.h" here.
 %include "include_and_import.h"
