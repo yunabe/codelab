@@ -10,11 +10,23 @@ basic.o: basic.cc basic.h
 basic_java_wrap.o: basic_java_wrap.cc
 	g++ -fPIC -c basic_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/
 
-libBasicModule.so: basic.o basic_java_wrap.o
-	g++ -shared basic.o basic_java_wrap.o -o libBasicModule.so
+libBasicModule.so: basic.o basic_java_wrap.o include_and_import.o include_and_import_java_wrap.o
+	g++ -shared basic.o basic_java_wrap.o include_and_import.o include_and_import_java_wrap.o -o libBasicModule.so
 
-BasicModule.jar: javafiles/com/yunabe/BasicModule.java  javafiles/com/yunabe/BasicModuleJNI.java  javafiles/com/yunabe/Lib.java javafiles/com/yunabe/DirectorModuleJNI.java javafiles/com/yunabe/TimeModule.java javafiles/com/yunabe/main/Main.java
+BasicModule.jar: javafiles/com/yunabe/BasicModule.java  javafiles/com/yunabe/BasicModuleJNI.java javafiles/com/yunabe/IncludeAndImportModule.java javafiles/com/yunabe/Lib.java javafiles/com/yunabe/DirectorModuleJNI.java javafiles/com/yunabe/TimeModule.java javafiles/com/yunabe/main/Main.java
 	cd javafiles && javac `find com/yunabe/ | grep "\.java$""` && jar cvf ../BasicModule.jar com
+
+include_and_import.o: include_and_import.cc include_and_import.h
+	g++ -fPIC -c include_and_import.cc -o include_and_import.o
+
+include_and_import_java_wrap.o: include_and_import_java_wrap.cc
+	g++ -fPIC -c include_and_import_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk/include/
+
+libIncludeAndImportModule.so: include_and_import.o include_and_import_java_wrap.o
+	g++ -shared include_and_import.o include_and_import_java_wrap.o -o libIncludeAndImportModule.so
+
+include_and_import_java_wrap.cc javafiles/com/yunabe/IncludeAndImportModule.java: include_and_import.i
+	swig -Wall -c++ -java -package com.yunabe -outdir javafiles/com/yunabe -o include_and_import_java_wrap.cc -module IncludeAndImportModule include_and_import.i
 
 director_java_wrap.cc javafiles/com/yunabe/DirectorModuleJNI.java: director.i
 	swig -c++ -java -package com.yunabe -outdir javafiles/com/yunabe -o director_java_wrap.cc -module DirectorModule director.i

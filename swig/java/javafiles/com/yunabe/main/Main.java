@@ -2,6 +2,7 @@ package com.yunabe.main;
 
 import com.yunabe.BasicModule;
 import com.yunabe.DirectorRoot;
+import com.yunabe.IncludeAndImportModule;
 import com.yunabe.Lib;
 import com.yunabe.MyClass;
 import com.yunabe.NoDirectorRoot;
@@ -44,6 +45,10 @@ public class Main {
     System.out.printf("list[0] == %d\n", list[0]);
 
     MyClass myclass = new MyClass(34);
+    System.out.printf("myclass.getX() == %d\n", myclass.getX());
+
+    System.out.println("--------- Import and Include ------------");
+    myclass = IncludeAndImportModule.createMyClass(897);
     System.out.printf("myclass.getX() == %d\n", myclass.getX());
 
     System.out.println("--------- Director ------------");
