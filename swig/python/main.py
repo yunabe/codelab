@@ -1,7 +1,11 @@
 import sys
 
+import time_type
+
+# SWIG modules
 import basic
 import director
+import use_time
 
 class DirectorChild(director.DirectorRoot):
   def PrintName(self):
@@ -31,6 +35,11 @@ def main():
   nod.PrintName()
   # Unfortunately, C++ codes of base class is called here.
   director.NoDirectorRoot.CallPrintName(nod)
+
+  print '--- typemap ---'
+  t0 = time_type.Time(1, 20, 30)
+  t1 = time_type.Time(2, 40, 30)
+  print use_time.sumTimeAsValue(t0, t1)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-run: _basic.so _director.so
+run: _basic.so _director.so _use_time.so
 	python main.py
 
 basic_python_wrap.cc basic.py: basic.i
@@ -25,5 +25,20 @@ director_python_wrap.o: director_python_wrap.cc
 _director.so: director.o director_python_wrap.o
 	g++ -shared director.o director_python_wrap.o -o _director.so
 
+time.o: time.cc
+	g++ -fPIC time.cc -c -o time.o
+
+use_time.o: use_time.cc
+	g++ -fPIC use_time.cc -c -o use_time.o
+
+use_time_python_wrap.cc use_time.py: use_time.i
+	swig -c++ -python -outdir ./ -o use_time_python_wrap.cc -module use_time use_time.i
+
+use_time_python_wrap.o: use_time_python_wrap.cc
+	g++ -fPIC use_time_python_wrap.cc -c -o use_time_python_wrap.o -I/usr/include/python2.6
+
+_use_time.so: time.o use_time.o use_time_python_wrap.o
+	g++ -shared time.o use_time.o use_time_python_wrap.o -o _use_time.so
+
 clean:
-	rm -rf *.o *.so *.pyc basic.py director.py *_wrap.cc *_wrap.h
+	rm -rf *.o *.so *.pyc basic.py director.py use_time.py *_wrap.cc *_wrap.h
