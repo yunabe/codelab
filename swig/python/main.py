@@ -56,6 +56,7 @@ def main():
   print '--- typemap & director ---'
   sub = PythonSubtractor()
   # TODO: registerSubtractor must own ownership of sub.
+  # Otherwise, segfault if sub is used from C++ after it is released in Python.
   use_time.registerSubtractor(sub);
   print 'Python: The result is %s' % use_time.subtractTime(t1, t0)
 
