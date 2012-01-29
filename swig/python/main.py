@@ -16,6 +16,18 @@ class NoDirectorChild(director.NoDirectorRoot):
   def PrintName(self):
     print 'I\'m a child of NoDirectorRoot in Python!'
 
+class PythonSubtractor(use_time.Subtractor):
+  def __init__(self):
+    use_time.Subtractor.__init__(self)
+
+  # if you forget 'self' here, swig outputs hard-to-understand error.
+  # TODO: Understand what happends.
+  def subtract(self, x, y):
+    print 'Python: subtract %s from %s' % (y, x)
+    return time_type.Time(x.hour - y.hour,
+                          x.minute - y.minute,
+                          x.second - y.second)
+
 
 def main():
   print '---- Basic ---'
@@ -40,6 +52,12 @@ def main():
   t0 = time_type.Time(1, 20, 30)
   t1 = time_type.Time(2, 40, 30)
   print use_time.sumTimeAsValue(t0, t1)
+
+  print '--- typemap & director ---'
+  sub = PythonSubtractor()
+  # TODO: registerSubtractor must own ownership of sub.
+  use_time.registerSubtractor(sub);
+  print 'Python: The result is %s' % use_time.subtractTime(t1, t0)
 
 
 if __name__ == '__main__':

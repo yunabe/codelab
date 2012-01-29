@@ -1,13 +1,15 @@
-%module(directors="1") modulename
+%module(directors="1") ues_time
 
 %feature("director") Subtractor;
 
 %{
+// auto_pyobj is corresponding to SwigVar_PyObject.
 #include "auto_pyobj.h"
 #include "time.h"
 #include "use_time.h"
 %}
 
+// See http://docs.python.org/c-api/
 %define TIME_CPP2PY(cppvar, pyvar)
 {
   int hour = cppvar.hour();
@@ -35,10 +37,9 @@
 
 %typemap(in) yunabe::Time TIME_PY2CPP($input, $1)
 
-// no descriptor causes segv of swig.
-// %typemap(directorin,descriptor="Lcom/yunabe/time/Time;") yunabe::Time TIME_CPP2PY($1, $input)
-
-// %typemap(directorout) yunabe::Time TIME_PY2CPP($input, $1)
+// Notice formats of args are different from Java case :{
+%typemap(directorin) yunabe::Time TIME_CPP2PY($1_name, $input)
+%typemap(directorout) yunabe::Time TIME_PY2CPP($input, $result)
 
 namespace yunabe {
 
