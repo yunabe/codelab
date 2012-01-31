@@ -55,9 +55,14 @@ def main():
 
   print '--- typemap & director ---'
   sub = PythonSubtractor()
-  # TODO: registerSubtractor must own ownership of sub.
-  # Otherwise, segfault if sub is used from C++ after it is released in Python.
-  use_time.registerSubtractor(sub);
+  use_time.registerSubtractor(sub)
+  # Release an ownership of object from Python.
+  sub.__disown__()
+  # If you don't call __disown__, the registered subtractor is released
+  # by sub = None and use_time.subtractorTime might cause segmentation fault.
+  # Also, please note that adding %delobject to registerSubtractor in
+  # SWIG file does not solve this ownership issue.
+  sub = None
   print 'Python: The result is %s' % use_time.subtractTime(t1, t0)
 
 

@@ -82,7 +82,15 @@ public class Main {
     System.out.println(TimeModule.sumTimeAsValue(t0, t1));
 
     System.out.println("--- typemap & director ---");
-    TimeModule.registerSubtractor(new JavaSubtractor());
+    JavaSubtractor subtractor = new JavaSubtractor();
+    // Release an ownership of object from Java.
+    // If you don't call this, the registered subtractor will be destroyed
+    // by Java GC and calling TimeModule.subtractTime might cause segv.
+    //
+    // Also, please note that adding %delobject to registerSubtractor in
+    // SWIG file does not solve this ownership issue.
+    subtractor.swigReleaseOwnership();
+    TimeModule.registerSubtractor(subtractor);
     System.out.printf("Java: The result is %s\n",
                       TimeModule.subtractTime(t1, t0));
   }
