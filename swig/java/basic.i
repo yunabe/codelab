@@ -5,6 +5,10 @@
 #include "basic.h"
 %}
 
+%define NEWOBJECT(func)
+   %newobject func;
+%enddef
+
 namespace yunabe {
 int int_sum(int x, int y);
 
