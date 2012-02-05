@@ -67,3 +67,8 @@ Prerequisite
  make
  sudo make install
  sudo ldconfig
+
+7. gperftools
+ sudo install libunwind7-dev
+ # for visualization
+ sudo install gv graphviz 
