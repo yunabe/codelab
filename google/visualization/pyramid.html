@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>日本の人口ピラミッドの予測</title>
+  </head>
+  <body>
+    <div style="width:600px">
+      2009年の年齢別の人口・出生率・死亡率にもとづく，日本の人口ピラミッドの変化の予測．
+      Google Visualization API を使ってアニメーション化．
+      ソースコードは
+      <a href="https://github.com/yunabe/practice/tree/master/google/visualization">こちら</a>．
+      <ul>
+       <li><a href="population.html">日本の人口数の予測</a></li>
+       <li><a href="ratio.html">日本の人口比率の予測</a></li>
+      </ul>
+    </div>
+    <div id="chart_div" style="width: 900px; height: 600px;"></div>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="population_data.js"></script>
+    <script type="text/javascript" src="population_visualize.js"></script>
+    <script type="text/javascript">
+      visualizePyramid(document.getElementById('chart_div'), 900, 600);
+    </script>
+  </body>
+</html>

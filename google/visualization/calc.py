@@ -75,55 +75,15 @@ def next_step(men, women):
   women[0].population = baby * (1 - male_ratio)
 
 
+kPyramidDataTemplate = 'var pyramidData = [%s];'
 
-kPyramidTemplate = '''
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>日本の人口ピラミッドの予測</title>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      google.load('visualization', '1', {'packages':['motionchart']});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Age');
-        data.addColumn('number', 'Year');
-        data.addColumn('number', 'Age');
-        data.addColumn('number', 'Population');
-        data.addColumn('string', 'Sex');
-        data.addRows([
-          %s
-          ]);
-        var chart = new google.visualization.MotionChart(document.getElementById('chart_div'));
-        chart.draw(data, {width: 900, height:600});
-      }
-    </script>
-  </head>
-
-  <body>
-    <div style="width:600px">
-      2009年の年齢別の人口・出生率・死亡率にもとづく，日本の人口ピラミッドの変化の予測．
-      Google Visualization API を使ってアニメーション化．
-      ソースコードは
-      <a href="https://github.com/yunabe/practice/tree/master/google/visualization/data">こちら</a>．
-
-      <ul>
-       <li><a href="population.html">日本の人口数の予測</a></li>
-       <li><a href="ratio.html">日本の人口比率の予測</a></li>
-      </ul>
-    </div>
-    <div id="chart_div" style="width: 900px; height: 600px;"></div>
-  </body>
-</html>
-'''
 
 def export_pyramid(men, women):
   rows = StringIO.StringIO()
   for year in xrange(kStartYear, kEndYear):
     rows.write(export_pyramid_row(year, men, women))
     next_step(men, women)
-  return kPyramidTemplate % rows.getvalue().rstrip(',')
+  return kPyramidDataTemplate % rows.getvalue().rstrip(',')
 
 
 def export_pyramid_row(year, men, women):
@@ -137,46 +97,23 @@ def export_pyramid_row(year, men, women):
   return o.getvalue()
 
 
-kAreaChartTemplate = '''
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Year');
-        %s
-        data.addRows([
-          %s
-        ]);
+kAreaChartPopulationDataTemplate = ('var populationColumns = [%s];\n'
+                                    'var populationData = [%s];')
 
-        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
-        chart.draw(data, {width: 900, height: 600, title: 'Company Performance',
-                          vAxis: {minValue: 0},
-                          hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}}
-                         });
-      }
-    </script>
-  </head>
-  <body>
-    <div id="chart_div"></div>
-  </body>
-</html>
-'''
+kAreaChartRatioDataTemplate = ('var ratioColumns = [%s];\n'
+                               'var ratioData = [%s];')
 
 kImportantAges = [0, 15, 65]
 
+
 def get_area_chart_column_defs(max_age):
-  o = StringIO.StringIO()
+  columns = []
   age = 0
   for age in kImportantAges:
     if age > max_age:
       break
-    o.write('data.addColumn("number", "%d <=");' % age)
-  return o.getvalue()
+    columns.append('"%d <="' % age)
+  return ','.join(columns)
 
 
 def export_population_or_ratio_row(year, max_age, men, women, is_ratio):
@@ -209,51 +146,17 @@ def export_population_or_ratio(men, women, is_ratio):
     rows.write(export_population_or_ratio_row(
         year, max_age, men, women, is_ratio))
     next_step(men, women)
-  return kAreaChartTemplate % (column_defs, rows.getvalue().rstrip(','))
+  if is_ratio:
+    template = kAreaChartRatioDataTemplate
+  else:
+    template = kAreaChartPopulationDataTemplate
+  return template % (column_defs, rows.getvalue().rstrip(','))
 
 
-kLineChartTemplate = '''
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Year');
-        %s
-        data.addRows(%d);
-        %s
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, {width: 900, height: 600, title: 'Eligibility Age',
-                          vAxis: {minValue: 55},
-                          hAxis: {title: 'Year', titleTextStyle: {color: '#FF0000'}}
-                         });
-      }
-    </script>
-  </head>
-  <body>
-    <div style="width:600px;margin:50px">
-      <h3>適正な年金支給開始年齢の推移予測．</h3>
-      <p>
-      人口の上位30%%（2009年時点での60歳）を社会が扶養可能な人口とした場合の、
-      人口分布予測に基づく年金支給可能な年齢の推移予測。<br>
-      <ul>
-        <li>
-          死亡率に変化がない場合の予測なので、
-          平均寿命や健康状態は2009年時点と変わらない場合の予測である。
-　　　　　医療技術の進歩で、高齢でもより元気に過ごせるようになり、
-          平均寿命が伸びた場合はさらに支給開始年齢は上昇することが予測される。
-        </li>
-      </ul>
-      </p>
-    </div>
-    <div id="chart_div"></div>
-  </body>
-</html>
-'''
+kLineChartDataTemplate = ('var eligibilityColumns = [%s];\n'
+                          'var elibitilibyNumRows = %d;'
+                          'var eligibilityData = [%s];')
+
 
 def calc_eligibility_age(men, women, start_age, num):
   population = sum(map(lambda m:m.population, men + women))
@@ -272,8 +175,7 @@ def calc_eligibility_age(men, women, start_age, num):
       else:
         age = i + (population * young_rate - young_population) / pop_i
         break
-    setvalues.append(
-      'data.setValue(%d, %d, %f);' % (year - kStartYear, num, age))
+    setvalues.append('[%d, %d, %f]' % (year - kStartYear, num, age))
     next_step(men, women)
   return young_rate, setvalues
 
@@ -281,9 +183,10 @@ def calc_eligibility_age(men, women, start_age, num):
 def export_eligibility_age(men, women):
   ages = [65, 60, 55,]
   allsetvalues = []
+
   for year in xrange(kStartYear, kEndYear):
-    allsetvalues.append('data.setValue(%d, 0, "%d");' % (year - kStartYear,
-                                                         year))
+    allsetvalues.append('[%d, 0, "%d"]' % (year - kStartYear, year))
+                                           
   addcolumns = []
   for i, age in enumerate(ages):
     young_rate, setvalues = calc_eligibility_age(
@@ -291,28 +194,31 @@ def export_eligibility_age(men, women):
     allsetvalues.extend(setvalues)
     label = 'Top %.2f%% - (%d years old in %d)' % (100 - 100.0 * young_rate,
                                                age, kStartYear)
-    addcolumns.append('data.addColumn("number", "%s");' % label)
+    addcolumns.append('"%s"' % label)
 
-  return kLineChartTemplate % ('\n'.join(addcolumns),
-                               len(allsetvalues) / (len(ages) + 1),
-                               '\n'.join(allsetvalues))
+  return kLineChartDataTemplate % (','.join(addcolumns),
+                                   len(allsetvalues) / (len(ages) + 1),
+                                   ','.join(allsetvalues))
+
+
+def export_pyramid_data(men, women):
+  rows = StringIO.StringIO()
+  for year in xrange(kStartYear, kEndYear):
+    rows.write(export_pyramid_row(year, men, women))
+    next_step(men, women)
+  return kPyramidTemplate % rows.getvalue().rstrip(',')
 
 
 def main():
-  assert len(sys.argv) == 2
-  mode = sys.argv[1]
+  assert len(sys.argv) == 1
   men, women = read_data()
-  if mode == 'pyramid':
-    print export_pyramid(men, women)
-  elif mode == 'population':
-    print export_population_or_ratio(men, women, False)
-  elif mode == 'ratio':
-    print export_population_or_ratio(men, women, True)
-  elif mode == 'eligibility':
-    print export_eligibility_age(men, women)
-  else:
-    print >> sys.stderr, 'Invalid mode:', mode
-    sys.exit(1)
+  print export_pyramid(men, women)
+  men, women = read_data()
+  print export_population_or_ratio(men, women, is_ratio=False)
+  men, women = read_data()
+  print export_population_or_ratio(men, women, is_ratio=True)
+  men, women = read_data()
+  print export_eligibility_age(men, women)
 
 
 if __name__ == '__main__':
