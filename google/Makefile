@@ -58,7 +58,10 @@ protobuf_example: protobuf_example.o example.pb.o
 re2_example: re2_example.cc
 	g++ re2_example.cc -o re2_example -lre2
 
+gperftools_leak: gperftools_leak.cc
+	g++ gperftools_leak.cc -o gperftools_leak -ltcmalloc
+
 clean:
 	rm -f *.o *.pb.h *.pb.cc *_pb2.py gflags_example glog_example \
   protobuf_example re2_example googletest_example *.varnames.h \
-  ctemplate_example
+  ctemplate_example gperftools_leak

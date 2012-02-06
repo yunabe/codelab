@@ -68,7 +68,16 @@ Prerequisite
  sudo make install
  sudo ldconfig
 
-7. gperftools
+7. Install gperftools
+
  sudo install libunwind7-dev
  # for visualization
- sudo install gv graphviz 
+ sudo install gv graphviz
+
+ curl -O http://gperftools.googlecode.com/files/gperftools-2.0.tar.gz
+ tar xfz gperftools-2.0.tar.gz
+ cd gperftools-2.0
+ ./configure
+ make
+ sudo make install
+ sudo ldconfig
