@@ -302,6 +302,16 @@ class Evaluator(object):
           os.dup2(w, sys.stdout.fileno())
         if old_r != -1:
           os.dup2(old_r, sys.stdin.fileno())
+        for redirect in redirects:
+          if redirect[0] == '>':
+            mode = 'w'
+          elif redirect[0] == '>>':
+            mode = 'a'
+          else:
+            raise Exception('Unexpected error - '
+                            'invalid redirect: %s' % redirect[0])
+          f = file(redirect[1], mode)
+          os.dup2(f.fileno(), sys.stdout.fileno())
         os.execvp(args[0], args)
     
     while len(pids) > 0:
@@ -309,7 +319,7 @@ class Evaluator(object):
       w = pids.pop(pid)
 
 def main():
-  tok = Tokenizer('cat "$tmp/test.txt" | sed "s/e/*/g"')
+  tok = Tokenizer('cat "$tmp/test.txt" | sed "s/e/*/g" > /tmp/out.txt')
   parser = Parser(tok)
   evaluator = Evaluator(parser)
   tmp = '/tmp'
