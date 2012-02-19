@@ -7,7 +7,7 @@ from pysh import SUBSTITUTION
 from pysh import REDIRECT
 from pysh import PIPE
 from pysh import LITERAL
-
+from pysh import EOF
 
 import unittest
 
@@ -17,6 +17,7 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'cat'),
                        (SPACE, ' '),
                        (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
                        ], list(tok))
 
   def test1(self):
@@ -24,6 +25,7 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'cat'),
                        (SPACE, ' '),
                        (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
                        ], list(tok))
 
   def test2(self):
@@ -31,6 +33,7 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'cat'),
                        (SPACE, ' '),
                        (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
                        ], list(tok))
 
   def test2_2(self):
@@ -38,6 +41,7 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'cat'),
                        (SPACE, ' '),
                        (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testSubstitution(self):
@@ -47,6 +51,7 @@ class TokenizerTest(unittest.TestCase):
                        (SUBSTITUTION, '$a'),
                        (SUBSTITUTION, '$b'),
                        (SUBSTITUTION, '$c'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testSubstitutionWithoutSpace(self):
@@ -55,6 +60,7 @@ class TokenizerTest(unittest.TestCase):
                        (SPACE, ' '),
                        (LITERAL, 'hoge'),
                        (SUBSTITUTION, '$a'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testBraceSubstitution(self):
@@ -63,6 +69,7 @@ class TokenizerTest(unittest.TestCase):
                        (SPACE, ' '),
                        (LITERAL, 'hoge'),
                        (SUBSTITUTION, '${a}'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testBraceSubstitutionWithTrailing(self):
@@ -72,6 +79,7 @@ class TokenizerTest(unittest.TestCase):
                        (LITERAL, 'hoge'),
                        (SUBSTITUTION, '${a}'),
                        (LITERAL, '10'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testSubstitutionUnderscore(self):
@@ -79,6 +87,7 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'echo'),
                        (SPACE, ' '),
                        (SUBSTITUTION, '$__init__'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testRedirect(self):
@@ -88,6 +97,7 @@ class TokenizerTest(unittest.TestCase):
                        (LITERAL, 'a'),
                        (REDIRECT, '>'),
                        (LITERAL, '/tmp/out'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testRedirectAppend(self):
@@ -97,6 +107,7 @@ class TokenizerTest(unittest.TestCase):
                        (LITERAL, 'a'),
                        (REDIRECT, '>>'),
                        (LITERAL, '/tmp/out'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testRedirectInvalidName(self):
@@ -105,6 +116,7 @@ class TokenizerTest(unittest.TestCase):
                        (SPACE, ' '),
                        (LITERAL, '$'),
                        (LITERAL, '10'),
+                       (EOF, ''),
                        ], list(tok))
 
   def testRedirectAppend(self):
@@ -113,7 +125,20 @@ class TokenizerTest(unittest.TestCase):
                        (SPACE, ' '),
                        (SINGLE_QUOTED_STRING, '\'abc\''),
                        (DOUBLE_QUOTED_STRING, '"def"'),
+                       (EOF, ''),
                        ], list(tok))
+
+
+class DoubleQuotedStringExpanderTest(unittest.TestCase):
+  def test(self):
+    tok = pysh.Tokenizer('echo "apple pie. a$bc e${fg}\t10"')
+    expanded = pysh.DoubleQuotedStringExpander('apple pie. a$bc e${fg}\t10')
+    self.assertEquals([(LITERAL, 'apple pie. a'),
+                       (SUBSTITUTION, '$bc'),
+                       (LITERAL, ' e'),
+                       (SUBSTITUTION, '${fg}'),
+                       (LITERAL, '\t10'),
+                       ], list(expanded))
 
 if __name__ == '__main__':
   unittest.main()
