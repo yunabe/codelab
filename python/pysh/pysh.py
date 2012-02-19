@@ -4,6 +4,8 @@ import StringIO
 
 SPACE = 'space'
 SINGLE_QUOTED_STRING = 'single_quoted'
+DOUBLE_QUOTED_STRING = 'double_quoted'
+SUBSTITUTION = 'substitution'
 REDIRECT = 'redirect'
 PIPE = 'pipe'
 LITERAL = 'literal'
@@ -91,33 +93,38 @@ class Tokenizer(object):
       pos = self.find_char(input, self.is_not_whitespace)
       assert pos != -1
       self.__input = input[pos:]
-      return ' '
+      return (SPACE, ' ')
     elif c == '|':
       self.__input = input[1:]
-      return '|'
+      return (PIPE, '|')
     elif c == '"' or c == '\'':
+      is_double = c == '"'
       string = self.extract_string(input)
       self.__input = input[len(string):]
-      return string
+      return (DOUBLE_QUOTED_STRING if is_double else SINGLE_QUOTED_STRING,
+              string)
     elif c == '$':
       string = self.extract_var(input)
       self.__input = input[len(string):]
-      return string
+      if string == '$':
+        return LITERAL, string
+      else:
+        return SUBSTITUTION, string
     elif c == '>':
       if input.startswith('>>'):
         self.__input = input[2:]
-        return '>>'
+        return (REDIRECT, '>>')
       else:
         self.__input = input[1:]
-        return '>'
+        return (REDIRECT, '>')
     else:
       pos = self.find_char(input, self.is_special)
       if pos == -1:
         self.__input = ''
-        return input
+        return LITERAL, input
       else:
         self.__input = input[pos:]
-        return input[:pos]
+        return LITERAL, input[:pos]
 
 def main():
   tok = Tokenizer('cat ~/www/foo.txt  "a b" ${var}1 | '
