@@ -1,5 +1,6 @@
 import __builtin__
 import os
+import re
 import tokenize
 import token
 import StringIO
@@ -14,6 +15,8 @@ REDIRECT = 'redirect'
 PIPE = 'pipe'
 LITERAL = 'literal'
 EOF = 'eof'
+
+REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
 
 class LexerBase(object):
   def is_whitespace(self, c):
@@ -101,14 +104,19 @@ class Tokenizer(LexerBase):
         return EOF, ''
 
     c = input[0]
-    if self.is_whitespace(c):
+    redirect_match = REDIRECT_PATTERN.match(input) 
+    if redirect_match:
+      string = redirect_match.group(0)
+      self.__input = input[len(string):]
+      return REDIRECT, string
+    elif self.is_whitespace(c):
       pos = self.find_char(input, self.is_not_whitespace)
       assert pos != -1
       self.__input = input[pos:]
-      return (SPACE, ' ')
+      return SPACE, ' '
     elif c == '|':
       self.__input = input[1:]
-      return (PIPE, '|')
+      return PIPE, '|'
     elif c == '"' or c == '\'':
       is_double = c == '"'
       string = self.extract_string(input)
@@ -122,13 +130,6 @@ class Tokenizer(LexerBase):
         return LITERAL, string
       else:
         return SUBSTITUTION, string
-    elif c == '>':
-      if input.startswith('>>'):
-        self.__input = input[2:]
-        return (REDIRECT, '>>')
-      else:
-        self.__input = input[1:]
-        return (REDIRECT, '>')
     else:
       pos = self.find_char(input, self.is_special)
       if pos == -1:
@@ -137,6 +138,7 @@ class Tokenizer(LexerBase):
       else:
         self.__input = input[pos:]
         return LITERAL, input[:pos]
+
 
 class Process(object):
   def __init__(self, args, redirects, is_last):
@@ -174,6 +176,21 @@ class Parser(object):
     else:
       tokens.append(tok)
 
+  def parseRedirectToken(self, tok):
+    m = REDIRECT_PATTERN.match(tok[1])
+    src_num = sys.stdout.fileno()
+    if m.group(1):
+      src_num = int(m.group(1))
+    append = False
+    if m.group(2):
+      append = True
+    dst_num = -1
+    if m.group(3):
+      dst_num = int(m.group(3))
+    if append and dst_num != -1:
+      raise Exception('Can not use both >> and &%d.' % dst_num)
+    return append, src_num, dst_num
+
   def parseProcess(self, tokens, is_last):
     assert tokens
     assert tokens[len(tokens) - 1][0] == EOF
@@ -189,17 +206,22 @@ class Parser(object):
           self.appendToken(tokens[i], arg)
           i += 1
       elif tok[0] == REDIRECT:
-        i += 1
-        if tokens[i][0] == SPACE:
-          # skip space
+        append, src_num, dst_num = self.parseRedirectToken(tok)
+        if dst_num != -1:
+          redirects.append((append, src_num, dst_num))
           i += 1
-        if not self.NotControlToken(tokens[i]):
-          raise Exception('Parse error - No direction target.')
-        target = []
-        redirects.append((tok[1], target))
-        while self.NotControlToken(tokens[i]):
-          self.appendToken(tokens[i], target)
+        else:
           i += 1
+          if tokens[i][0] == SPACE:
+            # skip space
+            i += 1
+          if not self.NotControlToken(tokens[i]):
+            raise Exception('Parse error - No direction target.')
+          target = []
+          redirects.append((append, src_num, target))
+          while self.NotControlToken(tokens[i]):
+            self.appendToken(tokens[i], target)
+            i += 1
       elif tok[0] == SPACE:
         i += 1
       elif tok[0] == EOF:
@@ -283,8 +305,11 @@ class Evaluator(object):
         args.append(self.evalArg(arg, globals, locals))
       redirects = []
       for redirect in proc.redirects:
-        redirects.append((redirect[0],
-                          self.evalArg(redirect[1], globals, locals)))
+        if isinstance(redirect[2], int):
+          redirects.append(redirect)
+        else:
+          redirects.append((redirect[0], redirect[1],
+                            self.evalArg(redirect[2], globals, locals)))
       if not is_last:
         new_r, w = os.pipe()
       pid = os.fork()
@@ -303,15 +328,15 @@ class Evaluator(object):
         if old_r != -1:
           os.dup2(old_r, sys.stdin.fileno())
         for redirect in redirects:
-          if redirect[0] == '>':
-            mode = 'w'
-          elif redirect[0] == '>>':
-            mode = 'a'
+          if isinstance(redirect[2], int):
+            os.dup2(redirect[2], redirect[1])
           else:
-            raise Exception('Unexpected error - '
-                            'invalid redirect: %s' % redirect[0])
-          f = file(redirect[1], mode)
-          os.dup2(f.fileno(), sys.stdout.fileno())
+            if redirect[0]:
+              mode = 'a'  # >>
+            else:
+              mode = 'w'  # >
+            f = file(redirect[2], mode)
+            os.dup2(f.fileno(), redirect[1])
         os.execvp(args[0], args)
     
     while len(pids) > 0:
@@ -319,7 +344,9 @@ class Evaluator(object):
       w = pids.pop(pid)
 
 def main():
-  tok = Tokenizer('cat "$tmp/test.txt" | sed "s/e/*/g" > /tmp/out.txt')
+  # tok = Tokenizer('cat "$tmp/test.txt" | sed "s/e/*/g" > /tmp/out.txt')
+  tok = Tokenizer('python -c "import sys;print \'stdout\';'
+                  'print >> sys.stderr, \'stderr\'" > /dev/null 2>&100')
   parser = Parser(tok)
   evaluator = Evaluator(parser)
   tmp = '/tmp'
