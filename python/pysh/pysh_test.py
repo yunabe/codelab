@@ -1,5 +1,4 @@
 import pysh
-
 from pysh import SPACE
 from pysh import SINGLE_QUOTED_STRING
 from pysh import DOUBLE_QUOTED_STRING
@@ -9,6 +8,9 @@ from pysh import PIPE
 from pysh import LITERAL
 from pysh import EOF
 
+import os
+import shutil
+import tempfile
 import unittest
 
 class TokenizerTest(unittest.TestCase):
@@ -139,6 +141,75 @@ class DoubleQuotedStringExpanderTest(unittest.TestCase):
                        (SUBSTITUTION, '${fg}'),
                        (LITERAL, '\t10'),
                        ], list(expanded))
+
+
+class TempDir(object):
+  def __init__(self):
+    self.path = None
+
+  def __enter__(self):
+    self.path = tempfile.mkdtemp()
+    return self
+
+  def __exit__(self, type, value, traceback):
+    if not self.path:
+      return
+    try:
+      shutil.rmtree(self.path)
+    except OSError, e:
+      if e.errorno != 2:
+        raise
+    self.path = None
+
+
+class RunTest(unittest.TestCase):
+  def setUp(self):
+    self.original_dir = os.getcwd()
+    self.tmpdir = TempDir()
+    self.tmpdir.__enter__()
+    os.chdir(self.tmpdir.path)
+
+  def tearDown(self):
+    self.tmpdir.__exit__(None, None, None)
+    os.chdir(self.original_dir)
+
+  def testRedirect(self):
+    pysh.run('echo foo bar > out.txt', globals(), locals())
+    self.assertEquals('foo bar\n', file('out.txt').read())
+
+  def testAppendRedirect(self):
+    pysh.run('echo foo > out.txt', globals(), locals())
+    pysh.run('echo bar >> out.txt', globals(), locals())
+    self.assertEquals('foo\nbar\n', file('out.txt').read())
+
+  def testPipe(self):
+    file('tmp.txt', 'w').write('a\nb\nc\n')
+    pysh.run('cat tmp.txt | grep -v b > out.txt', globals(), locals())
+    self.assertEquals('a\nc\n', file('out.txt').read())
+
+  def testVar(self):
+    message = 'Hello world.'
+    pysh.run('echo $message > out.txt', globals(), locals())
+    self.assertEquals('Hello world.\n', file('out.txt').read())
+
+  def testGlobalVar(self):
+    pysh.run('echo $__name__ > out.txt', globals(), locals())
+    self.assertEquals('__main__\n', file('out.txt').read())
+
+  def testNumberedRedirect(self):
+    pysh.run('python -c "import sys;'
+             'print >> sys.stderr, \'error\';print \'out\'"'
+             '> stdout.txt 2> stderr.txt',
+             globals(), locals())
+    self.assertEquals('error\n', file('stderr.txt').read())
+    self.assertEquals('out\n', file('stdout.txt').read())
+
+  def testDivertRedirect(self):
+    pysh.run('python -c "import sys;'
+             'print >> sys.stderr, \'error\';print \'out\'"'
+             '>out.txt 2>&1', globals(), locals())
+    self.assertEquals('error\nout\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()

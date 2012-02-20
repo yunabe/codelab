@@ -295,7 +295,6 @@ class Evaluator(object):
     return w.getvalue()
     
   def execute(self, globals, locals):
-    #TODO: Supports redirect.
     pids = {}
     old_r = -1
     for proc in self.__parser.parse():
@@ -343,14 +342,9 @@ class Evaluator(object):
       pid, rc = os.wait()
       w = pids.pop(pid)
 
-def main():
-  # tok = Tokenizer('cat "$tmp/test.txt" | sed "s/e/*/g" > /tmp/out.txt')
-  tok = Tokenizer('python -c "import sys;print \'stdout\';'
-                  'print >> sys.stderr, \'stderr\'" > /dev/null 2>&100')
+def run(cmd_str, globals, locals):
+  tok = Tokenizer(cmd_str)
   parser = Parser(tok)
   evaluator = Evaluator(parser)
-  tmp = '/tmp'
-  evaluator.execute(globals(), locals())
+  evaluator.execute(globals, locals)
 
-if __name__ == '__main__':
-  main()
