@@ -1,4 +1,3 @@
-import __builtin__
 import os
 import re
 import tokenize
@@ -259,6 +258,23 @@ class DoubleQuotedStringExpander(LexerBase):
         return LITERAL, input[:pos]
 
 
+class VarDict(object):
+  def __init__(self, globals, locals):
+    self.__globals = globals
+    self.__locals = locals
+
+  def __getitem__(self, key):
+    if key in self.__locals:
+      return self.__locals[key]
+    if key in self.__globals:
+      return self.__globals[key]
+    if key in os.environ:
+      return os.environ[key]
+    if hasattr(__builtins__, key):
+      return getattr(__builtins__, key)
+    raise KeyError(key)
+
+
 class Evaluator(object):
   def __init__(self, parser):
     self.__parser = parser
@@ -270,16 +286,7 @@ class Evaluator(object):
     else:
       # remove $
       name = value[1:]
-    if name in locals:
-      return locals[name]
-    elif name in globals:
-      return globals[name]
-    elif hasattr(__builtin__, name):
-      return getattr(__builtin__, name)
-    elif name in os.environ:
-      return os.environ[name]
-    else:
-      raise NameError('name \'%s\' is not defined' % name)
+    return eval(name, None, VarDict(globals, locals))
 
   def evalArg(self, arg, globals, locals):
     w = StringIO.StringIO()
@@ -342,6 +349,7 @@ class Evaluator(object):
     while len(pids) > 0:
       pid, rc = os.wait()
       w = pids.pop(pid)
+
 
 def run(cmd_str, globals, locals):
   tok = Tokenizer(cmd_str)
