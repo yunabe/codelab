@@ -336,6 +336,7 @@ class Evaluator(object):
               mode = 'w'  # >
             f = file(redirect[2], mode)
             os.dup2(f.fileno(), redirect[1])
+        # TODO(yunabe): quit a child process if execvp fails.
         os.execvp(args[0], args)
     
     while len(pids) > 0:
