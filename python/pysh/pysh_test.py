@@ -196,6 +196,11 @@ class RunTest(unittest.TestCase):
     pysh.run('echo $__name__ > out.txt', globals(), locals())
     self.assertEquals('__main__\n', file('out.txt').read())
 
+  def testBuiltinVar(self):
+    map_str = str(map)
+    pysh.run('echo $map > out.txt', globals(), locals())
+    self.assertEquals(map_str + '\n', file('out.txt').read())
+
   def testEnvVar(self):
     os.environ['YUNABE_PYSH_TEST_VAR'] = 'foobarbaz'
     pysh.run('echo $YUNABE_PYSH_TEST_VAR > out.txt', globals(), locals())
