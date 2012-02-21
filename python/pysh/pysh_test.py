@@ -196,6 +196,12 @@ class RunTest(unittest.TestCase):
     pysh.run('echo $__name__ > out.txt', globals(), locals())
     self.assertEquals('__main__\n', file('out.txt').read())
 
+  def testStringArgs(self):
+    pysh.run('python -c "import sys;print sys.argv" '
+             '"a b" \'c d\' e f > out.txt', globals(), locals())
+    argv = eval(file('out.txt').read())
+    self.assertEquals(['-c', 'a b', 'c d', 'e', 'f'], argv)
+
   def testNumberedRedirect(self):
     pysh.run('python -c "import sys;'
              'print >> sys.stderr, \'error\';print \'out\'"'
