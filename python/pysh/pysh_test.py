@@ -157,7 +157,7 @@ class TempDir(object):
     try:
       shutil.rmtree(self.path)
     except OSError, e:
-      if e.errorno != 2:
+      if e.errno != 2:
         raise
     self.path = None
 
