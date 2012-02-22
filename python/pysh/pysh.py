@@ -16,6 +16,9 @@ LITERAL = 'literal'
 EOF = 'eof'
 
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
+SPACE_PATTERN = re.compile(r'[ \t]+')
+VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z_][_a-zA-Z0-9]*')
+PIPE_PATTERN = re.compile(r'\|')
 
 class LexerBase(object):
   def is_whitespace(self, c):
@@ -47,7 +50,7 @@ class LexerBase(object):
     return ord('0') <= ordc and ordc <= ord('9')
 
   def extract_var(self, input):
-    assert input and input[0] == '$'
+    assert input and input.startswith('$')
     if len(input) == 1:
       return '$'
     if input[1] == '{':
@@ -102,41 +105,52 @@ class Tokenizer(LexerBase):
         self.__eof = True
         return EOF, ''
 
-    c = input[0]
-    redirect_match = REDIRECT_PATTERN.match(input) 
-    if redirect_match:
-      string = redirect_match.group(0)
+    match = REDIRECT_PATTERN.match(input) 
+    if match:
+      string = match.group(0)
       self.__input = input[len(string):]
       return REDIRECT, string
-    elif self.is_whitespace(c):
-      pos = self.find_char(input, self.is_not_whitespace)
-      assert pos != -1
-      self.__input = input[pos:]
+
+    match = PIPE_PATTERN.match(input)
+    if match:
+      string = match.group(0)
+      self.__input = input[len(string):]
+      return PIPE, string
+
+    match = SPACE_PATTERN.match(input)
+    if match:
+      string = match.group(0)
+      self.__input = input[len(string):]
       return SPACE, ' '
-    elif c == '|':
-      self.__input = input[1:]
-      return PIPE, '|'
-    elif c == '"' or c == '\'':
-      is_double = c == '"'
+
+    match = VARIABLE_PATTERN.match(input)
+    if match:
+      string = match.group(0)
+      self.__input = input[len(string):]
+      return SUBSTITUTION, string
+
+    if input.startswith('"') or input.startswith('\''):
+      is_double = input.startswith('"')
       string = self.extract_string(input)
       self.__input = input[len(string):]
       return (DOUBLE_QUOTED_STRING if is_double else SINGLE_QUOTED_STRING,
               string)
-    elif c == '$':
+    if input.startswith('${'):
       string = self.extract_var(input)
       self.__input = input[len(string):]
-      if string == '$':
-        return LITERAL, string
-      else:
-        return SUBSTITUTION, string
+      return SUBSTITUTION, string
+    if input.startswith('$'):
+      self.__input = input[1:]
+      return LITERAL, '$'
+
+    pos = self.find_char(input, self.is_special)
+    assert pos != 0
+    if pos == -1:
+      self.__input = ''
+      return LITERAL, input
     else:
-      pos = self.find_char(input, self.is_special)
-      if pos == -1:
-        self.__input = ''
-        return LITERAL, input
-      else:
-        self.__input = input[pos:]
-        return LITERAL, input[:pos]
+      self.__input = input[pos:]
+      return LITERAL, input[:pos]
 
 
 class Process(object):
