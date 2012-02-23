@@ -73,19 +73,52 @@ class LexerBase(object):
         raise Exception('bad substitution')
       return input[:pos + 1]
 
-  def extract_string(self, input):
-    toks = tokenize.generate_tokens(StringIO.StringIO(input).readline)
-    tok = toks.next()
-    if tok[0] == token.STRING:
-      return tok[1]
+
+class RegexMather(object):
+  def __init__(self, regex, type):
+    self.__pattern = re.compile(regex)
+    self.__type = type
+
+  def consume(self, input):
+    match = self.__pattern.match(input) 
+    if match:
+      string = match.group(0)
+      self.__input = input[len(string):]
+      return self.__type, string
     else:
-      raise Exception('Wrong string format')
+      return None, None
+
+
+class StringMatcher(object):
+  def consume(self, input):
+    type = None
+    if input.startswith('"'):
+      type = DOUBLE_QUOTED_STRING
+    elif input.startswith('\''):
+      type = SINGLE_QUOTED_STRING
+
+    if type is not None:
+      toks = tokenize.generate_tokens(StringIO.StringIO(input).readline)
+      tok = toks.next()
+      if tok[0] == token.STRING:
+        return type, tok[1]
+      else:
+        raise Exception('Wrong string format')
+    else:
+      return None, None
 
 
 class Tokenizer(LexerBase):
   def __init__(self, input):
     self.__input = input.strip()
     self.__eof = False
+    self.__matchers = [
+      RegexMather(REDIRECT_PATTERN, REDIRECT),
+      RegexMather(PIPE_PATTERN, PIPE),
+      RegexMather(SPACE_PATTERN, SPACE),
+      RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
+      StringMatcher(),
+      ]
 
   def __iter__(self):
     return self
@@ -105,36 +138,15 @@ class Tokenizer(LexerBase):
         self.__eof = True
         return EOF, ''
 
-    match = REDIRECT_PATTERN.match(input) 
-    if match:
-      string = match.group(0)
-      self.__input = input[len(string):]
-      return REDIRECT, string
+    for matcher in self.__matchers:
+      token, string = matcher.consume(input)
+      if token is not None:
+        self.__input = self.__input[len(string):]
+        if token == SPACE:
+          return token, ' '
+        else:
+          return token, string
 
-    match = PIPE_PATTERN.match(input)
-    if match:
-      string = match.group(0)
-      self.__input = input[len(string):]
-      return PIPE, string
-
-    match = SPACE_PATTERN.match(input)
-    if match:
-      string = match.group(0)
-      self.__input = input[len(string):]
-      return SPACE, ' '
-
-    match = VARIABLE_PATTERN.match(input)
-    if match:
-      string = match.group(0)
-      self.__input = input[len(string):]
-      return SUBSTITUTION, string
-
-    if input.startswith('"') or input.startswith('\''):
-      is_double = input.startswith('"')
-      string = self.extract_string(input)
-      self.__input = input[len(string):]
-      return (DOUBLE_QUOTED_STRING if is_double else SINGLE_QUOTED_STRING,
-              string)
     if input.startswith('${'):
       string = self.extract_var(input)
       self.__input = input[len(string):]
