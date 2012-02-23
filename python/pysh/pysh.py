@@ -1,4 +1,5 @@
 import os
+import parser
 import re
 import tokenize
 import token
@@ -19,6 +20,8 @@ REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
 SPACE_PATTERN = re.compile(r'[ \t]+')
 VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z_][_a-zA-Z0-9]*')
 PIPE_PATTERN = re.compile(r'\|')
+SINGLE_DOLLAR_PATTERN = re.compile(r'\$')
+
 
 class LexerBase(object):
   def is_whitespace(self, c):
@@ -108,6 +111,22 @@ class StringMatcher(object):
       return None, None
 
 
+class ExprMatcher(object):
+  def consume(self, input):
+    if not input.startswith('${'):
+      return None, None
+    input = input[2:]
+    try:
+      parser.expr(input)
+      raise Exception('Expected } but EOF found.')
+    except SyntaxError, e:
+      if input[e.offset - 1] != '}':
+        raise
+    expr = input[:e.offset - 1]
+    parser.expr(expr)
+    return SUBSTITUTION, '${%s}' % expr
+      
+
 class Tokenizer(LexerBase):
   def __init__(self, input):
     self.__input = input.strip()
@@ -118,6 +137,8 @@ class Tokenizer(LexerBase):
       RegexMather(SPACE_PATTERN, SPACE),
       RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
       StringMatcher(),
+      ExprMatcher(),
+      RegexMather(SINGLE_DOLLAR_PATTERN, LITERAL),
       ]
 
   def __iter__(self):
@@ -146,14 +167,6 @@ class Tokenizer(LexerBase):
           return token, ' '
         else:
           return token, string
-
-    if input.startswith('${'):
-      string = self.extract_var(input)
-      self.__input = input[len(string):]
-      return SUBSTITUTION, string
-    if input.startswith('$'):
-      self.__input = input[1:]
-      return LITERAL, '$'
 
     pos = self.find_char(input, self.is_special)
     assert pos != 0

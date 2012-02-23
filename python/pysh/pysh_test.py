@@ -84,6 +84,14 @@ class TokenizerTest(unittest.TestCase):
                        (EOF, ''),
                        ], list(tok))
 
+  def testExpression(self):
+    tok = pysh.Tokenizer('echo ${{1: 10}}')
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (SUBSTITUTION, '${{1: 10}}'),
+                       (EOF, ''),
+                       ], list(tok))
+
   def testSubstitutionUnderscore(self):
     tok = pysh.Tokenizer('echo $__init__')
     self.assertEquals([(LITERAL, 'echo'),
@@ -200,6 +208,11 @@ class RunTest(unittest.TestCase):
     map_str = str(map)
     pysh.run('echo $map > out.txt', globals(), locals())
     self.assertEquals(map_str + '\n', file('out.txt').read())
+
+  def testExpression(self):
+    map_str = str(map)
+    pysh.run('echo ${{len("abc") :[3 * 4 + 10]}} > out.txt', globals(), locals())
+    self.assertEquals('{3: [22]}\n', file('out.txt').read())
 
   def testEnvVar(self):
     os.environ['YUNABE_PYSH_TEST_VAR'] = 'foobarbaz'
