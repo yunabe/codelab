@@ -264,6 +264,12 @@ class RunTest(unittest.TestCase):
              globals(), locals())
     self.assertEquals('pycmd\nbaz\npycmd\nbar\nfoo\n', file('out.txt').read())
 
+  def testReceiveData(self):
+    recv = pysh.recv()
+    pysh.run('echo "foo bar" | $recv', globals(), locals())
+    self.assertTrue(isinstance(recv.input, file))
+    self.assertEquals('foo bar\n', recv.input.read())
+
 
 if __name__ == '__main__':
   unittest.main()

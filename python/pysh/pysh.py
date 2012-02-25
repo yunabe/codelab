@@ -323,11 +323,12 @@ def register_pycmd(name, pycmd):
 
 
 def get_pycmd(name):
-  if name in __pycmd_map:
+  if isinstance(name, str) and name in __pycmd_map:
     return __pycmd_map[name]
+  elif hasattr(name, 'process'):
+    return name
   else:
     return None
-
 
 class PyCmdRunner(threading.Thread):
   def __init__(self, pycmd_stack, r, w):
@@ -339,7 +340,10 @@ class PyCmdRunner(threading.Thread):
 
   def run(self):
     # Creates w first to close self.__w for sure.
-    w = os.fdopen(self.__w, 'w')
+    if self.__w != -1:
+      w = os.fdopen(self.__w, 'w')
+    else:
+      w = sys.stdout
     if self.__r == -1:
       out = None
     else:
@@ -368,17 +372,22 @@ class Evaluator(object):
     return eval(name, None, VarDict(globals, locals))
 
   def evalArg(self, arg, globals, locals):
+    assert arg
     w = StringIO.StringIO()
+    values = []
     for tok in arg:
       if tok[0] == LITERAL:
-        w.write(tok[1])
+        values.append(tok[1])
       elif tok[0] == SINGLE_QUOTED_STRING:
-        w.write(eval(tok[1]))
+        values.append(eval(tok[1]))
       elif tok[0] == SUBSTITUTION:
-        w.write(str(self.evalSubstitution(tok[1], globals, locals)))
+        values.append(self.evalSubstitution(tok[1], globals, locals))
       else:
         raise Exception('Unexpected token: %s' % tok[0])
-    return w.getvalue()
+    if len(values) > 1:
+      return ''.join(map(str, values))
+    else:
+      return values[0]
 
   def execute(self, globals, locals):
     pids = {}
@@ -399,7 +408,7 @@ class Evaluator(object):
           redirects.append(redirect)
         else:
           redirects.append((redirect[0], redirect[1],
-                            self.evalArg(redirect[2], globals, locals)))
+                            str(self.evalArg(redirect[2], globals, locals))))
 
       pycmd = get_pycmd(args[0])
       if pycmd:
@@ -444,10 +453,13 @@ class Evaluator(object):
             f = file(redirect[2], mode)
             os.dup2(f.fileno(), redirect[1])
         # TODO(yunabe): quit a child process if execvp fails.
-        os.execvp(args[0], args)
+        str_args = map(str, args)
+        os.execvp(str_args[0], str_args)
 
     if pycmd_stack:
-      raise Exception('pycmd must not be the last command now.')
+      # pycmd is the last command.
+      runner = PyCmdRunner(pycmd_stack, old_r, -1)
+      runners.append(runner)
 
     for runner in runners:
       runner.start()
@@ -457,6 +469,15 @@ class Evaluator(object):
     while len(pids) > 0:
       pid, rc = os.wait()
       w = pids.pop(pid)
+
+
+class recv():
+  def __init__(self):
+    self.input = None
+
+  def process(self, args, input):
+    self.input = input
+    return []
 
 
 def run(cmd_str, globals, locals):
