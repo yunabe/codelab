@@ -13,6 +13,16 @@ import shutil
 import tempfile
 import unittest
 
+class PyCmd(object):
+  def process(self, args, input):
+    for arg in args:
+      yield arg
+    for line in input:
+      yield line.rstrip('\n')
+
+pysh.register_pycmd('pycmd', PyCmd())
+
+
 class TokenizerTest(unittest.TestCase):
   def test0(self):
     tok = pysh.Tokenizer('cat /tmp/www/foo.txt')
@@ -238,6 +248,21 @@ class RunTest(unittest.TestCase):
              'print >> sys.stderr, \'error\';print \'out\'"'
              '>out.txt 2>&1', globals(), locals())
     self.assertEquals('error\nout\n', file('out.txt').read())
+
+  def testPyCmd(self):
+    pysh.run('echo "foo\\nbar" | pycmd a b c | cat > out.txt',
+             globals(), locals())
+    self.assertEquals('pycmd\na\nb\nc\nfoo\nbar\n', file('out.txt').read())
+
+  def testPyCmdSequence(self):
+    pysh.run('echo "foo" | pycmd bar | pycmd baz | cat > out.txt',
+             globals(), locals())
+    self.assertEquals('pycmd\nbaz\npycmd\nbar\nfoo\n', file('out.txt').read())
+
+  def testPyCmdSequence(self):
+    pysh.run('echo "foo" | pycmd bar | pycmd baz | cat > out.txt',
+             globals(), locals())
+    self.assertEquals('pycmd\nbaz\npycmd\nbar\nfoo\n', file('out.txt').read())
 
 
 if __name__ == '__main__':

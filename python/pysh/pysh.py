@@ -6,6 +6,7 @@ import token
 import StringIO
 import subprocess
 import sys
+import threading
 
 SPACE = 'space'
 SINGLE_QUOTED_STRING = 'single_quoted'
@@ -314,6 +315,45 @@ class VarDict(object):
     raise KeyError(key)
 
 
+__pycmd_map = {}
+
+
+def register_pycmd(name, pycmd):
+  __pycmd_map[name] = pycmd
+
+
+def get_pycmd(name):
+  if name in __pycmd_map:
+    return __pycmd_map[name]
+  else:
+    return None
+
+
+class PyCmdRunner(threading.Thread):
+  def __init__(self, pycmd_stack, r, w):
+    threading.Thread.__init__(self)
+    assert pycmd_stack
+    self.__pycmd_stack = pycmd_stack
+    self.__r = r
+    self.__w = w
+
+  def run(self):
+    # Creates w first to close self.__w for sure.
+    w = os.fdopen(self.__w, 'w')
+    if self.__r == -1:
+      out = None
+    else:
+      out = os.fdopen(self.__r, 'r')
+    for pycmd, args, redirects in self.__pycmd_stack:
+      if redirects:
+        raise Exception('redirect with pycmd is not supported yet.')
+      out = pycmd.process(args, out)
+
+    for data in out:
+      w.write(str(data) + '\n')
+      w.flush()  # can be inefficient.
+
+
 class Evaluator(object):
   def __init__(self, parser):
     self.__parser = parser
@@ -339,10 +379,15 @@ class Evaluator(object):
       else:
         raise Exception('Unexpected token: %s' % tok[0])
     return w.getvalue()
-    
+
   def execute(self, globals, locals):
     pids = {}
     old_r = -1
+    pycmd_stack = []
+    runners = []
+    # We need to store list of write-fd for runners to close them
+    # in child process!!
+    runner_wfd = []  
     for proc in self.__parser.parse():
       is_last = proc.is_last
       args = []
@@ -355,6 +400,20 @@ class Evaluator(object):
         else:
           redirects.append((redirect[0], redirect[1],
                             self.evalArg(redirect[2], globals, locals)))
+
+      pycmd = get_pycmd(args[0])
+      if pycmd:
+        pycmd_stack.append((pycmd, args, redirects))
+        continue
+
+      if pycmd_stack:
+        new_r, w = os.pipe()
+        runner = PyCmdRunner(pycmd_stack, old_r, w)
+        runners.append(runner)
+        runner_wfd.append(w)
+        old_r = new_r
+        pycmd_stack = []
+
       if not is_last:
         new_r, w = os.pipe()
       pid = os.fork()
@@ -368,6 +427,8 @@ class Evaluator(object):
         if not is_last:
           old_r = new_r
       else:
+        for fd in runner_wfd:
+          os.close(fd)
         if not is_last:
           os.dup2(w, sys.stdout.fileno())
         if old_r != -1:
@@ -384,7 +445,15 @@ class Evaluator(object):
             os.dup2(f.fileno(), redirect[1])
         # TODO(yunabe): quit a child process if execvp fails.
         os.execvp(args[0], args)
-    
+
+    if pycmd_stack:
+      raise Exception('pycmd must not be the last command now.')
+
+    for runner in runners:
+      runner.start()
+    for runner in runners:      
+      runner.join()
+
     while len(pids) > 0:
       pid, rc = os.wait()
       w = pids.pop(pid)
