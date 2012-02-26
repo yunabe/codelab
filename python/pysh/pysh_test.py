@@ -270,6 +270,11 @@ class RunTest(unittest.TestCase):
     self.assertTrue(isinstance(recv.input, file))
     self.assertEquals('foo bar\n', recv.input.read())
 
+  def testSendData(self):
+    data = ['foo', 'bar', 'baz']
+    pysh.run('send $data | sort > out.txt', globals(), locals())
+    self.assertEquals('bar\nbaz\nfoo\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()

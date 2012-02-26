@@ -471,7 +471,14 @@ class Evaluator(object):
       w = pids.pop(pid)
 
 
-class recv():
+class send(object):
+  def process(self, args, input):
+    assert len(args) > 1
+    return args[1]
+
+register_pycmd('send', send())
+
+class recv(object):
   def __init__(self):
     self.input = None
 
