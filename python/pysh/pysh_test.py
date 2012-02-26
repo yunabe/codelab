@@ -282,6 +282,22 @@ class RunTest(unittest.TestCase):
     pysh.run('send $data | sort > out.txt', globals(), locals())
     self.assertEquals('bar\nbaz\nfoo\n', file('out.txt').read())
 
+  def testMapCmd(self):
+    pysh.run('echo "1\\n2\\n3\\n4\\n5" | map ${lambda l: int(l)} |'
+             'map ${lambda x: x * x} | cat > out.txt', globals(), locals())
+    self.assertEquals('1\n4\n9\n16\n25\n', file('out.txt').read())
+
+  def testFilterCmd(self):
+    pysh.run('echo "cupcake\\ndonut\\nfroyo\\nginger" |'
+             'filter ${lambda l: "e" in l} | cat > out.txt',
+             globals(), locals())
+    self.assertEquals('cupcake\n\nginger\n\n', file('out.txt').read())
+
+  def testReduceCmd(self):
+    pysh.run('echo "foo\\nbar" | reduce ${lambda x, y: x.strip() + y.strip()} |'
+             'cat > out.txt', globals(), locals())
+    self.assertEquals('foobar\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()

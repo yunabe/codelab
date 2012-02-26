@@ -471,26 +471,52 @@ class Evaluator(object):
       w = pids.pop(pid)
 
 
-class send(object):
+class pycmd_send(object):
   def process(self, args, input):
-    assert len(args) > 1
+    assert len(args) == 2
     return args[1]
 
 
-class recv(object):
-  def __init__(self):
-    self.input = None
-
+class pycmd_recv(object):
   def process(self, args, input):
-    assert len(args) > 1
+    assert len(args) == 2
     l = args[1]
     assert isinstance(l, list)
     l.extend(input)
     return []
 
 
-register_pycmd('send', send())
-register_pycmd('recv', recv())
+class pycmd_map(object):
+  def process(self, args, input):
+    assert len(args) == 2
+    f = args[1]
+    assert callable(f)
+    return (f(x) for x in input)
+
+
+class pycmd_filter(object):
+  def process(self, args, input):
+    assert len(args) == 2
+    cond = args[1]
+    assert callable(cond)
+    for x in input:
+      if cond(x):
+        yield x
+
+
+class pycmd_reduce(object):
+  def process(self, args, input):
+    assert len(args) == 2
+    f = args[1]
+    assert callable(f)
+    return [reduce(f, input)]
+
+
+register_pycmd('send', pycmd_send())
+register_pycmd('recv', pycmd_recv())
+register_pycmd('map', pycmd_map())
+register_pycmd('filter', pycmd_filter())
+register_pycmd('reduce', pycmd_reduce())
 
 
 def run(cmd_str, globals, locals):
