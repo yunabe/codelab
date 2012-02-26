@@ -476,15 +476,21 @@ class send(object):
     assert len(args) > 1
     return args[1]
 
-register_pycmd('send', send())
 
 class recv(object):
   def __init__(self):
     self.input = None
 
   def process(self, args, input):
-    self.input = input
+    assert len(args) > 1
+    l = args[1]
+    assert isinstance(l, list)
+    l.extend(input)
     return []
+
+
+register_pycmd('send', send())
+register_pycmd('recv', recv())
 
 
 def run(cmd_str, globals, locals):

@@ -264,11 +264,18 @@ class RunTest(unittest.TestCase):
              globals(), locals())
     self.assertEquals('pycmd\nbaz\npycmd\nbar\nfoo\n', file('out.txt').read())
 
+  def testPyCmdInVar(self):
+    class Tmp(object):
+      def process(self, args, input):
+        return ['tmp', 19]
+    tmp = Tmp()
+    pysh.run('$tmp | cat > out.txt', globals(), locals())
+    self.assertEquals('tmp\n19\n', file('out.txt').read())
+
   def testReceiveData(self):
-    recv = pysh.recv()
-    pysh.run('echo "foo bar" | $recv', globals(), locals())
-    self.assertTrue(isinstance(recv.input, file))
-    self.assertEquals('foo bar\n', recv.input.read())
+    out = []
+    pysh.run('echo "foo\\nbar" | recv $out', globals(), locals())
+    self.assertEquals(['foo\n', 'bar\n'], out)
 
   def testSendData(self):
     data = ['foo', 'bar', 'baz']
