@@ -1,3 +1,4 @@
+import csv
 import os
 import parser
 import re
@@ -512,11 +513,17 @@ class pycmd_reduce(object):
     return [reduce(f, input)]
 
 
+class pycmd_readcsv(object):
+  def process(self, args, input):
+    return csv.reader(input)
+
+
 register_pycmd('send', pycmd_send())
 register_pycmd('recv', pycmd_recv())
 register_pycmd('map', pycmd_map())
 register_pycmd('filter', pycmd_filter())
 register_pycmd('reduce', pycmd_reduce())
+register_pycmd('readcsv', pycmd_readcsv())
 
 
 def run(cmd_str, globals, locals):

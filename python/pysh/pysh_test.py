@@ -298,6 +298,14 @@ class RunTest(unittest.TestCase):
              'cat > out.txt', globals(), locals())
     self.assertEquals('foobar\n', file('out.txt').read())
 
+  def testReadCvsCmd(self):
+    pysh.run('echo \'a,b,"c,"\' > in.txt', globals(), locals())
+    pysh.run('echo \'e,"f","""g"""\' >> in.txt', globals(), locals())
+    pysh.run('cat in.txt | readcsv |'
+             'map ${lambda row: row[2]} | cat > out.txt',
+             globals(), locals())
+    self.assertEquals('c,\n"g"\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()
