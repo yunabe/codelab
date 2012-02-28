@@ -254,10 +254,10 @@ class RunTest(unittest.TestCase):
              globals(), locals())
     self.assertEquals('pycmd\na\nb\nc\nfoo\nbar\n', file('out.txt').read())
 
-  def testPyCmdSequence(self):
-    pysh.run('echo "foo" | pycmd bar | pycmd baz | cat > out.txt',
+  def testPyCmdRedirect(self):
+    pysh.run('echo "foo" | pycmd a b c > out.txt',
              globals(), locals())
-    self.assertEquals('pycmd\nbaz\npycmd\nbar\nfoo\n', file('out.txt').read())
+    self.assertEquals('pycmd\na\nb\nc\nfoo\n', file('out.txt').read())
 
   def testPyCmdSequence(self):
     pysh.run('echo "foo" | pycmd bar | pycmd baz | cat > out.txt',
@@ -269,7 +269,7 @@ class RunTest(unittest.TestCase):
       def process(self, args, input):
         return ['tmp', 19]
     tmp = Tmp()
-    pysh.run('$tmp | cat > out.txt', globals(), locals())
+    pysh.run('$tmp > out.txt', globals(), locals())
     self.assertEquals('tmp\n19\n', file('out.txt').read())
 
   def testReceiveData(self):
@@ -284,12 +284,12 @@ class RunTest(unittest.TestCase):
 
   def testMapCmd(self):
     pysh.run('echo "1\\n2\\n3\\n4\\n5" | map ${lambda l: int(l)} |'
-             'map ${lambda x: x * x} | cat > out.txt', globals(), locals())
+             'map ${lambda x: x * x} > out.txt', globals(), locals())
     self.assertEquals('1\n4\n9\n16\n25\n', file('out.txt').read())
 
   def testFilterCmd(self):
     pysh.run('echo "cupcake\\ndonut\\nfroyo\\nginger" |'
-             'filter ${lambda l: "e" in l} | cat > out.txt',
+             'filter ${lambda l: "e" in l} > out.txt',
              globals(), locals())
     self.assertEquals('cupcake\n\nginger\n\n', file('out.txt').read())
 
@@ -302,7 +302,7 @@ class RunTest(unittest.TestCase):
     pysh.run('echo \'a,b,"c,"\' > in.txt', globals(), locals())
     pysh.run('echo \'e,"f","""g"""\' >> in.txt', globals(), locals())
     pysh.run('cat in.txt | readcsv |'
-             'map ${lambda row: row[2]} | cat > out.txt',
+             'map ${lambda row: row[2]} > out.txt',
              globals(), locals())
     self.assertEquals('c,\n"g"\n', file('out.txt').read())
 

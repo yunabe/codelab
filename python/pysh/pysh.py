@@ -349,9 +349,23 @@ class PyCmdRunner(threading.Thread):
       out = None
     else:
       out = os.fdopen(self.__r, 'r')
-    for pycmd, args, redirects in self.__pycmd_stack:
+    for i, (pycmd, args, redirects) in enumerate(self.__pycmd_stack):
       if redirects:
-        raise Exception('redirect with pycmd is not supported yet.')
+        if w is not sys.stdout or i != len(self.__pycmd_stack) - 1:
+          raise Exception('redirect with pycmd is allowed '
+                          'only when it is the last.')
+        if len(redirects) != 1:
+          raise Exception('multi-redirect with pycmd is not allowed.')
+
+        redirect = redirects[0]
+        if isinstance(redirect[2], int):
+          raise Exception('Redirect to another file descriptor is not allowed.')
+        if redirect[0]:
+          mode = 'a'  # >>
+        else:
+          mode = 'w'  # >
+        w = file(redirect[2], mode)
+
       out = pycmd.process(args, out)
 
     for data in out:
