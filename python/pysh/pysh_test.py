@@ -110,6 +110,25 @@ class TokenizerTest(unittest.TestCase):
                        (EOF, ''),
                        ], list(tok))
 
+  def testPipe(self):
+    tok = pysh.Tokenizer('cat | /tmp/out')
+    self.assertEquals([(LITERAL, 'cat'),
+                       (SPACE, ' '),
+                       (PIPE, '|'),
+                       (SPACE, ' '),
+                       (LITERAL, '/tmp/out'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testPipeWithoutSpace(self):
+    tok = pysh.Tokenizer('cat|/tmp/out')
+    self.assertEquals([(LITERAL, 'cat'),
+                       (PIPE, '|'),
+                       (LITERAL, '/tmp/out'),
+                       (EOF, ''),
+                       ], list(tok))
+
+
   def testRedirect(self):
     tok = pysh.Tokenizer('echo a>/tmp/out')
     self.assertEquals([(LITERAL, 'echo'),

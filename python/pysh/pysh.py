@@ -105,6 +105,8 @@ class Tokenizer(object):
       return True
     if c == '>':
       return True
+    if c == '|':
+      return True
 
   def next(self):
     input = self.__input
