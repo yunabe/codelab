@@ -25,60 +25,6 @@ PIPE_PATTERN = re.compile(r'\|')
 SINGLE_DOLLAR_PATTERN = re.compile(r'\$')
 
 
-class LexerBase(object):
-  def is_whitespace(self, c):
-    return ord(c) <= ord(' ')
-
-  def is_not_whitespace(self, c):
-    return not self.is_whitespace(c)
-
-  def is_special(self, c):
-    if self.is_whitespace(c):
-      return True
-    if c == '$':
-      return True
-    if c == '>':
-      return True
-
-  def is_alphabet(self, c):
-    if c == '_':
-      return True
-    ordc = ord(c)
-    if ord('a') <= ordc and ordc <= ord('z'):
-      return True
-    if ord('A') <= ordc and ordc <= ord('Z'):
-      return True
-    return False
-
-  def is_digit(self, c):
-    ordc = ord(c)
-    return ord('0') <= ordc and ordc <= ord('9')
-
-  def extract_var(self, input):
-    assert input and input.startswith('$')
-    if len(input) == 1:
-      return '$'
-    if input[1] == '{':
-      brace = True
-      pos = 2
-    else:
-      brace = False
-      pos = 1
-    first_char = True
-    while pos < len(input) and (
-      (first_char and self.is_alphabet(input[pos])) or
-      (not first_char and (self.is_alphabet(input[pos]) or
-                           self.is_digit(input[pos])))):
-      first_char = False
-      pos += 1
-    if not brace:
-      return input[:pos]
-    else:
-      if not pos < len(input) or input[pos] != '}':
-        raise Exception('bad substitution')
-      return input[:pos + 1]
-
-
 class RegexMather(object):
   def __init__(self, regex, type):
     self.__pattern = re.compile(regex)
@@ -129,7 +75,7 @@ class ExprMatcher(object):
     return SUBSTITUTION, '${%s}' % expr
       
 
-class Tokenizer(LexerBase):
+class Tokenizer(object):
   def __init__(self, input):
     self.__input = input.strip()
     self.__eof = False
@@ -151,6 +97,14 @@ class Tokenizer(LexerBase):
       if cond(c):
         return i
     return -1
+
+  def is_special(self, c):
+    if ord(c) <= ord(' '):  # whitespace
+      return True
+    if c == '$':
+      return True
+    if c == '>':
+      return True
 
   def next(self):
     input = self.__input
@@ -271,7 +225,7 @@ class Parser(object):
     return Process(args, redirects, is_last)
       
 
-class DoubleQuotedStringExpander(LexerBase):
+class DoubleQuotedStringExpander(object):
   def __init__(self, input):
     self.__input = input
     self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION)
