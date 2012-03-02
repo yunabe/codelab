@@ -151,13 +151,14 @@ class TokenizerTest(unittest.TestCase):
 
 class DoubleQuotedStringExpanderTest(unittest.TestCase):
   def test(self):
-    tok = pysh.Tokenizer('echo "apple pie. a$bc e${fg}\t10"')
-    expanded = pysh.DoubleQuotedStringExpander('apple pie. a$bc e${fg}\t10')
+    expanded = pysh.DoubleQuotedStringExpander(
+      'apple pie. a$bc e${fg}\t10 ${{1: "3}"}}')
     self.assertEquals([(LITERAL, 'apple pie. a'),
                        (SUBSTITUTION, '$bc'),
                        (LITERAL, ' e'),
                        (SUBSTITUTION, '${fg}'),
-                       (LITERAL, '\t10'),
+                       (LITERAL, '\t10 '),
+                       (SUBSTITUTION, '${{1: "3}"}}'),
                        ], list(expanded))
 
 

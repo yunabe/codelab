@@ -274,7 +274,9 @@ class Parser(object):
 class DoubleQuotedStringExpander(LexerBase):
   def __init__(self, input):
     self.__input = input
-
+    self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION)
+    self.__expr_matcher = ExprMatcher()
+    
   def __iter__(self):
     return self
 
@@ -283,12 +285,13 @@ class DoubleQuotedStringExpander(LexerBase):
     if not input:
       raise StopIteration()
     if input[0] == '$':
-      string = self.extract_var(input)
+      token, string = self.__var_matcher.consume(input)
+      if token is None:
+        token, string = self.__expr_matcher.consume(input)
+      if token is None:
+        token, string = LITERAL, '$'
       self.__input = input[len(string):]
-      if string == '$':
-        return LITERAL, string
-      else:
-        return SUBSTITUTION, string
+      return token, string
     else:
       pos = input.find('$')
       if pos == -1:
