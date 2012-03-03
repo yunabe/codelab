@@ -16,6 +16,10 @@ SUBSTITUTION = 'substitution'
 REDIRECT = 'redirect'
 PIPE = 'pipe'
 LITERAL = 'literal'
+AND_OP = 'andop'
+OR_OP = 'orop'
+PARENTHESIS_START = 'parenthesis_start'
+PARENTHESIS_END = 'parenthesis_end'
 EOF = 'eof'
 
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
@@ -23,6 +27,10 @@ SPACE_PATTERN = re.compile(r'[ \t]+')
 VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z_][_a-zA-Z0-9]*')
 PIPE_PATTERN = re.compile(r'\|')
 SINGLE_DOLLAR_PATTERN = re.compile(r'\$')
+AND_OPERATOR_PATTERN = re.compile(r'&&')
+PARENTHESIS_START_PATTERN = re.compile(r'\(')
+PARENTHESIS_END_PATTERN = re.compile(r'\)')
+OR_OPERATOR_PATTERN = re.compile(r'\|\|')
 
 
 class RegexMather(object):
@@ -81,7 +89,11 @@ class Tokenizer(object):
     self.__eof = False
     self.__matchers = [
       RegexMather(REDIRECT_PATTERN, REDIRECT),
+      RegexMather(AND_OPERATOR_PATTERN, AND_OP),
+      RegexMather(OR_OPERATOR_PATTERN, OR_OP),  # should precede PIPE_PATTERN
       RegexMather(PIPE_PATTERN, PIPE),
+      RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START),
+      RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END),
       RegexMather(SPACE_PATTERN, SPACE),
       RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
       StringMatcher(),
@@ -106,6 +118,12 @@ class Tokenizer(object):
     if c == '>':
       return True
     if c == '|':
+      return True
+    if c == '&':
+      return True
+    if c == '(':
+      return True
+    if c == ')':
       return True
 
   def next(self):
@@ -223,7 +241,7 @@ class Parser(object):
       elif tok[0] == EOF:
         break
       else:
-        raise Exception('Unexpected error.')
+        raise Exception('Unexpected token: %s' % tok[0])
     return Process(args, redirects, is_last)
       
 

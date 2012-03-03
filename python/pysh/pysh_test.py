@@ -6,6 +6,10 @@ from pysh import SUBSTITUTION
 from pysh import REDIRECT
 from pysh import PIPE
 from pysh import LITERAL
+from pysh import AND_OP
+from pysh import OR_OP
+from pysh import PARENTHESIS_START
+from pysh import PARENTHESIS_END
 from pysh import EOF
 
 import os
@@ -166,6 +170,35 @@ class TokenizerTest(unittest.TestCase):
                        (DOUBLE_QUOTED_STRING, '"def"'),
                        (EOF, ''),
                        ], list(tok))
+
+  def testAndOrOperator(self):
+    tok = pysh.Tokenizer('foo && bar || a&&b||c')
+    self.assertEquals([(LITERAL, 'foo'),
+                       (SPACE, ' '),
+                       (AND_OP, '&&'),
+                       (SPACE, ' '),
+                       (LITERAL, 'bar'),
+                       (SPACE, ' '),
+                       (OR_OP, '||'),
+                       (SPACE, ' '),
+                       (LITERAL, 'a'),
+                       (AND_OP, '&&'),
+                       (LITERAL, 'b'),
+                       (OR_OP, '||'),
+                       (LITERAL, 'c'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testParenthesis(self):
+    tok = pysh.Tokenizer('() a(b)')
+    self.assertEquals([(PARENTHESIS_START, '('),
+                       (PARENTHESIS_END, ')'),
+                       (SPACE, ' '),
+                       (LITERAL, 'a'),
+                       (PARENTHESIS_START, '('),
+                       (LITERAL, 'b'),
+                       (PARENTHESIS_END, ')'),
+                       ('eof', '')], list(tok))
 
 
 class DoubleQuotedStringExpanderTest(unittest.TestCase):
