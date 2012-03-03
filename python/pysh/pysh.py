@@ -43,9 +43,9 @@ class RegexMather(object):
     if match:
       string = match.group(0)
       self.__input = input[len(string):]
-      return self.__type, string
+      return self.__type, string, len(string)
     else:
-      return None, None
+      return None, None, 0
 
 
 class StringMatcher(object):
@@ -60,17 +60,17 @@ class StringMatcher(object):
       toks = tokenize.generate_tokens(StringIO.StringIO(input).readline)
       tok = toks.next()
       if tok[0] == token.STRING:
-        return type, tok[1]
+        return type, tok[1], len(tok[1])
       else:
         raise Exception('Wrong string format')
     else:
-      return None, None
+      return None, None, 0
 
 
 class ExprMatcher(object):
   def consume(self, input):
     if not input.startswith('${'):
-      return None, None
+      return None, None, 0
     input = input[2:]
     try:
       parser.expr(input)
@@ -80,7 +80,8 @@ class ExprMatcher(object):
         raise
     expr = input[:e.offset - 1]
     parser.expr(expr)
-    return SUBSTITUTION, '${%s}' % expr
+    string = '${%s}' % expr
+    return SUBSTITUTION, string, len(string)
       
 
 class Tokenizer(object):
@@ -140,9 +141,9 @@ class Tokenizer(object):
         return EOF, ''
 
     for matcher in self.__matchers:
-      token, string = matcher.consume(input)
+      token, string, consumed = matcher.consume(input)
       if token is not None:
-        self.__input = self.__input[len(string):]
+        self.__input = self.__input[consumed:]
         if token == SPACE:
           return token, ' '
         else:
@@ -263,12 +264,12 @@ class DoubleQuotedStringExpander(object):
     if not input:
       raise StopIteration()
     if input[0] == '$':
-      token, string = self.__var_matcher.consume(input)
+      token, string, consumed = self.__var_matcher.consume(input)
       if token is None:
-        token, string = self.__expr_matcher.consume(input)
+        token, string, consumed = self.__expr_matcher.consume(input)
       if token is None:
-        token, string = LITERAL, '$'
-      self.__input = input[len(string):]
+        token, string, consumed = LITERAL, '$', 1
+      self.__input = input[consumed:]
       return token, string
     else:
       pos = input.find('$')
