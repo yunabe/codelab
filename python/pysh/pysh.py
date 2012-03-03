@@ -127,6 +127,10 @@ class Tokenizer(object):
       return True
 
   def next(self):
+    self.cur = self.__next()
+    return self.cur
+
+  def __next(self):
     input = self.__input
     if not input:
       if self.__eof:
