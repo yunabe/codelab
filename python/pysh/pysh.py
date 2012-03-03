@@ -34,18 +34,29 @@ OR_OPERATOR_PATTERN = re.compile(r'\|\|')
 
 
 class RegexMather(object):
-  def __init__(self, regex, type):
+  def __init__(self, regex, type, ignore_space):
     self.__pattern = re.compile(regex)
     self.__type = type
+    self.__ignore_space = ignore_space
 
   def consume(self, input):
+    consumed = 0
+    if self.__ignore_space:
+      match = SPACE_PATTERN.match(input)
+      if match:
+        consumed += match.end()
+        input = input[match.end():]
     match = self.__pattern.match(input) 
-    if match:
-      string = match.group(0)
-      self.__input = input[len(string):]
-      return self.__type, string, len(string)
-    else:
+    if not match:
       return None, None, 0
+    string = match.group(0)
+    consumed += len(string)
+    input = input[len(string):]
+    if self.__ignore_space:
+      match = SPACE_PATTERN.match(input)
+      if match:
+        consumed += match.end()
+    return self.__type, string, consumed
 
 
 class StringMatcher(object):
@@ -82,24 +93,25 @@ class ExprMatcher(object):
     parser.expr(expr)
     string = '${%s}' % expr
     return SUBSTITUTION, string, len(string)
-      
+
 
 class Tokenizer(object):
   def __init__(self, input):
     self.__input = input.strip()
     self.__eof = False
     self.__matchers = [
-      RegexMather(REDIRECT_PATTERN, REDIRECT),
-      RegexMather(AND_OPERATOR_PATTERN, AND_OP),
-      RegexMather(OR_OPERATOR_PATTERN, OR_OP),  # should precede PIPE_PATTERN
-      RegexMather(PIPE_PATTERN, PIPE),
-      RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START),
-      RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END),
-      RegexMather(SPACE_PATTERN, SPACE),
-      RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
+      RegexMather(REDIRECT_PATTERN, REDIRECT, True),
+      RegexMather(AND_OPERATOR_PATTERN, AND_OP, True),
+      # should precede PIPE_PATTERN
+      RegexMather(OR_OPERATOR_PATTERN, OR_OP, True),
+      RegexMather(PIPE_PATTERN, PIPE, True),
+      RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START, True),
+      RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END, True),
       StringMatcher(),
+      RegexMather(VARIABLE_PATTERN, SUBSTITUTION, False),
       ExprMatcher(),
-      RegexMather(SINGLE_DOLLAR_PATTERN, LITERAL),
+      RegexMather(SINGLE_DOLLAR_PATTERN, LITERAL, False),
+      RegexMather(SPACE_PATTERN, SPACE, False),
       ]
 
   def __iter__(self):
@@ -253,7 +265,7 @@ class Parser(object):
 class DoubleQuotedStringExpander(object):
   def __init__(self, input):
     self.__input = input
-    self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION)
+    self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION, False)
     self.__expr_matcher = ExprMatcher()
     
   def __iter__(self):

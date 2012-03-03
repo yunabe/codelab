@@ -13,6 +13,7 @@ from pysh import PARENTHESIS_END
 from pysh import EOF
 
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -25,6 +26,44 @@ class PyCmd(object):
       yield line.rstrip('\n')
 
 pysh.register_pycmd('pycmd', PyCmd())
+
+
+class RegexMatherTest(unittest.TestCase):
+  def test(self):
+    pattern = re.compile(r'abc')
+    matcher = pysh.RegexMather(pattern, LITERAL, False)
+
+    type, string, consumed = matcher.consume('abcdefg')
+    self.assertEquals(type, LITERAL)
+    self.assertEquals(string, 'abc')
+    self.assertEquals(consumed, 3)
+
+    type, string, consumed = matcher.consume('abc defg')
+    self.assertEquals(type, LITERAL)
+    self.assertEquals(string, 'abc')
+    self.assertEquals(consumed, 3)
+
+    type, _, _ = matcher.consume(' abcdefg')
+    self.assertTrue(type is None)
+
+  def testIgnoreSpace(self):
+    pattern = re.compile(r'abc')
+    matcher = pysh.RegexMather(pattern, LITERAL, True)
+
+    type, string, consumed = matcher.consume('abcdefg')
+    self.assertEquals(type, LITERAL)
+    self.assertEquals(string, 'abc')
+    self.assertEquals(consumed, 3)
+
+    type, string, consumed = matcher.consume('abc  defg')
+    self.assertEquals(type, LITERAL)
+    self.assertEquals(string, 'abc')
+    self.assertEquals(consumed, 5)
+
+    type, string, consumed = matcher.consume('  abcdefg')
+    self.assertEquals(type, LITERAL)
+    self.assertEquals(string, 'abc')
+    self.assertEquals(consumed, 5)
 
 
 class TokenizerTest(unittest.TestCase):
@@ -61,14 +100,29 @@ class TokenizerTest(unittest.TestCase):
                        ], list(tok))
 
   def testSubstitution(self):
-    tok = pysh.Tokenizer('echo $a$b$c')
+    tok = pysh.Tokenizer('echo $a$b/$c')
     self.assertEquals([(LITERAL, 'echo'),
                        (SPACE, ' '),
                        (SUBSTITUTION, '$a'),
                        (SUBSTITUTION, '$b'),
+                       (LITERAL, '/'),
                        (SUBSTITUTION, '$c'),
                        (EOF, ''),
                        ], list(tok))
+
+  def testSubstitutionWithSpace(self):
+    tok = pysh.Tokenizer('echo $a $b /$c')
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (SUBSTITUTION, '$a'),
+                       (SPACE, ' '),
+                       (SUBSTITUTION, '$b'),
+                       (SPACE, ' '),
+                       (LITERAL, '/'),
+                       (SUBSTITUTION, '$c'),
+                       (EOF, ''),
+                       ], list(tok))
+
 
   def testSubstitutionWithoutSpace(self):
     tok = pysh.Tokenizer('echo hoge$a')
@@ -117,9 +171,7 @@ class TokenizerTest(unittest.TestCase):
   def testPipe(self):
     tok = pysh.Tokenizer('cat | /tmp/out')
     self.assertEquals([(LITERAL, 'cat'),
-                       (SPACE, ' '),
                        (PIPE, '|'),
-                       (SPACE, ' '),
                        (LITERAL, '/tmp/out'),
                        (EOF, ''),
                        ], list(tok))
@@ -174,13 +226,9 @@ class TokenizerTest(unittest.TestCase):
   def testAndOrOperator(self):
     tok = pysh.Tokenizer('foo && bar || a&&b||c')
     self.assertEquals([(LITERAL, 'foo'),
-                       (SPACE, ' '),
                        (AND_OP, '&&'),
-                       (SPACE, ' '),
                        (LITERAL, 'bar'),
-                       (SPACE, ' '),
                        (OR_OP, '||'),
-                       (SPACE, ' '),
                        (LITERAL, 'a'),
                        (AND_OP, '&&'),
                        (LITERAL, 'b'),
@@ -193,7 +241,6 @@ class TokenizerTest(unittest.TestCase):
     tok = pysh.Tokenizer('() a(b)')
     self.assertEquals([(PARENTHESIS_START, '('),
                        (PARENTHESIS_END, ')'),
-                       (SPACE, ' '),
                        (LITERAL, 'a'),
                        (PARENTHESIS_START, '('),
                        (LITERAL, 'b'),
