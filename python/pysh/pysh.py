@@ -464,6 +464,7 @@ class Evaluator(object):
     self.evalAst(ast, [], procs)
     procs_queue = [procs]
 
+    # TODO: Improve task parallelism.
     while procs_queue:
       procs = procs_queue[0]
       procs_queue = procs_queue[1:]
