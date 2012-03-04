@@ -357,6 +357,7 @@ def get_pycmd(name):
   else:
     return None
 
+# TODO: handle exception in run correctly.
 class PyCmdRunner(threading.Thread):
   def __init__(self, pycmd_stack, r, w):
     threading.Thread.__init__(self)
@@ -364,6 +365,13 @@ class PyCmdRunner(threading.Thread):
     self.__pycmd_stack = pycmd_stack
     self.__r = r
     self.__w = w
+    self.ok = False
+
+  def dependencies(self):
+    result = []
+    for _, _, _, dependency in self.__pycmd_stack:
+      result.append(dependency)
+    return result
 
   def run(self):
     # Creates w first to close self.__w for sure.
@@ -375,7 +383,7 @@ class PyCmdRunner(threading.Thread):
       out = None
     else:
       out = os.fdopen(self.__r, 'r')
-    for i, (pycmd, args, redirects) in enumerate(self.__pycmd_stack):
+    for i, (pycmd, args, redirects, _) in enumerate(self.__pycmd_stack):
       if redirects:
         if w is not sys.stdout or i != len(self.__pycmd_stack) - 1:
           raise Exception('redirect with pycmd is allowed '
@@ -397,6 +405,7 @@ class PyCmdRunner(threading.Thread):
     for data in out:
       w.write(str(data) + '\n')
       w.flush()  # can be inefficient.
+    self.ok = True
 
 
 class Evaluator(object):
@@ -451,16 +460,40 @@ class Evaluator(object):
   def execute(self, globals, locals):
     pids = {}
     ast = self.__parser.parse()
-    pycmd_runners = []
     procs = []
     self.evalAst(ast, [], procs)
-    self.executeProcs(procs, globals, locals, pids, pycmd_runners)
+    procs_queue = [procs]
 
-    for runner in pycmd_runners:
-      runner.join()
-    while len(pids) > 0:
-      pid, rc = os.wait()
-      pids.pop(pid)
+    while procs_queue:
+      procs = procs_queue[0]
+      procs_queue = procs_queue[1:]
+      pycmd_runners = []
+      self.executeProcs(procs, globals, locals, pids, pycmd_runners)
+
+      for runner in pycmd_runners:
+        runner.join()
+        for dependency in runner.dependencies():
+          new_procs = self.continueFromDependency(runner.ok, dependency)
+          if new_procs:
+            procs_queue.append(new_procs)
+
+      while len(pids) > 0:
+        pid, rc = os.wait()
+        ok = rc == 0
+        dependency = pids.pop(pid)
+        new_procs = self.continueFromDependency(ok, dependency)
+        if new_procs:
+          procs_queue.append(new_procs)
+
+  def continueFromDependency(self, ok, dependency_stack):
+    if not dependency_stack:
+      return None
+    op, _, right = dependency_stack.pop()
+    if (ok == True and op == '||') or (ok == False and op == '&&'):
+      return None
+    procs = []
+    self.evalAst(right, dependency_stack, procs)
+    return procs
 
   def executeProcs(self, procs, globals, locals, pids, pycmd_runners):
     old_r = -1
@@ -483,7 +516,7 @@ class Evaluator(object):
 
       pycmd = get_pycmd(args[0])
       if pycmd:
-        pycmd_stack.append((pycmd, args, redirects))
+        pycmd_stack.append((pycmd, args, redirects, dependency))
         continue
 
       if pycmd_stack:

@@ -468,6 +468,41 @@ class RunTest(unittest.TestCase):
              globals(), locals())
     self.assertEquals('c,\n"g"\n', file('out.txt').read())
 
+  def testAnd(self):
+    pysh.run('echo hoge >> out.txt && echo piyo >> out.txt',
+             globals(), locals())
+    self.assertEquals('hoge\npiyo\n', file('out.txt').read())
+
+  def testOr(self):
+    pysh.run('echo hoge >> out.txt || echo piyo >> out.txt',
+             globals(), locals())
+    self.assertEquals('hoge\n', file('out.txt').read())
+
+  def testAndNot(self):
+    pysh.run('python -c "import sys;sys.exit(1)" > out.txt && '
+             'echo foo >> out.txt', globals(), locals())
+    self.assertEquals('', file('out.txt').read())
+
+  def testOrNot(self):
+    pysh.run('python -c "import sys;sys.exit(1)" > out.txt || '
+             'echo foo >> out.txt', globals(), locals())
+    self.assertEquals('foo\n', file('out.txt').read())
+
+  def testAndPyCmd(self):
+    class Tmp(object):
+      def process(self, args, input):
+        return ['tmp']
+    tmp = Tmp()
+    pysh.run('$tmp > out.txt && echo foo >> out.txt', globals(), locals())
+    self.assertEquals('tmp\nfoo\n', file('out.txt').read())
+
+  def testOrPyCmd(self):
+    class Tmp(object):
+      def process(self, args, input):
+        return ['tmp']
+    tmp = Tmp()
+    pysh.run('$tmp > out.txt || echo foo >> out.txt', globals(), locals())
+    self.assertEquals('tmp\n', file('out.txt').read())
 
 if __name__ == '__main__':
   unittest.main()
