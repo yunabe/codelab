@@ -450,15 +450,24 @@ class Evaluator(object):
 
   def execute(self, globals, locals):
     pids = {}
+    ast = self.__parser.parse()
+    pycmd_runners = []
+    procs = []
+    self.evalAst(ast, [], procs)
+    self.executeProcs(procs, globals, locals, pids, pycmd_runners)
+
+    for runner in pycmd_runners:
+      runner.join()
+    while len(pids) > 0:
+      pid, rc = os.wait()
+      pids.pop(pid)
+
+  def executeProcs(self, procs, globals, locals, pids, pycmd_runners):
     old_r = -1
     pycmd_stack = []
-    runners = []
     # We need to store list of write-fd for runners to close them
     # in child process!!
     runner_wfd = []
-    ast = self.__parser.parse()
-    procs = []
-    self.evalAst(ast, [], procs)
     for i, (proc, dependency) in enumerate(procs):
       is_last = i == len(procs) - 1
       args = []
@@ -480,7 +489,7 @@ class Evaluator(object):
       if pycmd_stack:
         new_r, w = os.pipe()
         runner = PyCmdRunner(pycmd_stack, old_r, w)
-        runners.append(runner)
+        pycmd_runners.append(runner)
         runner_wfd.append(w)
         old_r = new_r
         pycmd_stack = []
@@ -494,7 +503,7 @@ class Evaluator(object):
           os.close(w)
         if old_r != -1:
           os.close(old_r)
-        pids[pid] = w if not is_last else None
+        pids[pid] = dependency
         if not is_last:
           old_r = new_r
       else:
@@ -521,16 +530,10 @@ class Evaluator(object):
     if pycmd_stack:
       # pycmd is the last command.
       runner = PyCmdRunner(pycmd_stack, old_r, -1)
-      runners.append(runner)
+      pycmd_runners.append(runner)
 
-    for runner in runners:
+    for runner in pycmd_runners:
       runner.start()
-    for runner in runners:      
-      runner.join()
-
-    while len(pids) > 0:
-      pid, rc = os.wait()
-      w = pids.pop(pid)
 
 
 class pycmd_send(object):
