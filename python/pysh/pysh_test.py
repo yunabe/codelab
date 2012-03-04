@@ -504,5 +504,22 @@ class RunTest(unittest.TestCase):
     pysh.run('$tmp > out.txt || echo foo >> out.txt', globals(), locals())
     self.assertEquals('tmp\n', file('out.txt').read())
 
+  def testAndNotPyCmd(self):
+    class Tmp(object):
+      def process(self, args, input):
+        raise Exception('Error!')
+    tmp = Tmp()
+    pysh.run('$tmp > out.txt && echo foo >> out.txt', globals(), locals())
+    self.assertEquals('', file('out.txt').read())
+
+  def testOrNotPyCmd(self):
+    class Tmp(object):
+      def process(self, args, input):
+        raise Exception('Error!')
+    tmp = Tmp()
+    pysh.run('$tmp > out.txt || echo foo >> out.txt', globals(), locals())
+    self.assertEquals('foo\n', file('out.txt').read())
+
+
 if __name__ == '__main__':
   unittest.main()
