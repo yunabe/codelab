@@ -280,6 +280,68 @@ class TempDir(object):
     self.path = None
 
 
+class ParserTest(unittest.TestCase):
+  def test(self):
+    input = 'echo hoge$foo || echo piyo && cat'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertEquals(3, len(ast))
+    self.assertEquals('&&', ast[0])
+    self.assertEquals(3, len(ast[1]))
+    self.assertEquals('||', ast[1][0])
+    proc0 = ast[1][1]
+    self.assertTrue(isinstance(proc0, pysh.Process))
+    self.assertEquals([[('literal', 'echo')],
+                       [('literal', 'hoge'), ('substitution', '$foo')]],
+                      proc0.args)
+    self.assertFalse(proc0.redirects)
+    proc1 = ast[1][2]
+    self.assertTrue(isinstance(proc1, pysh.Process))
+    self.assertEquals([[('literal', 'echo')], [('literal', 'piyo')]],
+                      proc1.args)
+    self.assertFalse(proc1.redirects)
+    proc2 = ast[2]
+    self.assertTrue(isinstance(proc2, pysh.Process))
+    self.assertEquals([[('literal', 'cat')]], proc2.args)
+    self.assertFalse(proc2.redirects)
+
+
+class EvalTest(unittest.TestCase):
+  def getAst(self, cmd):
+    tok = pysh.Tokenizer(cmd)
+    parser = pysh.Parser(tok)
+    return parser.parse()
+
+  def testConditionInPipe(self):
+    evalator = pysh.Evaluator(None)
+    ast = self.getAst('((foo || bar) && baz) | qux')
+    procs = []
+    evalator.evalAst(ast, [], procs)
+    self.assertEquals(2, len(procs))
+    self.assertTrue('foo', procs[0][0].args[0])
+    dependency_stack = procs[0][1]
+    self.assertEquals(2, len(dependency_stack))
+    self.assertTrue('||', dependency_stack[0][0])
+    self.assertTrue('&&', dependency_stack[0][1])
+    self.assertTrue('qux', procs[1][0].args[0])
+
+  def testPipeInCondition(self):
+    evalator = pysh.Evaluator(None)
+    ast = self.getAst('((foo || bar) | baz) && qux')
+    procs = []
+    evalator.evalAst(ast, [], procs)
+    self.assertEquals(2, len(procs))
+
+    self.assertTrue('foo', procs[0][0].args[0])
+    dependency_stack = procs[0][1]
+    self.assertEquals(1, len(dependency_stack))
+    self.assertTrue('||', dependency_stack[0][0])
+
+    self.assertTrue('baz', procs[1][0].args[0])
+    dependency_stack = procs[1][1]
+    self.assertEquals(1, len(dependency_stack))
+    self.assertTrue('&&', dependency_stack[0][0])
+
 class RunTest(unittest.TestCase):
   def setUp(self):
     self.original_dir = os.getcwd()

@@ -172,10 +172,15 @@ class Tokenizer(object):
 
 
 class Process(object):
-  def __init__(self, args, redirects, is_last):
+  def __init__(self, args, redirects):
     self.args = args
     self.redirects = redirects
-    self.is_last = is_last
+
+  def __str__(self):
+    return '<Process(args=%s, redirects=%s)>' % (self.args, self.redirects)
+
+  def __repr__(self):
+    return str(self)
 
 
 class Parser(object):
@@ -183,29 +188,72 @@ class Parser(object):
     self.__tokenizer = tokenizer
 
   def parse(self):
-    token_stack = []
-    for tok in self.__tokenizer:
-      if tok[0] == PIPE or tok[0] == EOF:
-        if not token_stack:
-          raise Exception('Parse error - pipe without command.')
-        token_stack.append((EOF, ''))
-        proc = self.parseProcess(token_stack, tok[0] == EOF)
-        token_stack = []
-        yield proc
+    tok, string = self.__tokenizer.next()
+    return self.parseExpr()
+
+  def parseExpr(self):
+    left = None
+    op = None
+    while True:
+      piped = self.parsePiped()
+      if left:
+        left = (op, left, piped)
       else:
-        token_stack.append(tok)
+        left = piped
+      tok, _ = self.__tokenizer.cur
+      if tok == AND_OP:
+        op = '&&'
+        self.__tokenizer.next()
+      elif tok == OR_OP:
+        op = '||'
+        self.__tokenizer.next()
+      else:
+        return left
 
-  def NotControlToken(self, tok):
-    return (tok[0] == LITERAL or
-            tok[0] == SINGLE_QUOTED_STRING or
-            tok[0] == DOUBLE_QUOTED_STRING or
-            tok[0] == SUBSTITUTION)
-
-  def appendToken(self, tok, tokens):
-    if tok[0] == DOUBLE_QUOTED_STRING:
-      tokens.extend(DoubleQuotedStringExpander(eval(tok[1])))
+  def parsePiped(self):
+    left = None
+    while True:
+      cmd = self.parseCmd()
+      left = ('|', left, cmd) if left else cmd
+      tok, _ = self.__tokenizer.cur
+      if tok != PIPE:
+        return left
+      else:
+        self.__tokenizer.next()
+ 
+  def parseCmd(self):
+    tok, _ = self.__tokenizer.cur
+    if tok == PARENTHESIS_START:
+      self.__tokenizer.next()
+      expr = self.parseExpr()
+      tok, _ = self.__tokenizer.cur
+      if tok != PARENTHESIS_END:
+        raise Exception('Parenthesis mismatch')
+      self.__tokenizer.next()
+      return expr
     else:
-      tokens.append(tok)
+      return self.parseProcess()
+
+  def parseProcess(self):
+    args = []
+    redirects = []
+    args.append(self.parseArg())
+    while True:
+      tok, string = self.__tokenizer.cur
+      if tok == SPACE:
+        self.__tokenizer.next()
+        args.append(self.parseArg())
+      elif tok == REDIRECT:
+        append, src_num, dst_num = self.parseRedirectToken((tok, string))
+        self.__tokenizer.next()
+        if dst_num != -1:
+          redirects.append((append, src_num, dst_num))
+        else:
+          target = self.parseArg()
+          redirects.append((append, src_num, target))
+      else:
+        break
+    return Process(args, redirects)
 
   def parseRedirectToken(self, tok):
     m = REDIRECT_PATTERN.match(tok[1])
@@ -222,45 +270,29 @@ class Parser(object):
       raise Exception('Can not use both >> and &%d.' % dst_num)
     return append, src_num, dst_num
 
-  def parseProcess(self, tokens, is_last):
-    assert tokens
-    assert tokens[len(tokens) - 1][0] == EOF
-    args = []
-    redirects = []
-    i = 0
-    while True:
-      tok = tokens[i]
-      if self.NotControlToken(tok):
-        arg = []
-        args.append(arg)
-        while self.NotControlToken(tokens[i]):
-          self.appendToken(tokens[i], arg)
-          i += 1
-      elif tok[0] == REDIRECT:
-        append, src_num, dst_num = self.parseRedirectToken(tok)
-        if dst_num != -1:
-          redirects.append((append, src_num, dst_num))
-          i += 1
-        else:
-          i += 1
-          if tokens[i][0] == SPACE:
-            # skip space
-            i += 1
-          if not self.NotControlToken(tokens[i]):
-            raise Exception('Parse error - No direction target.')
-          target = []
-          redirects.append((append, src_num, target))
-          while self.NotControlToken(tokens[i]):
-            self.appendToken(tokens[i], target)
-            i += 1
-      elif tok[0] == SPACE:
-        i += 1
-      elif tok[0] == EOF:
-        break
-      else:
-        raise Exception('Unexpected token: %s' % tok[0])
-    return Process(args, redirects, is_last)
-      
+  def parseArg(self):
+    tok, string = self.__tokenizer.cur
+    result = []
+    while self.isArgToken(tok):
+      self.appendToken((tok, string), result)
+      self.__tokenizer.next()
+      tok, string = self.__tokenizer.cur
+    if not result:
+      raise Exception('Unexpected token: %s: %s' % (tok, string))
+    return result
+
+  def isArgToken(self, tok):
+    return (tok == LITERAL or
+            tok == SINGLE_QUOTED_STRING or
+            tok == DOUBLE_QUOTED_STRING or
+            tok == SUBSTITUTION)
+
+  def appendToken(self, tok, tokens):
+    if tok[0] == DOUBLE_QUOTED_STRING:
+      tokens.extend(DoubleQuotedStringExpander(eval(tok[1])))
+    else:
+      tokens.append(tok)
+
 
 class DoubleQuotedStringExpander(object):
   def __init__(self, input):
@@ -371,6 +403,24 @@ class Evaluator(object):
   def __init__(self, parser):
     self.__parser = parser
 
+  def evalAst(self, ast, dependency_stack, out):
+    if isinstance(ast, Process):
+      out.append((ast, dependency_stack))
+    elif isinstance(ast, tuple) or isinstance(ast, list):
+      if len(ast) != 3:
+        raise Exception('Invalid AST format. Wrong length.')
+      op = ast[0]
+      if op == '&&' or op == '||':
+        dependency_stack.append(ast)
+        self.evalAst(ast[1], dependency_stack, out)
+      elif op == '|':
+        self.evalAst(ast[1], [], out)
+        self.evalAst(ast[2], dependency_stack, out)
+      else:
+        raise Exception('Unknown operator: %s' % op)
+    else:
+      raise Exception('Invalid AST format.')
+
   def evalSubstitution(self, value, globals, locals):
     if value.startswith('${'):
       # remove ${ and }
@@ -405,9 +455,12 @@ class Evaluator(object):
     runners = []
     # We need to store list of write-fd for runners to close them
     # in child process!!
-    runner_wfd = []  
-    for proc in self.__parser.parse():
-      is_last = proc.is_last
+    runner_wfd = []
+    ast = self.__parser.parse()
+    procs = []
+    self.evalAst(ast, [], procs)
+    for i, (proc, dependency) in enumerate(procs):
+      is_last = i == len(procs) - 1
       args = []
       for arg in proc.args:
         args.append(self.evalArg(arg, globals, locals))
