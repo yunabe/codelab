@@ -487,11 +487,12 @@ class Evaluator(object):
           procs_queue.append(new_procs)
 
   def continueFromDependency(self, ok, dependency_stack):
-    if not dependency_stack:
-      return None
-    op, _, right = dependency_stack.pop()
-    if (ok == True and op == '||') or (ok == False and op == '&&'):
-      return None
+    while True:
+      if not dependency_stack:
+        return None
+      op, _, right = dependency_stack.pop()
+      if (ok == True and op == '&&') or (ok == False and op == '||'):
+        break
     procs = []
     self.evalAst(right, dependency_stack, procs)
     return procs

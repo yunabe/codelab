@@ -478,6 +478,16 @@ class RunTest(unittest.TestCase):
              globals(), locals())
     self.assertEquals('hoge\n', file('out.txt').read())
 
+  def testOrAnd(self):
+    pysh.run('(echo foo >> out.txt || echo bar >> out.txt) && '
+             'echo baz >> out.txt', globals(), locals())
+    self.assertEquals('foo\nbaz\n', file('out.txt').read())
+
+  def testAndOr(self):
+    pysh.run('(python -c "import sys;sys.exit(1)" >> out.txt && echo bar) || '
+             'echo baz >> out.txt)', globals(), locals())
+    self.assertEquals('baz\n', file('out.txt').read())
+
   def testAndNot(self):
     pysh.run('python -c "import sys;sys.exit(1)" > out.txt && '
              'echo foo >> out.txt', globals(), locals())
