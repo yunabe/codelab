@@ -560,6 +560,18 @@ class RunTest(unittest.TestCase):
     pysh.run('$tmp > out.txt || echo foo >> out.txt', globals(), locals())
     self.assertEquals('foo\n', file('out.txt').read())
 
+  def testReturnCode(self):
+    rc = pysh.run('rc <- echo foo >> /dev/null', globals(), locals())
+    self.assertEquals(1, len(rc))
+    self.assertEquals(0, rc['rc'])
+
+  def testReturnCodeMulti(self):
+    rc = pysh.run('(rc0 <- echo foo >> /dev/null) && '
+                  '(rc1 <- echo bar >> /dev/null)', globals(), locals())
+    self.assertEquals(2, len(rc))
+    self.assertEquals(0, rc['rc0'])
+    self.assertEquals(0, rc['rc1'])
+
 
 if __name__ == '__main__':
   unittest.main()

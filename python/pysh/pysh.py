@@ -440,6 +440,10 @@ class PyCmdRunner(threading.Thread):
 class Evaluator(object):
   def __init__(self, parser):
     self.__parser = parser
+    self.__rc = {}
+
+  def rc(self):
+    return self.__rc
 
   def evalAst(self, ast, dependency_stack, out):
     if isinstance(ast, Process):
@@ -453,6 +457,9 @@ class Evaluator(object):
         self.evalAst(ast[1], dependency_stack, out)
       elif op == '|':
         self.evalAst(ast[1], [], out)
+        self.evalAst(ast[2], dependency_stack, out)
+      elif op == '<-':
+        dependency_stack.append(ast)
         self.evalAst(ast[2], dependency_stack, out)
       else:
         raise Exception('Unknown operator: %s' % op)
@@ -519,12 +526,18 @@ class Evaluator(object):
     while True:
       if not dependency_stack:
         return None
-      op, _, right = dependency_stack.pop()
-      if (ok == True and op == '&&') or (ok == False and op == '||'):
-        break
+      op, left, right = dependency_stack.pop()
+      if op == '<-':
+        self.storeReturnCode(left, 0 if ok else 1)
+      else:
+        if (ok == True and op == '&&') or (ok == False and op == '||'):
+          break
     procs = []
     self.evalAst(right, dependency_stack, procs)
     return procs
+
+  def storeReturnCode(self, name, rc):
+    self.__rc[name] = rc
 
   def executeProcs(self, procs, globals, locals, pids, pycmd_runners):
     old_r = -1
@@ -659,3 +672,4 @@ def run(cmd_str, globals, locals):
   parser = Parser(tok)
   evaluator = Evaluator(parser)
   evaluator.execute(globals, locals)
+  return evaluator.rc()
