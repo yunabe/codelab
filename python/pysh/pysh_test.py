@@ -5,6 +5,7 @@ from pysh import DOUBLE_QUOTED_STRING
 from pysh import SUBSTITUTION
 from pysh import REDIRECT
 from pysh import PIPE
+from pysh import LEFT_ARROW
 from pysh import LITERAL
 from pysh import AND_OP
 from pysh import OR_OP
@@ -247,6 +248,18 @@ class TokenizerTest(unittest.TestCase):
                        (PARENTHESIS_END, ')'),
                        ('eof', '')], list(tok))
 
+  def testLeftArrow(self):
+    tok = pysh.Tokenizer('x<-echo')
+    self.assertEquals([(LITERAL, 'x'),
+                       (LEFT_ARROW, '<-'),
+                       (LITERAL, 'echo'),
+                       (EOF, '')], list(tok))
+    tok = pysh.Tokenizer('x <- echo')
+    self.assertEquals([(LITERAL, 'x'),
+                       (LEFT_ARROW, '<-'),
+                       (LITERAL, 'echo'),
+                       (EOF, '')], list(tok))
+
 
 class DoubleQuotedStringExpanderTest(unittest.TestCase):
   def test(self):
@@ -341,6 +354,23 @@ class EvalTest(unittest.TestCase):
     dependency_stack = procs[1][1]
     self.assertEquals(1, len(dependency_stack))
     self.assertTrue('&&', dependency_stack[0][0])
+
+  def testLeftArrow(self):
+    ast = self.getAst('rc <- echo foo | cat')
+    self.assertEquals(3, len(ast))
+    self.assertEquals('<-', ast[0])
+    self.assertEquals('rc', ast[1])
+    self.assertEquals('|', ast[2][0])
+
+  def testLeftArrowInParenthesis(self):
+    ast = self.getAst('(rc <- echo foo) | cat')
+    self.assertEquals(3, len(ast))
+    self.assertEquals('|', ast[0])
+    ast = ast[1]
+    self.assertEquals(3, len(ast))
+    self.assertEquals('<-', ast[0])
+    self.assertEquals('rc', ast[1])
+
 
 class RunTest(unittest.TestCase):
   def setUp(self):

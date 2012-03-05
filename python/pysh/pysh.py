@@ -15,6 +15,7 @@ DOUBLE_QUOTED_STRING = 'double_quoted'
 SUBSTITUTION = 'substitution'
 REDIRECT = 'redirect'
 PIPE = 'pipe'
+LEFT_ARROW = 'left_arrow'
 LITERAL = 'literal'
 AND_OP = 'andop'
 OR_OP = 'orop'
@@ -24,13 +25,16 @@ EOF = 'eof'
 
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
 SPACE_PATTERN = re.compile(r'[ \t]+')
-VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z_][_a-zA-Z0-9]*')
+VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z][_a-zA-Z0-9]*')
 PIPE_PATTERN = re.compile(r'\|')
+LEFT_ARROW_PATTERN = re.compile(r'<-')
 SINGLE_DOLLAR_PATTERN = re.compile(r'\$')
 AND_OPERATOR_PATTERN = re.compile(r'&&')
 PARENTHESIS_START_PATTERN = re.compile(r'\(')
 PARENTHESIS_END_PATTERN = re.compile(r'\)')
 OR_OPERATOR_PATTERN = re.compile(r'\|\|')
+
+PYTHON_VARIABLE_PATTERN = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
 
 
 class RegexMather(object):
@@ -105,6 +109,7 @@ class Tokenizer(object):
       # should precede PIPE_PATTERN
       RegexMather(OR_OPERATOR_PATTERN, OR_OP, True),
       RegexMather(PIPE_PATTERN, PIPE, True),
+      RegexMather(LEFT_ARROW_PATTERN, LEFT_ARROW, True),
       RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START, True),
       RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END, True),
       StringMatcher(),
@@ -129,6 +134,8 @@ class Tokenizer(object):
     if c == '$':
       return True
     if c == '>':
+      return True
+    if c == '<':
       return True
     if c == '|':
       return True
@@ -191,7 +198,29 @@ class Parser(object):
     tok, string = self.__tokenizer.next()
     return self.parseExpr()
 
+  def validateLeftForAssign(self, left):
+    if (not isinstance(left, Process) or
+        len(left.args) != 1 or len(left.args[0]) != 1):
+      return None
+    tok, string = left.args[0][0]
+    if tok == LITERAL and PYTHON_VARIABLE_PATTERN.match(string):
+      return string
+    else:
+      return None
+
   def parseExpr(self):
+    left = self.parseAndOrTest()
+    tok, _ = self.__tokenizer.cur
+    if tok != LEFT_ARROW:
+      return left
+    self.__tokenizer.next()
+    left = self.validateLeftForAssign(left)
+    if not left:
+      raise Exception('Bad left-value format for assign.')
+    right = self.parseAndOrTest()
+    return ('<-', left, right)
+
+  def parseAndOrTest(self):
     left = None
     op = None
     while True:
