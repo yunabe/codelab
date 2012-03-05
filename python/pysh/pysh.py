@@ -21,6 +21,7 @@ AND_OP = 'andop'
 OR_OP = 'orop'
 PARENTHESIS_START = 'parenthesis_start'
 PARENTHESIS_END = 'parenthesis_end'
+SEMICOLON = 'semicolon'
 EOF = 'eof'
 
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
@@ -33,6 +34,7 @@ AND_OPERATOR_PATTERN = re.compile(r'&&')
 PARENTHESIS_START_PATTERN = re.compile(r'\(')
 PARENTHESIS_END_PATTERN = re.compile(r'\)')
 OR_OPERATOR_PATTERN = re.compile(r'\|\|')
+SEMICOLON_PATTERN = re.compile(r';')
 
 PYTHON_VARIABLE_PATTERN = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
 
@@ -112,6 +114,7 @@ class Tokenizer(object):
       RegexMather(LEFT_ARROW_PATTERN, LEFT_ARROW, True),
       RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START, True),
       RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END, True),
+      RegexMather(SEMICOLON_PATTERN, SEMICOLON, True),
       StringMatcher(),
       RegexMather(VARIABLE_PATTERN, SUBSTITUTION, False),
       ExprMatcher(),
@@ -144,6 +147,8 @@ class Tokenizer(object):
     if c == '(':
       return True
     if c == ')':
+      return True
+    if c == ';':
       return True
 
   def next(self):

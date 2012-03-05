@@ -11,6 +11,7 @@ from pysh import AND_OP
 from pysh import OR_OP
 from pysh import PARENTHESIS_START
 from pysh import PARENTHESIS_END
+from pysh import SEMICOLON
 from pysh import EOF
 
 import os
@@ -246,7 +247,7 @@ class TokenizerTest(unittest.TestCase):
                        (PARENTHESIS_START, '('),
                        (LITERAL, 'b'),
                        (PARENTHESIS_END, ')'),
-                       ('eof', '')], list(tok))
+                       (EOF, '')], list(tok))
 
   def testLeftArrow(self):
     tok = pysh.Tokenizer('x<-echo')
@@ -258,6 +259,22 @@ class TokenizerTest(unittest.TestCase):
     self.assertEquals([(LITERAL, 'x'),
                        (LEFT_ARROW, '<-'),
                        (LITERAL, 'echo'),
+                       (EOF, '')], list(tok))
+
+  def testSemicolon(self):
+    tok = pysh.Tokenizer('a;b;')
+    self.assertEquals([(LITERAL, 'a'),
+                       (SEMICOLON, ';'),
+                       (LITERAL, 'b'),
+                       (SEMICOLON, ';'),
+                       (EOF, '')], list(tok))
+
+  def testSemicolonWithSpace(self):
+    tok = pysh.Tokenizer('a ; b ; ')
+    self.assertEquals([(LITERAL, 'a'),
+                       (SEMICOLON, ';'),
+                       (LITERAL, 'b'),
+                       (SEMICOLON, ';'),
                        (EOF, '')], list(tok))
 
 
