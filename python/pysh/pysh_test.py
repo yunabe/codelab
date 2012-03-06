@@ -598,6 +598,11 @@ class RunTest(unittest.TestCase):
     self.assertEquals(0, rc['rc0'])
     self.assertEquals(0, rc['rc1'])
 
+  def testSemiColon(self):
+    rc = pysh.run('echo foo >> out.txt; echo bar >> out.txt',
+                  globals(), locals())
+    self.assertEquals('foo\nbar\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()

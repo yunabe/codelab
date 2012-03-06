@@ -470,7 +470,7 @@ class Evaluator(object):
       if len(ast) != 3:
         raise Exception('Invalid AST format. Wrong length.')
       op = ast[0]
-      if op == '&&' or op == '||':
+      if op == '&&' or op == '||' or op == ';':
         dependency_stack.append(ast)
         self.evalAst(ast[1], dependency_stack, out)
       elif op == '|':
@@ -548,7 +548,9 @@ class Evaluator(object):
       if op == '<-':
         self.storeReturnCode(left, 0 if ok else 1)
       else:
-        if (ok == True and op == '&&') or (ok == False and op == '||'):
+        if (op == ';' or
+            (op == '&&' and ok == True) or
+            (op == '||' and ok == False)):
           break
     procs = []
     self.evalAst(right, dependency_stack, procs)
