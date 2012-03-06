@@ -203,6 +203,19 @@ class Parser(object):
     tok, string = self.__tokenizer.next()
     return self.parseExpr()
 
+  def parseExpr(self):
+    left = None
+    while True:
+      assign = self.parseAssign()
+      left = (';', left, assign) if left else assign
+      tok, _ = self.__tokenizer.cur
+      if tok != SEMICOLON:
+        return left
+      self.__tokenizer.next()
+      tok, _ = self.__tokenizer.cur
+      if tok == EOF or tok == PARENTHESIS_END:
+        return left
+
   def validateLeftForAssign(self, left):
     if (not isinstance(left, Process) or
         len(left.args) != 1 or len(left.args[0]) != 1):
@@ -213,7 +226,7 @@ class Parser(object):
     else:
       return None
 
-  def parseExpr(self):
+  def parseAssign(self):
     left = self.parseAndOrTest()
     tok, _ = self.__tokenizer.cur
     if tok != LEFT_ARROW:

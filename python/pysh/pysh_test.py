@@ -335,6 +335,15 @@ class ParserTest(unittest.TestCase):
     self.assertEquals([[('literal', 'cat')]], proc2.args)
     self.assertFalse(proc2.redirects)
 
+  def testSemicolon(self):
+    input = 'echo; cat;'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertEquals(3, len(ast))
+    self.assertEquals(';', ast[0])
+    self.assertTrue(isinstance(ast[1], pysh.Process))
+    self.assertTrue(isinstance(ast[2], pysh.Process))
+
 
 class EvalTest(unittest.TestCase):
   def getAst(self, cmd):
