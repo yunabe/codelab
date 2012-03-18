@@ -622,7 +622,11 @@ class Evaluator(object):
             os.dup2(f.fileno(), redirect[1])
         # TODO(yunabe): quit a child process if execvp fails.
         str_args = map(str, args)
-        os.execvp(str_args[0], str_args)
+        try:
+          os.execvp(str_args[0], str_args)
+        except Exception, e:
+          print >> sys.stderr, e
+          os._exit(1)
 
     if pycmd_stack:
       # pycmd is the last command.
