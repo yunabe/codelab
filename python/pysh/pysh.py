@@ -686,12 +686,19 @@ class pycmd_readcsv(object):
     return csv.reader(input)
 
 
+class pycmd_cd(object):
+  def process(self, args, input):
+    assert len(args) == 2
+    os.chdir(args[1])
+
+
 register_pycmd('send', pycmd_send())
 register_pycmd('recv', pycmd_recv())
 register_pycmd('map', pycmd_map())
 register_pycmd('filter', pycmd_filter())
 register_pycmd('reduce', pycmd_reduce())
 register_pycmd('readcsv', pycmd_readcsv())
+register_pycmd('cd', pycmd_cd())
 
 
 def run(cmd_str, globals, locals):

@@ -608,6 +608,10 @@ class RunTest(unittest.TestCase):
     path = os.path.expanduser('~/test.txt')
     self.assertEquals(path + '\n', file('out.txt').read())
 
+  def testChangeDir(self):
+    rc = pysh.run('cd /dev', globals(), locals())
+    self.assertEquals('/dev', os.getcwd())
+
 
 if __name__ == '__main__':
   unittest.main()
