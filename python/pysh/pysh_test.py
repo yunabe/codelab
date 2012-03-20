@@ -603,6 +603,11 @@ class RunTest(unittest.TestCase):
                   globals(), locals())
     self.assertEquals('foo\nbar\n', file('out.txt').read())
 
+  def testExpandUser(self):
+    rc = pysh.run('echo ~/test.txt > out.txt', globals(), locals())
+    path = os.path.expanduser('~/test.txt')
+    self.assertEquals(path + '\n', file('out.txt').read())
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -507,9 +507,12 @@ class Evaluator(object):
       else:
         raise Exception('Unexpected token: %s' % tok[0])
     if len(values) > 1:
-      return ''.join(map(str, values))
+      result = ''.join(map(str, values))
     else:
-      return values[0]
+      result = values[0]
+    if isinstance(result, str):
+      result = os.path.expanduser(result)
+    return result
 
   def execute(self, globals, locals):
     pids = {}
