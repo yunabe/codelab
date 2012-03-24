@@ -690,6 +690,7 @@ class pycmd_cd(object):
   def process(self, args, input):
     assert len(args) == 2
     os.chdir(args[1])
+    return ()
 
 
 register_pycmd('send', pycmd_send())
