@@ -277,6 +277,49 @@ class TokenizerTest(unittest.TestCase):
                        (SEMICOLON, ';'),
                        (EOF, '')], list(tok))
 
+class AliasTest(unittest.TestCase):
+  def test(self):
+    alias_map = {'ls': ('ls -la', False)}
+    tok = pysh.Tokenizer('ls /tmp/www/foo.txt', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'ls'),
+                       (SPACE, ' '),
+                       (LITERAL, '-la'),
+                       (SPACE, ' '),
+                       (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testWithSubstitution(self):
+    alias_map = {'ls': ('ls -la', False)}
+    tok = pysh.Tokenizer('ls$x', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'ls'),
+                       (SUBSTITUTION, '$x'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testNotGlobal(self):
+    alias_map = {'ls': ('ls -la', False)}
+    tok = pysh.Tokenizer('echo ls /tmp/www/foo.txt', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (LITERAL, 'ls'),
+                       (SPACE, ' '),
+                       (LITERAL, '/tmp/www/foo.txt'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testGlobal(self):
+    alias_map = {'GR': ('| grep', True)}
+    tok = pysh.Tokenizer('ls GR py', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'ls'),
+                       (SPACE, ' '),  # need remove
+                       (PIPE, '|'),
+                       (LITERAL, 'grep'),
+                       (SPACE, ' '),
+                       (LITERAL, 'py'),
+                       (EOF, ''),
+                       ], list(tok))
+
 
 class DoubleQuotedStringExpanderTest(unittest.TestCase):
   def test(self):

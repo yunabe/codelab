@@ -102,9 +102,16 @@ class ExprMatcher(object):
 
 
 class Tokenizer(object):
-  def __init__(self, input):
+  def __init__(self, input,
+               global_alias_only=False, alias_map=None, alias_history=None):
+    self.cur = None
+    self.prev = None
     self.__input = input.strip()
+    self.__global_alias_only = global_alias_only
+    self.__tokens = []
+    self.__alias_map = alias_map
     self.__eof = False
+    self.__alias_history = alias_history or set()
     self.__matchers = [
       RegexMather(REDIRECT_PATTERN, REDIRECT, True),
       RegexMather(AND_OPERATOR_PATTERN, AND_OP, True),
@@ -152,10 +159,57 @@ class Tokenizer(object):
       return True
 
   def next(self):
-    self.cur = self.__next()
+    self.prev = self.cur
+    if self.__tokens:
+      self.cur = self.__tokens[0]
+      self.__tokens = self.__tokens[1:]
+    else:
+      self.cur = self.__next_exalias()
+    self.__global_alias_only = True
     return self.cur
 
-  def __next(self):
+  def __is_literal_like(self, tok):
+    return (tok[0] == LITERAL or tok[0] == SINGLE_QUOTED_STRING or
+            tok[0] == DOUBLE_QUOTED_STRING or tok[0] == SUBSTITUTION)
+
+  def __next_exalias(self):
+    # If tok is literal, try to expand alias.
+    tok = self.__next_internal()
+    if tok[0] != LITERAL or (self.prev and self.__is_literal_like(self.prev)):
+      return tok
+
+    next = self.__next_internal()
+    if self.__is_literal_like(next):
+      self.__tokens.append(next)
+      return tok
+
+    expanded = self.__expand_alias(tok[1])
+    if expanded:
+      self.__tokens.extend(expanded[1:])
+      self.__tokens.append(next)
+      return expanded[0]
+    else:
+      return next
+
+  def __expand_alias(self, text):
+    if (not self.__alias_map or text in self.__alias_history or
+        not text in self.__alias_map):
+      return [(LITERAL, text)]
+
+    alias, is_global = self.__alias_map[text]
+    if self.__global_alias_only and not is_global:
+      return [(LITERAL, text)]
+    self.__alias_history.add(text)
+    alias_tokenizer = Tokenizer(alias,
+                                global_alias_only=self.__global_alias_only,
+                                alias_map=self.__alias_map,
+                                alias_history=self.__alias_history)
+    # strip eof
+    result = list(alias_tokenizer)[:-1]
+    self.__alias_history.remove(text)
+    return result
+
+  def __next_internal(self):
     input = self.__input
     if not input:
       if self.__eof:
