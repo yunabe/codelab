@@ -292,6 +292,26 @@ class AliasTest(unittest.TestCase):
                        (EOF, ''),
                        ], list(tok))
 
+  def testRecursive(self):
+    alias_map = {'ls': ('ls -la', False),
+                 'sl': ('ls', True)}
+    tok = pysh.Tokenizer('sl', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'ls'),
+                       (SPACE, ' '),
+                       (LITERAL, '-la'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testRecursiveNotGlobal(self):
+    alias_map = {'ls': ('ls -la', False),
+                 'sl': ('ls', True)}
+    tok = pysh.Tokenizer('echo sl', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (LITERAL, 'ls'),
+                       (EOF, ''),
+                       ], list(tok))
+
   def testSubstitutionSuffix(self):
     alias_map = {'ls': ('ls -la', False)}
     tok = pysh.Tokenizer('ls$x', alias_map=alias_map)
