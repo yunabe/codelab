@@ -282,8 +282,8 @@ class AliasTest(unittest.TestCase):
                        ], list(tok))
 
   def testGlobal(self):
-    alias_map = {'GR': ('| grep', True)}
-    tok = pysh.Tokenizer('ls GR && echo', alias_map=alias_map)
+    alias_map = {'GR': ('| grep &&', True)}
+    tok = pysh.Tokenizer('ls GR echo', alias_map=alias_map)
     self.assertEquals([(LITERAL, 'ls'),
                        (PIPE, '|'),
                        (LITERAL, 'grep'),
