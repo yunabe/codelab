@@ -33,7 +33,7 @@ pysh.register_pycmd('pycmd', PyCmd())
 class RegexMatherTest(unittest.TestCase):
   def test(self):
     pattern = re.compile(r'abc')
-    matcher = pysh.RegexMather(pattern, LITERAL, False)
+    matcher = pysh.RegexMather(pattern, LITERAL)
 
     type, string, consumed = matcher.consume('abcdefg')
     self.assertEquals(type, LITERAL)
@@ -47,25 +47,6 @@ class RegexMatherTest(unittest.TestCase):
 
     type, _, _ = matcher.consume(' abcdefg')
     self.assertTrue(type is None)
-
-  def testIgnoreSpace(self):
-    pattern = re.compile(r'abc')
-    matcher = pysh.RegexMather(pattern, LITERAL, True)
-
-    type, string, consumed = matcher.consume('abcdefg')
-    self.assertEquals(type, LITERAL)
-    self.assertEquals(string, 'abc')
-    self.assertEquals(consumed, 3)
-
-    type, string, consumed = matcher.consume('abc  defg')
-    self.assertEquals(type, LITERAL)
-    self.assertEquals(string, 'abc')
-    self.assertEquals(consumed, 5)
-
-    type, string, consumed = matcher.consume('  abcdefg')
-    self.assertEquals(type, LITERAL)
-    self.assertEquals(string, 'abc')
-    self.assertEquals(consumed, 5)
 
 
 class TokenizerTest(unittest.TestCase):
@@ -289,14 +270,6 @@ class AliasTest(unittest.TestCase):
                        (EOF, ''),
                        ], list(tok))
 
-  def testWithSubstitution(self):
-    alias_map = {'ls': ('ls -la', False)}
-    tok = pysh.Tokenizer('ls$x', alias_map=alias_map)
-    self.assertEquals([(LITERAL, 'ls'),
-                       (SUBSTITUTION, '$x'),
-                       (EOF, ''),
-                       ], list(tok))
-
   def testNotGlobal(self):
     alias_map = {'ls': ('ls -la', False)}
     tok = pysh.Tokenizer('echo ls /tmp/www/foo.txt', alias_map=alias_map)
@@ -310,13 +283,28 @@ class AliasTest(unittest.TestCase):
 
   def testGlobal(self):
     alias_map = {'GR': ('| grep', True)}
-    tok = pysh.Tokenizer('ls GR py', alias_map=alias_map)
+    tok = pysh.Tokenizer('ls GR && echo', alias_map=alias_map)
     self.assertEquals([(LITERAL, 'ls'),
-                       (SPACE, ' '),  # need remove
                        (PIPE, '|'),
                        (LITERAL, 'grep'),
-                       (SPACE, ' '),
-                       (LITERAL, 'py'),
+                       (AND_OP, '&&'),
+                       (LITERAL, 'echo'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testSubstitutionSuffix(self):
+    alias_map = {'ls': ('ls -la', False)}
+    tok = pysh.Tokenizer('ls$x', alias_map=alias_map)
+    self.assertEquals([(LITERAL, 'ls'),
+                       (SUBSTITUTION, '$x'),
+                       (EOF, ''),
+                       ], list(tok))
+
+  def testSubstitutionPrefix(self):
+    alias_map = {'GR': ('| grep', True)}
+    tok = pysh.Tokenizer('${x}GR', alias_map=alias_map)
+    self.assertEquals([(SUBSTITUTION, '${x}'),
+                       (LITERAL, 'GR'),
                        (EOF, ''),
                        ], list(tok))
 

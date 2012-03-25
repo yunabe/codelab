@@ -24,6 +24,9 @@ PARENTHESIS_END = 'parenthesis_end'
 SEMICOLON = 'semicolon'
 EOF = 'eof'
 
+SPACE_SENSITIVE = set((SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING,
+                       SUBSTITUTION, LITERAL))
+
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
 SPACE_PATTERN = re.compile(r'[ \t]+')
 VARIABLE_PATTERN = re.compile(r'\$[_a-zA-Z][_a-zA-Z0-9]*')
@@ -40,28 +43,17 @@ PYTHON_VARIABLE_PATTERN = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
 
 
 class RegexMather(object):
-  def __init__(self, regex, type, ignore_space):
+  def __init__(self, regex, type):
     self.__pattern = re.compile(regex)
     self.__type = type
-    self.__ignore_space = ignore_space
 
   def consume(self, input):
-    consumed = 0
-    if self.__ignore_space:
-      match = SPACE_PATTERN.match(input)
-      if match:
-        consumed += match.end()
-        input = input[match.end():]
     match = self.__pattern.match(input) 
     if not match:
       return None, None, 0
     string = match.group(0)
-    consumed += len(string)
-    input = input[len(string):]
-    if self.__ignore_space:
-      match = SPACE_PATTERN.match(input)
-      if match:
-        consumed += match.end()
+    consumed = len(string)
+    input = input[consumed:]
     return self.__type, string, consumed
 
 
@@ -105,7 +97,7 @@ class Tokenizer(object):
   def __init__(self, input,
                global_alias_only=False, alias_map=None, alias_history=None):
     self.cur = None
-    self.prev = None
+    self.__next = None
     self.__input = input.strip()
     self.__global_alias_only = global_alias_only
     self.__tokens = []
@@ -113,20 +105,20 @@ class Tokenizer(object):
     self.__eof = False
     self.__alias_history = alias_history or set()
     self.__matchers = [
-      RegexMather(REDIRECT_PATTERN, REDIRECT, True),
-      RegexMather(AND_OPERATOR_PATTERN, AND_OP, True),
+      RegexMather(REDIRECT_PATTERN, REDIRECT),
+      RegexMather(AND_OPERATOR_PATTERN, AND_OP),
       # should precede PIPE_PATTERN
-      RegexMather(OR_OPERATOR_PATTERN, OR_OP, True),
-      RegexMather(PIPE_PATTERN, PIPE, True),
-      RegexMather(LEFT_ARROW_PATTERN, LEFT_ARROW, True),
-      RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START, True),
-      RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END, True),
-      RegexMather(SEMICOLON_PATTERN, SEMICOLON, True),
+      RegexMather(OR_OPERATOR_PATTERN, OR_OP),
+      RegexMather(PIPE_PATTERN, PIPE),
+      RegexMather(LEFT_ARROW_PATTERN, LEFT_ARROW),
+      RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START),
+      RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END),
+      RegexMather(SEMICOLON_PATTERN, SEMICOLON),
       StringMatcher(),
-      RegexMather(VARIABLE_PATTERN, SUBSTITUTION, False),
+      RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
       ExprMatcher(),
-      RegexMather(SINGLE_DOLLAR_PATTERN, LITERAL, False),
-      RegexMather(SPACE_PATTERN, SPACE, False),
+      RegexMather(SINGLE_DOLLAR_PATTERN, LITERAL),
+      RegexMather(SPACE_PATTERN, SPACE),
       ]
 
   def __iter__(self):
@@ -159,14 +151,37 @@ class Tokenizer(object):
       return True
 
   def next(self):
-    self.prev = self.cur
+    if not self.cur:
+      self.cur = self.__get_next()
+    else:
+      if self.cur[0] == EOF:
+        raise StopIteration()
+      self.cur = self.__next
+      self.__next = None
+    if self.cur and self.cur[0] == EOF:
+      return self.cur
+
+    self.__next = self.__get_next()
+    while True:
+      # skip space toke if it's unnecessary.
+      # Please note that we call break if self.__next is EOF.
+      if self.__next[0] == SPACE and not self.cur[0] in SPACE_SENSITIVE:
+        self.__next = self.__get_next()
+      elif self.cur[0] == SPACE and not self.__next[0] in SPACE_SENSITIVE:
+        self.cur = self.__next
+        self.__next = self.__get_next()
+      else:
+        break
+    return self.cur
+
+  def __get_next(self):
     if self.__tokens:
-      self.cur = self.__tokens[0]
+      next = self.__tokens[0]
       self.__tokens = self.__tokens[1:]
     else:
-      self.cur = self.__next_exalias()
+      next = self.__next_exalias()
     self.__global_alias_only = True
-    return self.cur
+    return next
 
   def __is_literal_like(self, tok):
     return (tok[0] == LITERAL or tok[0] == SINGLE_QUOTED_STRING or
@@ -175,7 +190,7 @@ class Tokenizer(object):
   def __next_exalias(self):
     # If tok is literal, try to expand alias.
     tok = self.__next_internal()
-    if tok[0] != LITERAL or (self.prev and self.__is_literal_like(self.prev)):
+    if tok[0] != LITERAL or (self.cur and self.__is_literal_like(self.cur)):
       return tok
 
     next = self.__next_internal()
@@ -398,7 +413,7 @@ class Parser(object):
 class DoubleQuotedStringExpander(object):
   def __init__(self, input):
     self.__input = input
-    self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION, False)
+    self.__var_matcher = RegexMather(VARIABLE_PATTERN, SUBSTITUTION)
     self.__expr_matcher = ExprMatcher()
     
   def __iter__(self):
