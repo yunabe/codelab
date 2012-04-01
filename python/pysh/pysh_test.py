@@ -333,11 +333,11 @@ class DoubleQuotedStringExpanderTest(unittest.TestCase):
   def test(self):
     expanded = pysh.DoubleQuotedStringExpander(
       'apple pie. a$bc e${fg}\t10 ${{1: "3}"}}')
-    self.assertEquals([(LITERAL, 'apple pie. a'),
+    self.assertEquals([(SINGLE_QUOTED_STRING, "'apple pie. a'"),
                        (SUBSTITUTION, '$bc'),
-                       (LITERAL, ' e'),
+                       (SINGLE_QUOTED_STRING, "' e'"),
                        (SUBSTITUTION, '${fg}'),
-                       (LITERAL, '\t10 '),
+                       (SINGLE_QUOTED_STRING, "'\\t10 '"),
                        (SUBSTITUTION, '${{1: "3}"}}'),
                        ], list(expanded))
 
@@ -669,6 +669,17 @@ class RunTest(unittest.TestCase):
     rc = pysh.run('cd /dev', globals(), locals())
     self.assertEquals('/dev', os.getcwd())
 
+  def testGlob(self):
+    pysh.run('echo foo > foo.txt', globals(), locals())
+    pysh.run('echo bar > bar.txt', globals(), locals())
+    pysh.run('echo baz > baz.doc', globals(), locals())
+    pysh.run('echo test > "a*b.doc"', globals(), locals())
+    pysh.run('echo *.txt > out1.txt', globals(), locals())
+    pysh.run('echo "*.txt" > out2.txt', globals(), locals())
+    pysh.run('echo *\'*\'*.doc > out3.txt', globals(), locals())
+    self.assertEquals('bar.txt foo.txt\n', file('out1.txt').read())
+    self.assertEquals('*.txt\n', file('out2.txt').read())
+    self.assertEquals('a*b.doc\n', file('out3.txt').read())
 
 if __name__ == '__main__':
   unittest.main()

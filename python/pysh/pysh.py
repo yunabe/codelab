@@ -1,4 +1,5 @@
 import csv
+import glob
 import os
 import parser
 import re
@@ -149,6 +150,11 @@ class Tokenizer(object):
       return True
     if c == ';':
       return True
+    if c == '\'':
+      return True
+    if c == '"':
+      return True
+    return False
 
   def next(self):
     if not self.cur:
@@ -435,10 +441,10 @@ class DoubleQuotedStringExpander(object):
       pos = input.find('$')
       if pos == -1:
         self.__input = ''
-        return LITERAL, input
+        return SINGLE_QUOTED_STRING, repr(input)
       else:
         self.__input = input[pos:]
-        return LITERAL, input[:pos]
+        return SINGLE_QUOTED_STRING, repr(input[:pos])
 
 
 class VarDict(object):
@@ -578,7 +584,12 @@ class Evaluator(object):
 
   def evalArg(self, arg, globals, locals):
     assert arg
-    w = StringIO.StringIO()
+    if not self.hasGlobPattern(arg):
+      return self.evalArgNoGlob(arg, globals, locals)
+    else:
+      return self.evalArgGlob(arg, globals, locals)
+  
+  def evalArgNoGlob(self, arg, globals, locals):
     values = []
     for tok in arg:
       if tok[0] == LITERAL:
@@ -595,7 +606,33 @@ class Evaluator(object):
       result = values[0]
     if isinstance(result, str):
       result = os.path.expanduser(result)
-    return result
+    return [result]
+
+  def evalArgGlob(self, arg, globals, locals):
+    values = []
+    for tok in arg:
+      if tok[0] == LITERAL:
+        values.append(tok[1])
+      elif tok[0] == SINGLE_QUOTED_STRING:
+        values.append(eval(tok[1]).replace('*', '[*]').replace('?', '[?]'))
+      elif tok[0] == SUBSTITUTION:
+        values.append(
+          self.evalSubstitution(tok[1], globals, locals).replace(
+            '*', '[*]').replace('?', '[?]'))
+      else:
+        raise Exception('Unexpected token: %s' % tok[0])
+    result = ''.join(map(str, values))
+    expanded = glob.glob(os.path.expanduser(result))
+    # Make order of glob expansion stable.
+    expanded.sort()
+    return expanded
+
+  def hasGlobPattern(self, arg):
+    for tok in arg:
+      if tok[0] == LITERAL:
+        if '*' in tok[1] or '?' in tok[1]:
+          return True
+    return False
 
   def execute(self, globals, locals):
     pids = {}
@@ -655,14 +692,15 @@ class Evaluator(object):
       is_last = i == len(procs) - 1
       args = []
       for arg in proc.args:
-        args.append(self.evalArg(arg, globals, locals))
+        args.extend(self.evalArg(arg, globals, locals))
       redirects = []
       for redirect in proc.redirects:
         if isinstance(redirect[2], int):
           redirects.append(redirect)
         else:
+          targets = self.evalArg(redirect[2], globals, locals)
           redirects.append((redirect[0], redirect[1],
-                            str(self.evalArg(redirect[2], globals, locals))))
+                            str(targets[0])))
 
       pycmd = get_pycmd(args[0])
       if pycmd:
