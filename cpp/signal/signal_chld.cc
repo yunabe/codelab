@@ -19,6 +19,8 @@
 
 
 void handler(int signum) {
+  // Please note that we shouldn't call printf in signal handler
+  // except for demo use because it's not "asynchronous-signal safe".
   printf("handler.\n");
 }
 
@@ -40,6 +42,8 @@ int main(int argc, char** argv) {
   sigaction(SIGCHLD, &sa, NULL);
   char buf[256];
   ssize_t rc = read(fileno(stdin), (void*)buf, 256);
+  // errno is thread-local.
+  // http://www.kernel.org/doc/man-pages/online/pages/man3/errno.3.html
   if (rc < 0 && errno == EINTR) {
     printf("interrupted with signal!\n");
   }
