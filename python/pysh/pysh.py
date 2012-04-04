@@ -750,6 +750,7 @@ class Evaluator(object):
           os.execvp(str_args[0], str_args)
         except Exception, e:
           print >> sys.stderr, e
+          sys.stderr.flush()
           os._exit(1)
 
     if pycmd_stack:
