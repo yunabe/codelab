@@ -510,6 +510,13 @@ class RunTest(unittest.TestCase):
     argv = eval(file('out.txt').read())
     self.assertEquals(['-c', 'a b', 'c d', 'e', 'f'], argv)
 
+  def testListArgs(self):
+    args = ['a', 'b', 10, {1: 3}]
+    pysh.run('python -c "import sys;print sys.argv" '
+             '$args > out.txt', globals(), locals())
+    argv = eval(file('out.txt').read())
+    self.assertEquals(['-c', 'a', 'b', '10', '{1: 3}'], argv)
+
   def testNumberedRedirect(self):
     pysh.run('python -c "import sys;'
              'print >> sys.stderr, \'error\';print \'out\'"'

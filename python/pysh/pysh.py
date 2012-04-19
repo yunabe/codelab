@@ -627,6 +627,12 @@ class Evaluator(object):
     expanded.sort()
     return expanded
 
+  def convertToCmdArgs(self, arg):
+    if isinstance(arg, list):
+      return map(str, arg)
+    else:
+      return [str(arg)]
+
   def hasGlobPattern(self, arg):
     for tok in arg:
       if tok[0] == LITERAL:
@@ -744,8 +750,10 @@ class Evaluator(object):
               mode = 'w'  # >
             f = file(redirect[2], mode)
             os.dup2(f.fileno(), redirect[1])
-        # TODO(yunabe): quit a child process if execvp fails.
-        str_args = map(str, args)
+        str_args = []
+        for arg in args:
+          str_args.extend(self.convertToCmdArgs(arg))
+        print args, ' == ',  str_args
         try:
           os.execvp(str_args[0], str_args)
         except Exception, e:
