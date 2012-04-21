@@ -557,7 +557,7 @@ class RunTest(unittest.TestCase):
   def testReceiveData(self):
     out = []
     pysh.run('echo "foo\\nbar" | recv $out', globals(), locals())
-    self.assertEquals(['foo\n', 'bar\n'], out)
+    self.assertEquals(['foo', 'bar'], out)
 
   def testSendData(self):
     data = ['foo', 'bar', 'baz']
@@ -573,10 +573,10 @@ class RunTest(unittest.TestCase):
     pysh.run('echo "cupcake\\ndonut\\nfroyo\\nginger" |'
              'filter ${lambda l: "e" in l} > out.txt',
              globals(), locals())
-    self.assertEquals('cupcake\n\nginger\n\n', file('out.txt').read())
+    self.assertEquals('cupcake\nginger\n', file('out.txt').read())
 
   def testReduceCmd(self):
-    pysh.run('echo "foo\\nbar" | reduce ${lambda x, y: x.strip() + y.strip()} |'
+    pysh.run('echo "foo\\nbar" | reduce ${lambda x, y: x + y} |'
              'cat > out.txt', globals(), locals())
     self.assertEquals('foobar\n', file('out.txt').read())
 

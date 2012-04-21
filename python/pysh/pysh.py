@@ -769,6 +769,10 @@ class Evaluator(object):
       runner.start()
 
 
+def file_to_array(f):
+  return map(lambda line: line.rstrip('\r\n'), f.readlines())
+
+
 class pycmd_send(object):
   def process(self, args, input):
     assert len(args) == 2
@@ -777,6 +781,8 @@ class pycmd_send(object):
 
 class pycmd_recv(object):
   def process(self, args, input):
+    if isinstance(input, file):
+      input = file_to_array(input)
     assert len(args) == 2
     l = args[1]
     assert isinstance(l, list)
@@ -787,6 +793,8 @@ class pycmd_recv(object):
 class pycmd_map(object):
   def process(self, args, input):
     assert len(args) == 2
+    if isinstance(input, file):
+      input = file_to_array(input)
     f = args[1]
     assert callable(f)
     return (f(x) for x in input)
@@ -795,6 +803,8 @@ class pycmd_map(object):
 class pycmd_filter(object):
   def process(self, args, input):
     assert len(args) == 2
+    if isinstance(input, file):
+      input = file_to_array(input)
     cond = args[1]
     assert callable(cond)
     for x in input:
@@ -805,6 +815,8 @@ class pycmd_filter(object):
 class pycmd_reduce(object):
   def process(self, args, input):
     assert len(args) == 2
+    if isinstance(input, file):
+      input = file_to_array(input)
     f = args[1]
     assert callable(f)
     return [reduce(f, input)]
