@@ -753,7 +753,6 @@ class Evaluator(object):
         str_args = []
         for arg in args:
           str_args.extend(self.convertToCmdArgs(arg))
-        print args, ' == ',  str_args
         try:
           os.execvp(str_args[0], str_args)
         except Exception, e:
