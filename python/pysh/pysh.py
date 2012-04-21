@@ -832,7 +832,7 @@ register_pycmd('cd', pycmd_cd())
 
 
 def run(cmd_str, globals, locals, alias_map=None):
-  tok = Tokenizer(cmd_str, alias_map)
+  tok = Tokenizer(cmd_str, alias_map=alias_map)
   parser = Parser(tok)
   evaluator = Evaluator(parser)
   evaluator.execute(globals, locals)
