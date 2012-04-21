@@ -23,10 +23,11 @@ OR_OP = 'orop'
 PARENTHESIS_START = 'parenthesis_start'
 PARENTHESIS_END = 'parenthesis_end'
 SEMICOLON = 'semicolon'
+BACKQUOTE = 'bquote'
 EOF = 'eof'
 
 SPACE_SENSITIVE = set((SINGLE_QUOTED_STRING, DOUBLE_QUOTED_STRING,
-                       SUBSTITUTION, LITERAL))
+                       SUBSTITUTION, LITERAL, BACKQUOTE))
 
 REDIRECT_PATTERN = re.compile(r'(\d*)>(>)?(?:&(\d+))?')
 SPACE_PATTERN = re.compile(r'[ \t]+')
@@ -39,6 +40,7 @@ PARENTHESIS_START_PATTERN = re.compile(r'\(')
 PARENTHESIS_END_PATTERN = re.compile(r'\)')
 OR_OPERATOR_PATTERN = re.compile(r'\|\|')
 SEMICOLON_PATTERN = re.compile(r';')
+BACKQUOTE_PATTERN = re.compile(r'`')
 
 PYTHON_VARIABLE_PATTERN = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
 
@@ -115,6 +117,7 @@ class Tokenizer(object):
       RegexMather(PARENTHESIS_START_PATTERN, PARENTHESIS_START),
       RegexMather(PARENTHESIS_END_PATTERN, PARENTHESIS_END),
       RegexMather(SEMICOLON_PATTERN, SEMICOLON),
+      RegexMather(BACKQUOTE_PATTERN, BACKQUOTE),
       StringMatcher(),
       RegexMather(VARIABLE_PATTERN, SUBSTITUTION),
       ExprMatcher(),
@@ -153,6 +156,8 @@ class Tokenizer(object):
     if c == '\'':
       return True
     if c == '"':
+      return True
+    if c == '`':
       return True
     return False
 
@@ -275,6 +280,7 @@ class Parser(object):
     self.__tokenizer = tokenizer
 
   def parse(self):
+    self.__in_bquote = False
     tok, string = self.__tokenizer.next()
     return self.parseExpr()
 
@@ -288,7 +294,7 @@ class Parser(object):
         return left
       self.__tokenizer.next()
       tok, _ = self.__tokenizer.cur
-      if tok == EOF or tok == PARENTHESIS_END:
+      if tok == EOF or tok == PARENTHESIS_END or tok == BACKQUOTE:
         return left
 
   def validateLeftForAssign(self, left):
@@ -364,6 +370,9 @@ class Parser(object):
       tok, string = self.__tokenizer.cur
       if tok == SPACE:
         self.__tokenizer.next()
+        if self.__tokenizer.cur[0] == BACKQUOTE and self.__in_bquote:
+          # A hack to ignore space in backquote
+          break
         args.append(self.parseArg())
       elif tok == REDIRECT:
         append, src_num, dst_num = self.parseRedirectToken((tok, string))
@@ -393,12 +402,16 @@ class Parser(object):
     return append, src_num, dst_num
 
   def parseArg(self):
-    tok, string = self.__tokenizer.cur
     result = []
-    while self.isArgToken(tok):
-      self.appendToken((tok, string), result)
-      self.__tokenizer.next()
+    while True:
       tok, string = self.__tokenizer.cur
+      if self.isArgToken(tok):
+        self.appendToken((tok, string), result)
+        self.__tokenizer.next()
+      elif tok == BACKQUOTE and not self.__in_bquote:
+        result.append(self.parseBackQuote())
+      else:
+        break
     if not result:
       raise Exception('Unexpected token: %s: %s' % (tok, string))
     return result
@@ -414,6 +427,19 @@ class Parser(object):
       tokens.extend(DoubleQuotedStringExpander(eval(tok[1])))
     else:
       tokens.append(tok)
+
+  def parseBackQuote(self):
+    while self.__tokenizer.next()[0] == SPACE:
+      # A hack to ignore space in backquote
+      pass
+    self.__in_bquote = True
+    expr = self.parseExpr()
+    self.__in_bquote = False
+    tok, _ = self.__tokenizer.cur
+    if tok != BACKQUOTE:
+      raise Exception('backquote mismatch')
+    self.__tokenizer.next()
+    return (BACKQUOTE, expr)
 
 
 class DoubleQuotedStringExpander(object):
@@ -584,10 +610,20 @@ class Evaluator(object):
 
   def evalArg(self, arg, globals, locals):
     assert arg
+    arg = self.evalBackquotedCmd(arg, globals, locals)
     if not self.hasGlobPattern(arg):
       return self.evalArgNoGlob(arg, globals, locals)
     else:
       return self.evalArgGlob(arg, globals, locals)
+
+  def evalBackquotedCmd(self, arg, globals, locals):
+    result = []
+    for tok in arg:
+      if tok[0] == BACKQUOTE:
+        raise Exception('Evaluation of backquote is not supported.')
+      else:
+        result.append(tok)
+    return result
   
   def evalArgNoGlob(self, arg, globals, locals):
     values = []
@@ -641,8 +677,11 @@ class Evaluator(object):
     return False
 
   def execute(self, globals, locals):
-    pids = {}
     ast = self.__parser.parse()
+    self.executeAst(ast, globals, locals)
+
+  def executeAst(self, ast, globals, locals):
+    pids = {}
     procs = []
     self.evalAst(ast, [], procs)
     procs_queue = [procs]

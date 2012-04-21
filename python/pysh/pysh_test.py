@@ -12,6 +12,7 @@ from pysh import OR_OP
 from pysh import PARENTHESIS_START
 from pysh import PARENTHESIS_END
 from pysh import SEMICOLON
+from pysh import BACKQUOTE
 from pysh import EOF
 
 import os
@@ -258,6 +259,31 @@ class TokenizerTest(unittest.TestCase):
                        (SEMICOLON, ';'),
                        (EOF, '')], list(tok))
 
+  def testBackQuote(self):
+    tok = pysh.Tokenizer('echo `echo foo`')
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (BACKQUOTE, '`'),
+                       (LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (LITERAL, 'foo'),
+                       (BACKQUOTE, '`'),
+                       (EOF, '')], list(tok))
+
+  def testBackQuoteWithSpace(self):
+    tok = pysh.Tokenizer('echo ` echo foo `')
+    self.assertEquals([(LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (BACKQUOTE, '`'),
+                       (SPACE, ' '),
+                       (LITERAL, 'echo'),
+                       (SPACE, ' '),
+                       (LITERAL, 'foo'),
+                       (SPACE, ' '),
+                       (BACKQUOTE, '`'),
+                       (EOF, '')], list(tok))
+
+
 class AliasTest(unittest.TestCase):
   def test(self):
     alias_map = {'ls': ('ls -la', False)}
@@ -394,6 +420,53 @@ class ParserTest(unittest.TestCase):
     self.assertEquals(';', ast[0])
     self.assertTrue(isinstance(ast[1], pysh.Process))
     self.assertTrue(isinstance(ast[2], pysh.Process))
+
+  def testBackquote(self):
+    input = 'echo `echo foo`'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertTrue(isinstance(ast, pysh.Process))
+    self.assertEquals(2, len(ast.args))
+    self.assertEquals(1, len(ast.args[1]))
+    self.assertEquals(BACKQUOTE, ast.args[1][0][0])
+    self.assertTrue(isinstance(ast.args[1][0][1], pysh.Process))
+    self.assertEquals([[(LITERAL, 'echo')], [(LITERAL, 'foo')]],
+                      ast.args[1][0][1].args)
+
+
+  def testBackquoteWithSpace(self):
+    input = 'echo ` echo foo `'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertTrue(isinstance(ast, pysh.Process))
+    self.assertEquals(2, len(ast.args))
+    self.assertEquals(1, len(ast.args[1]))
+    self.assertEquals(BACKQUOTE, ast.args[1][0][0])
+    self.assertTrue(isinstance(ast.args[1][0][1], pysh.Process))
+    self.assertEquals([[(LITERAL, 'echo')], [(LITERAL, 'foo')]],
+                      ast.args[1][0][1].args)
+
+  def testBackquoteWithSemicolon(self):
+    input = 'echo `echo foo;`'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertTrue(isinstance(ast, pysh.Process))
+    self.assertEquals(2, len(ast.args))
+    self.assertEquals(1, len(ast.args[1]))
+    self.assertEquals(BACKQUOTE, ast.args[1][0][0])
+    self.assertTrue(isinstance(ast.args[1][0][1], pysh.Process))
+    self.assertEquals([[(LITERAL, 'echo')], [(LITERAL, 'foo')]],
+                      ast.args[1][0][1].args)
+
+  def testBackquoteWithSemicolon(self):
+    input = 'echo `echo foo | cat`'
+    parser = pysh.Parser(pysh.Tokenizer(input))
+    ast = parser.parse()
+    self.assertTrue(isinstance(ast, pysh.Process))
+    self.assertEquals(2, len(ast.args))
+    self.assertEquals(1, len(ast.args[1]))
+    self.assertEquals(BACKQUOTE, ast.args[1][0][0])
+    self.assertEquals('|', ast.args[1][0][1][0])
 
 
 class EvalTest(unittest.TestCase):
