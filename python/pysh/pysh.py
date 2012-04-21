@@ -575,6 +575,9 @@ class Evaluator(object):
     self.__parser = parser
     self.__rc = {}
 
+  def __after_folk(self, pid):
+    pass
+
   def rc(self):
     return self.__rc
 
@@ -763,6 +766,7 @@ class Evaluator(object):
       if not is_last:
         new_r, w = os.pipe()
       pid = os.fork()
+      self.__after_folk(pid)
       if pid != 0:
         if not is_last:
           # Don't forget to close pipe in the root process.
