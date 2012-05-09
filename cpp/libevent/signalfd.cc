@@ -25,22 +25,29 @@ void read_signalfd_cb(struct bufferevent *bev, void *ctx) {
     }
     if (info.ssi_signo == SIGCHLD) {
       printf("Received SIGCHLD\n");
-      pid_t pid = wait(NULL);
-      if (data->children.find(pid) == data->children.end()) {
-        printf("Unexpected pid: %d\n", pid);
-      } else {
-        data->children.erase(pid);
-      }
-      if (data->children.size() == 0) {
-        printf("Removed all childrens...\n");
-        close(data->sfd);
-        // close is not good enough to exit from loop in some cases.
-        // TODO(yunabe): Understand the reason.
-        event_loopexit(0);
+      while (true) {
+        // multiple SIGCHLD can be merged into one.
+        pid_t pid = waitpid(-1, NULL, WNOHANG);
+        if (pid == 0) {
+          break;
+        }
+        if (data->children.find(pid) == data->children.end()) {
+          printf("Unexpected pid: %d\n", pid);
+        } else {
+          data->children.erase(pid);
+        }
+        if (data->children.size() == 0) {
+          printf("Removed all childrens...\n");
+          close(data->sfd);
+          // close is not good enough to exit from loop in some cases.
+          // TODO(yunabe): Understand the reason.
+          event_loopexit(0);
+          break;
+        }
       }
     } else if (info.ssi_signo == SIGINT) {
       printf("Received SIGINT\n");
-      break;
+      sleep(2);
     }
   }
 }
