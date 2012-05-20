@@ -1,48 +1,25 @@
-include $(GOROOT)/src/Make.inc
-
 all: basic func oop concurrency websocket protobuf
 
-basic: basic.$(O)
-	$(LD) -o basic basic.$(O)
+basic: basic.go
+	go build basic.go
 
-basic.$(O): basic.go
-	$(GC) basic.go
+func: func.go
+	go build func.go
 
-func: func.$(O)
-	$(LD) -o func func.$(O)
+oop: oop.go
+	go build oop.go
 
-func.$(O): func.go
-	$(GC) func.go
+concurrency: concurrency.go
+	go build concurrency.go
 
-oop: oop.$(O)
-	$(LD) -o oop oop.$(O)
+websocket: websocket.go
+	go build websocket.go
 
-oop.$(O): oop.go
-	$(GC) oop.go
-
-concurrency: concurrency.$(O)
-	$(LD) -o concurrency concurrency.$(O)
-
-concurrency.$(O): concurrency.go
-	$(GC) concurrency.go
-
-websocket: websocket.$(O)
-	$(LD) -o websocket websocket.$(O)
-
-websocket.$(O): websocket.go
-	$(GC) websocket.go
-
-protobuf: protobuf.$(O)
-	$(LD) -o protobuf protobuf.$(O)
-
-protobuf.$(O): protobuf.go example_pb.$(O)
-	$(GC) protobuf.go
+protobuf: protobuf.go example.pb.go
+	go build protobuf.go example.pb.go
 
 example.pb.go: example.proto
 	protoc --go_out=. example.proto
 
-example_pb.$(O): example.pb.go
-	$(GC) -o example_pb.$(O) example.pb.go
-
 clean:
-	rm -rf *.$(O) *.pb.go basic func oop concurrency websocket protobuf
+	rm -rf *.pb.go basic func oop concurrency websocket protobuf

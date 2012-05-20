@@ -3,8 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"./example_pb"
-	"goprotobuf.googlecode.com/hg/proto"
+  "code.google.com/p/goprotobuf/proto"
 	)	
 
 func PrintToString(pb interface{}) string {
@@ -14,12 +13,12 @@ func PrintToString(pb interface{}) string {
 }
 
 func main() {
-	p := example.Person {
+	p := Person {
 	Name: proto.String("Taro Yamada"),
 	Age: proto.Int32(8),
 	};
 
-	pet := example.Pet {Name: proto.String("Mike")}
+	pet := Pet {Name: proto.String("Mike")}
 	p.Pet = append(p.Pet, &pet)
 	fmt.Println("-- p.String()  --")
 	fmt.Println(p.String())

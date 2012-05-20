@@ -1,14 +1,8 @@
-go version: weekly.2011-12-22
-
-goprotobuf version: go.weekly.2011-12-06
+go version: Go version 1
+http://blog.golang.org/2012/03/go-version-1-is-released.html
 
 -- how to install goprotobuf --
+http://code.google.com/p/goprotobuf/
 
-# goinstall code.google.com/p/goprotobuf/proto does not work
-# though it's written in http://code.google.com/p/goprotobuf/
-
-export GOPATH=/home/yunabe/local/src/gocode
-goinstall code.google.com/p/goprotobuf/hg/proto
-cd $GOPATH/src/goprotobuf.googlecode.com/hg/compiler
-hg update -r go.weekly.2011-12-06 -C
-make install
+-- How to install websocket --
+>>> go get code.google.com/p/go.net/websocket

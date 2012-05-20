@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"log"
 	"time"
-	"websocket"
+	"code.google.com/p/go.net/websocket"
 )
 
 const response string = `
