@@ -8,7 +8,7 @@ basic.o: basic.cc basic.h
 	g++ -fPIC -c basic.cc -o basic.o
 
 basic_java_wrap.o: basic_java_wrap.cc
-	g++ -fPIC -c basic_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk-amd64/include/
+	g++ -fPIC -c basic_java_wrap.cc -I/usr/lib/jvm/default-java/include/
 
 libBasicModule.so: basic.o basic_java_wrap.o include_and_import.o include_and_import_java_wrap.o memory_leak_java_wrap.o
 	g++ -shared basic.o basic_java_wrap.o include_and_import.o include_and_import_java_wrap.o memory_leak_java_wrap.o -o libBasicModule.so
@@ -20,7 +20,7 @@ include_and_import.o: include_and_import.cc include_and_import.h
 	g++ -fPIC -c include_and_import.cc -o include_and_import.o
 
 include_and_import_java_wrap.o: include_and_import_java_wrap.cc
-	g++ -fPIC -c include_and_import_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk-amd64/include/
+	g++ -fPIC -c include_and_import_java_wrap.cc -I/usr/lib/jvm/default-java/include/
 
 libIncludeAndImportModule.so: include_and_import.o include_and_import_java_wrap.o
 	g++ -shared include_and_import.o include_and_import_java_wrap.o -o libIncludeAndImportModule.so
@@ -47,10 +47,10 @@ use_time_java_wrap.cc javafiles/com/yunabe/TimeModule.java: use_time.i
 	swig -c++ -java -package com.yunabe -outdir javafiles/com/yunabe -o use_time_java_wrap.cc -module TimeModule use_time.i
 
 use_time_java_wrap.o: use_time_java_wrap.cc
-	g++ -fPIC -c use_time_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk-amd64/include/
+	g++ -fPIC -c use_time_java_wrap.cc -I/usr/lib/jvm/default-java/include/
 
 director_java_wrap.o: director_java_wrap.cc director_java_wrap.h
-	g++ -fPIC -c director_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk-amd64/include/
+	g++ -fPIC -c director_java_wrap.cc -I/usr/lib/jvm/default-java/include/
 
 libDirectorModule.so: director.o director_java_wrap.o
 	g++ -shared director.o director_java_wrap.o -o libDirectorModule.so
@@ -59,7 +59,7 @@ memory_leak_java_wrap.cc javafiles/com/yunabe/MemoryLeakModule.java: memory_leak
 	swig -c++ -java -package com.yunabe -outdir javafiles/com/yunabe -o memory_leak_java_wrap.cc -module MemoryLeakModule memory_leak.i
 
 memory_leak_java_wrap.o: memory_leak_java_wrap.cc
-	g++ -fPIC -c memory_leak_java_wrap.cc -I/usr/lib/jvm/java-6-openjdk-amd64/include/
+	g++ -fPIC -c memory_leak_java_wrap.cc -I/usr/lib/jvm/default-java/include/
 
 clean:
 	rm -rf *.o *.jar *_wrap.cc *_wrap.h *.class *.so javafiles/com/yunabe/*.java javafiles/com/yunabe/*.class *.jar hs_err_*.log
