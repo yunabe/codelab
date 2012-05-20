@@ -11,6 +11,9 @@ import com.yunabe.TimeModule;
 import com.yunabe.Subtractor;
 import com.yunabe.time.Time;
 
+import com.yunabe.Manager;
+import com.yunabe.Runner;
+
 class Child0 extends DirectorRoot {
   @Override
   public void PrintName() {
@@ -25,6 +28,19 @@ class JavaSubtractor extends Subtractor {
     return new Time(x.hour() - y.hour(),
                     x.minute() - y.minute(),
                     x.second() - y.second());
+  }
+}
+
+class MyRunner extends Runner {
+  private final Manager manager;
+  private final byte[] dummyData;
+  MyRunner(Manager manager) {
+    this.manager = manager;
+    this.dummyData = new byte[10 * 1000 * 1000];
+  }
+  
+  public void run() {
+    System.out.println("Myrunner.run()");
   }
 }
 
@@ -93,5 +109,12 @@ public class Main {
     TimeModule.registerSubtractor(subtractor);
     System.out.printf("Java: The result is %s\n",
                       TimeModule.subtractTime(t1, t0));
+
+    /////// Memory Leak /////////
+    for (int i = 0; i < 30; ++i) {
+      Manager manager = new Manager();
+      manager.set_runner(new MyRunner(null));
+      // manager.set_runner(new MyRunner(manager));  // <- memory leak
+    }
   }
 }
