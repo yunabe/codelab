@@ -87,6 +87,13 @@ func play_with_channel() {
 			fmt.Println(message)
 		}
 	}
+
+	fmt.Println("** cap and len of channel **")
+	buf_ch := make(chan int, 100)
+	buf_ch <- 10
+	buf_ch <- 20
+	fmt.Println("len(buf_ch) ==", len(buf_ch))
+	fmt.Println("cap(buf_ch) ==", cap(buf_ch))
 }
 
 func channnel_and_deadlock(casenum int) {
