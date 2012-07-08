@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+import os
+import runpy
+import sys
+
+bindir = os.path.abspath(os.path.dirname(__file__))
+assert bindir == sys.path[0]
+srcdir = os.path.join(bindir, '../src')
+sys.path = [srcdir] + sys.path[1:]
+runpy.run_module('mylib.main', run_name='__main__')
