@@ -60,11 +60,11 @@ class EvalTask(object):
             return
         op = tree[0]
         if op == '+':
-            task = AddTask
+            task = AddTask()
         elif op == '-':
-            task = SubTask
+            task = SubTask()
         elif op == '*':
-            task = MulTask
+            task = MulTask()
         else:
             raise Exception('Unexpected op')
         args = (tree[1], tree[2])
@@ -79,12 +79,12 @@ class AddTask(object):
     def start(self, cont, args):
         left, right = args
         self.right = right
-        cont.call(EvalTask, left, 'left')
+        cont.call(EvalTask(), left, 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask, self.right, 'right')
+            cont.call(EvalTask(), self.right, 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res + response)
@@ -93,12 +93,12 @@ class SubTask(object):
     def start(self, cont, args):
         left, right = args
         self.right = right
-        cont.call(EvalTask, left, 'left')
+        cont.call(EvalTask(), left, 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask, self.right, 'right')
+            cont.call(EvalTask(), self.right, 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res - response)
@@ -107,12 +107,12 @@ class MulTask(object):
     def start(self, cont, args):
         left, right = args
         self.right = right
-        cont.call(EvalTask, left, 'left')
+        cont.call(EvalTask(), left, 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask, self.right, 'right')
+            cont.call(EvalTask(), self.right, 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res * response)
@@ -143,7 +143,7 @@ class Runner(object):
         type = task[0]
         stack = task[1]
         if type == 'call':
-            f = task[2]()
+            f = task[2]
             cont = Controller(self, f, stack)
             f.start(cont, task[3])
         else:
@@ -153,6 +153,6 @@ class Runner(object):
             f.resume(cont, task[3], task[4])
 
 
-runner = Runner(EvalTask, tree)
+runner = Runner(EvalTask(), tree)
 runner.run()
 print 'runner.response =', runner.response
