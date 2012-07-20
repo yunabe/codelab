@@ -33,16 +33,23 @@ print 'eval(tree) ==', eval(tree)
 
 ###########################################
 
-class Cont(object):
-    def __init__(self):
-        self.call_list = []
-        self.done_list = []
+class Controller(object):
+    def __init__(self, runner, task, callstack):
+        self.__runner = runner
+        self.__task = task
+        self.__stack = callstack
 
     def call(self, task, args, state):
-        self.call_list.append((task, args, state))
+        stack = ((self.__task, state), self.__stack)
+        self.__runner.push_call(stack, task, args)
 
     def done(self, response):
-        self.done_list.append(response)
+        if self.__stack is None:
+            self.__runner.record_done(response)
+        else:
+            stack = self.__stack[1]
+            task, state = self.__stack[0]
+            self.__runner.push_resume(stack, task, state, response)
 
 
 class EvalTask(object):
@@ -114,31 +121,36 @@ class Runner(object):
     def __init__(self, task, args):
         self.tasks = [('call', None, task, args)]
         self.response = None
+        self.done = False
 
     def run(self):
         while self.tasks:
             self.run_internal()
+
+    def push_call(self, callstack, subtask, args):
+        self.tasks.append(('call', callstack, subtask, args))
+
+    def push_resume(self, callstack, parenttask, state, response):
+        self.tasks.append(('resume', callstack, parenttask, state, response))
+
+    def record_done(self, response):
+        self.response = response
+        self.done = True
 
     def run_internal(self):
         task = self.tasks[0]
         self.tasks = self.tasks[1:]
         type = task[0]
         stack = task[1]
-        cont = Cont()
         if type == 'call':
             f = task[2]()
+            cont = Controller(self, f, stack)
             f.start(cont, task[3])
         else:
             # 'resume'
             f = task[2]
+            cont = Controller(self, f, stack)
             f.resume(cont, task[3], task[4])
-        for call in cont.call_list:
-            self.tasks.append(('call', ((f, call[2]), stack), call[0], call[1]))
-        for response in cont.done_list:
-            if stack:
-                self.tasks.append(('resume', stack[1], stack[0][0], stack[0][1], response))
-            else:
-                self.response = response
 
 
 runner = Runner(EvalTask, tree)
