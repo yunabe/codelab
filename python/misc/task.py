@@ -119,6 +119,8 @@ class MulTask(object):
 
 class Runner(object):
     def __init__(self, task, args):
+        # tasks is FIFO to run tasks in DFS way.
+        # To run tasks in BFS way, use collections.deque.
         self.tasks = [('call', None, task, args)]
         self.response = None
         self.done = False
@@ -138,8 +140,7 @@ class Runner(object):
         self.done = True
 
     def run_internal(self):
-        task = self.tasks[0]
-        self.tasks = self.tasks[1:]
+        task = self.tasks.pop()
         type = task[0]
         stack = task[1]
         if type == 'call':
