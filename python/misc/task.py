@@ -41,24 +41,6 @@ print 'eval(tree) ==', eval(tree)
 
 ###########################################
 
-class Controller(object):
-    def __init__(self, runner, task, callstack):
-        self.__runner = runner
-        self.__task = task
-        self.__stack = callstack
-
-    def call(self, task, args, state):
-        stack = ((self.__task, state), self.__stack)
-        self.__runner.push_call(stack, task, args)
-
-    def done(self, response):
-        if self.__stack is None:
-            self.__runner.record_done(response)
-        else:
-            stack = self.__stack[1]
-            task, state = self.__stack[0]
-            self.__runner.push_resume(stack, task, state, response)
-
 
 class EvalTask(object):
     def start(self, cont, args):
@@ -126,6 +108,25 @@ class MulTask(object):
         else:
             assert state == 'right'
             cont.done(self.left_res * response)
+
+
+class Controller(object):
+    def __init__(self, runner, task, callstack):
+        self.__runner = runner
+        self.__task = task
+        self.__stack = callstack
+
+    def call(self, task, args, state):
+        stack = ((self.__task, state), self.__stack)
+        self.__runner.push_call(stack, task, args)
+
+    def done(self, response):
+        if self.__stack is None:
+            self.__runner.record_done(response)
+        else:
+            stack = self.__stack[1]
+            task, state = self.__stack[0]
+            self.__runner.push_resume(stack, task, state, response)
 
 
 class Runner(object):
