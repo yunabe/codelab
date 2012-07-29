@@ -121,12 +121,7 @@ class Controller(object):
         self.__runner.push_call(stack, task, args)
 
     def done(self, response):
-        if self.__stack is None:
-            self.__runner.record_done(response)
-        else:
-            stack = self.__stack[1]
-            task, state = self.__stack[0]
-            self.__runner.push_resume(stack, task, state, response)
+        self.__runner.push_done(self.__stack, response)
 
 
 class Runner(object):
@@ -144,12 +139,15 @@ class Runner(object):
     def push_call(self, callstack, subtask, args):
         self.tasks.append(('call', callstack, subtask, args))
 
-    def push_resume(self, callstack, parenttask, state, response):
-        self.tasks.append(('resume', callstack, parenttask, state, response))
-
-    def record_done(self, response):
-        self.response = response
-        self.done = True
+    def push_done(self, callstack, response):
+        if not callstack:
+            self.response = response
+            self.done = True
+        else:
+            parent_callstack = callstack[1]
+            task, state = callstack[0]
+            self.tasks.append(
+                ('resume', parent_callstack, task, state, response))
 
     def run_internal(self):
         task = self.tasks.pop()
