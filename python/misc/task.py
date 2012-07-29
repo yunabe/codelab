@@ -5,6 +5,14 @@ tree = ('+',
                   2,
                   3)))
 
+large_tree = 1
+for i in xrange(15):
+    large_tree = ('+', large_tree, large_tree)
+
+deep_tree = 1
+for i in xrange(1000):
+    deep_tree = ('+', deep_tree, 1)
+
 
 def eval(tree):
     if not isinstance(tree, tuple):
@@ -89,6 +97,7 @@ class AddTask(object):
             assert state == 'right'
             cont.done(self.left_res + response)
 
+
 class SubTask(object):
     def start(self, cont, args):
         left, right = args
@@ -103,6 +112,7 @@ class SubTask(object):
             assert state == 'right'
             cont.done(self.left_res - response)
 
+
 class MulTask(object):
     def start(self, cont, args):
         left, right = args
@@ -116,6 +126,7 @@ class MulTask(object):
         else:
             assert state == 'right'
             cont.done(self.left_res * response)
+
 
 class Runner(object):
     def __init__(self, task, args):
