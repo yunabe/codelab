@@ -128,29 +128,25 @@ class Runner(object):
     def __init__(self, task, args):
         # tasks is FIFO to run tasks in DFS way.
         # To run tasks in BFS way, use collections.deque.
-        self.tasks = [('call', None, task, args)]
+        self.__tasks = [('call', None, task, args)]
         self.response = None
         self.done = False
 
     def run(self):
-        while self.tasks:
+        while self.__tasks:
             self.run_internal()
 
+    def __push_task(self, task):
+        self.__tasks.append(task)
+
     def push_call(self, callstack, subtask, args):
-        self.tasks.append(('call', callstack, subtask, args))
+        self.__push_task(('call', callstack, subtask, args))
 
     def push_done(self, callstack, response):
-        if not callstack:
-            self.response = response
-            self.done = True
-        else:
-            parent_callstack = callstack[1]
-            task, state = callstack[0]
-            self.tasks.append(
-                ('resume', parent_callstack, task, state, response))
+        self.__push_task(('done', callstack, response))
 
     def run_internal(self):
-        task = self.tasks.pop()
+        task = self.__tasks.pop()
         type = task[0]
         stack = task[1]
         if type == 'call':
@@ -158,10 +154,16 @@ class Runner(object):
             cont = Controller(self, f, stack)
             f.start(cont, task[3])
         else:
-            # 'resume'
-            f = task[2]
-            cont = Controller(self, f, stack)
-            f.resume(cont, task[3], task[4])
+            # 'done'
+            response = task[2]
+            if not stack:
+                self.response = response
+                self.done = True
+            else:
+                parent_stack = stack[1]
+                task, state = stack[0]
+                cont = Controller(self, task, parent_stack)
+                task.resume(cont, state, response)
 
 
 runner = Runner(EvalTask(), tree)
