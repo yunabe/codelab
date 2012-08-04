@@ -43,22 +43,24 @@ print 'eval(tree) ==', eval(tree)
 
 
 class EvalTask(object):
-    def start(self, cont, args):
-        tree = args
+    def __init__(self, tree):
+        self.__tree = tree
+
+    def start(self, cont):
+        tree = self.__tree
         if not isinstance(tree, tuple):
             cont.done(tree)
             return
-        op = tree[0]
+        op, left, right = tree
         if op == '+':
-            task = AddTask()
+            task = AddTask(left, right)
         elif op == '-':
-            task = SubTask()
+            task = SubTask(left, right)
         elif op == '*':
-            task = MulTask()
+            task = MulTask(left, right)
         else:
             raise Exception('Unexpected op')
-        args = (tree[1], tree[2])
-        cont.call(task, args, 'wait')
+        cont.call(task, 'wait')
 
     def resume(self, cont, state, response):
         assert state == 'wait'
@@ -66,45 +68,51 @@ class EvalTask(object):
 
 
 class AddTask(object):
-    def start(self, cont, args):
-        left, right = args
-        self.right = right
-        cont.call(EvalTask(), left, 'left')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
+        cont.call(EvalTask(self.__left), 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask(), self.right, 'right')
+            cont.call(EvalTask(self.__right), 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res + response)
 
 
 class SubTask(object):
-    def start(self, cont, args):
-        left, right = args
-        self.right = right
-        cont.call(EvalTask(), left, 'left')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
+        cont.call(EvalTask(self.__left), 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask(), self.right, 'right')
+            cont.call(EvalTask(self.__right), 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res - response)
 
 
 class MulTask(object):
-    def start(self, cont, args):
-        left, right = args
-        self.right = right
-        cont.call(EvalTask(), left, 'left')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
+        cont.call(EvalTask(self.__left), 'left')
 
     def resume(self, cont, state, response):
         if state == 'left':
             self.left_res = response
-            cont.call(EvalTask(), self.right, 'right')
+            cont.call(EvalTask(self.__right), 'right')
         else:
             assert state == 'right'
             cont.done(self.left_res * response)
@@ -116,19 +124,19 @@ class Controller(object):
         self.__task = task
         self.__stack = callstack
 
-    def call(self, task, args, state):
+    def call(self, task, state):
         stack = ((self.__task, state), self.__stack)
-        self.__runner.push_call(stack, task, args)
+        self.__runner.push_call(stack, task)
 
     def done(self, response):
         self.__runner.push_done(self.__stack, response)
 
 
 class Runner(object):
-    def __init__(self, task, args):
+    def __init__(self, task):
         # tasks is FIFO to run tasks in DFS way.
         # To run tasks in BFS way, use collections.deque.
-        self.__tasks = [('call', None, task, args)]
+        self.__tasks = [('call', None, task)]
         self.response = None
         self.done = False
 
@@ -139,8 +147,8 @@ class Runner(object):
     def __push_task(self, task):
         self.__tasks.append(task)
 
-    def push_call(self, callstack, subtask, args):
-        self.__push_task(('call', callstack, subtask, args))
+    def push_call(self, callstack, subtask):
+        self.__push_task(('call', callstack, subtask))
 
     def push_done(self, callstack, response):
         self.__push_task(('done', callstack, response))
@@ -152,7 +160,7 @@ class Runner(object):
         if type == 'call':
             f = task[2]
             cont = Controller(self, f, stack)
-            f.start(cont, task[3])
+            f.start(cont)
         else:
             # 'done'
             response = task[2]
@@ -166,6 +174,6 @@ class Runner(object):
                 task.resume(cont, state, response)
 
 
-runner = Runner(EvalTask(), tree)
+runner = Runner(EvalTask(tree))
 runner.run()
 print 'runner.response =', runner.response

@@ -86,22 +86,24 @@ def async_multiply(x, y, callback):
 
 
 class EvalTask(object):
-    def start(self, cont, args):
-        tree = args
+    def __init__(self, tree):
+        self.__tree = tree
+
+    def start(self, cont):
+        tree = self.__tree
         if not isinstance(tree, tuple):
             cont.done(tree)
             return
-        op = tree[0]
+        op, left, right = tree
         if op == '+':
-            task = AddTask()
+            task = AddTask(left, right)
         elif op == '-':
-            task = SubTask()
+            task = SubTask(left, right)
         elif op == '*':
-            task = MulTask()
+            task = MulTask(left, right)
         else:
             raise Exception('Unexpected op')
-        args = (tree[1], tree[2])
-        cont.call(task, args, 'wait')
+        cont.call(task, 'wait')
 
     def resume(self, cont, state, response):
         assert state == 'wait'
@@ -109,12 +111,15 @@ class EvalTask(object):
 
 
 class AddTask(object):
-    def start(self, cont, args):
-        left, right = args
-        cont.call(EvalTask(), left, 'left')
-        cont.call(EvalTask(), right, 'right')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
         self.left_result = None
         self.right_result = None
+        cont.call(EvalTask(self.__left), 'left')
+        cont.call(EvalTask(self.__right), 'right')
 
     def resume(self, cont, state, response):
         if state == 'left':
@@ -126,10 +131,13 @@ class AddTask(object):
 
 
 class SubTask(object):
-    def start(self, cont, args):
-        left, right = args
-        cont.call(EvalTask(), left, 'left')
-        cont.call(EvalTask(), right, 'right')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
+        cont.call(EvalTask(self.__left), 'left')
+        cont.call(EvalTask(self.__right), 'right')
         self.left_result = None
         self.right_result = None
 
@@ -142,10 +150,13 @@ class SubTask(object):
             cont.done(self.left_result - self.right_result)
 
 class MulTask(object):
-    def start(self, cont, args):
-        left, right = args
-        cont.call(EvalTask(), left, 'left')
-        cont.call(EvalTask(), right, 'right')
+    def __init__(self, left, right):
+        self.__left = left
+        self.__right = right
+
+    def start(self, cont):
+        cont.call(EvalTask(self.__left), 'left')
+        cont.call(EvalTask(self.__right), 'right')
         self.left_result = None
         self.right_result = None
 
@@ -165,26 +176,26 @@ class Controller(object):
         self.__task = task
         self.__stack = callstack
 
-    def call(self, task, args, state):
+    def call(self, task, state):
         stack = ((self.__task, state), self.__stack)
-        self.__runner.push_call(stack, task, args)
+        self.__runner.push_call(stack, task)
 
     def done(self, response):
         self.__runner.push_done(self.__stack, response)
 
-    def sync_call(self, task, args, state):
+    def sync_call(self, task, state):
         stack = ((self.__task, state), self.__stack)
-        self.__runner.sync_push_call(stack, task, args)
+        self.__runner.sync_push_call(stack, task)
 
     def sync_done(self, response):
         self.__runner.sync_push_done(self.__stack, response)
 
 
 class Runner(object):
-    def __init__(self, task, args):
+    def __init__(self, task):
         # tasks is FIFO to run tasks in DFS way.
         # To run tasks in BFS way, use collections.deque.
-        self.__tasks = [('call', None, task, args)]
+        self.__tasks = [('call', None, task, None)]
         self.response = None
         self.done = False
         self.__sync_tasks = []
@@ -211,11 +222,11 @@ class Runner(object):
         self.__cond.notify()
         self.__cond.release()
 
-    def push_call(self, callstack, subtask, args):
-        self.__push_task(('call', callstack, subtask, args))
+    def push_call(self, callstack, subtask):
+        self.__push_task(('call', callstack, subtask))
 
-    def sync_push_call(self, callstack, subtask, args):
-        self.__sync_push_task(('call', callstack, subtask, args))
+    def sync_push_call(self, callstack, subtask):
+        self.__sync_push_task(('call', callstack, subtask))
 
     def push_done(self, callstack, response):
         self.__push_task(('done', callstack, response))
@@ -230,7 +241,7 @@ class Runner(object):
         if type == 'call':
             f = task[2]
             cont = Controller(self, f, stack)
-            f.start(cont, task[3])
+            f.start(cont)
         else:
             # 'done'
             response = task[2]
@@ -244,7 +255,7 @@ class Runner(object):
                 task.resume(cont, state, response)
 
 
-runner = Runner(EvalTask(), tree)
+runner = Runner(EvalTask(tree))
 while runner.response is None:
     runner.run()
 print 'runner.response =', runner.response
