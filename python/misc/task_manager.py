@@ -94,6 +94,9 @@ class Runner(object):
             # 'done'
             _, response, cont = task
             parentcont = cont.parent()
+            f = cont.task()
+            if hasattr(f, 'dispose'):
+                f.dispose()
             if not parentcont:
                 self.response = response
                 self.done = True

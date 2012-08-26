@@ -26,6 +26,39 @@ class TaskManagerTest(unittest.TestCase):
         self.assertTrue(runner.done)
         self.assertEquals(89, runner.response)
 
+    def testDispose(self):
+        class Dispose(object):
+            def __init__(self, depth, log):
+                self.__depth = depth
+                self.__log = log
+                self.__response_count = 0
+
+            def start(self, cont):
+                self.__label = cont.state()
+                if self.__depth > 1:
+                    cont.call(Dispose(self.__depth - 1, self.__log), 'left')
+                    cont.call(Dispose(self.__depth - 1, self.__log), 'right')
+                else:
+                    cont.done(None)
+
+            def resume(self, cont, state, response):
+                self.__response_count += 1
+                if self.__response_count == 2:
+                    cont.done(None)
+
+            def dispose(self):
+                self.__log.append('Dispose: depth = %d, state = %s' % (
+                        self.__depth, self.__label))
+
+        log = []
+        runner = Runner(Dispose(2, log))
+        runner.run()
+        self.assertEquals(3, len(log))
+        self.assertEquals('Dispose: depth = 1, state = right', log[0])
+        self.assertEquals('Dispose: depth = 1, state = left', log[1])
+        self.assertEquals('Dispose: depth = 2, state = <init>', log[2])
+                                                         
+
     def testDisponseWithException(self):
         class DisposeWithException(object):
             def __init__(self, log):
@@ -116,9 +149,10 @@ class TaskManagerTest(unittest.TestCase):
             else:
                 ok = True
         self.assertTrue(ok)
-        self.assertEquals(2, len(log))
-        self.assertEquals('dispose:RaiseException', log[0])
-        self.assertEquals('dispose:DisposeWithException', log[1])
+        self.assertEquals(3, len(log))
+        self.assertEquals('dispose:Child', log[0])
+        self.assertEquals('dispose:RaiseException', log[1])
+        self.assertEquals('dispose:DisposeWithException', log[2])
 
 
 if __name__ == '__main__':
