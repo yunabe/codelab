@@ -87,7 +87,7 @@ class TaskManagerTest(unittest.TestCase):
                 self.__log = log
 
             def start(self, cont):
-                cont.call(Child(), 'child')
+                cont.call(Child(self.__log), 'child')
 
             def resume(self, cont, state, response):
                 raise Exception('This is an exception!')
@@ -96,6 +96,9 @@ class TaskManagerTest(unittest.TestCase):
                 self.__log.append('dispose:RaiseException')
 
         class Child(object):
+            def __init__(self, log):
+                self.__log = log
+
             def start(self, cont):
                 cont.done(None)
 
