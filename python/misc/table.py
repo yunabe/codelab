@@ -48,6 +48,16 @@ class Table(object):
                 new.add_row(row.values())
         return new
 
+    def orderby(self, order):
+        orders = []
+        for i, row in enumerate(self.__rows):
+            orders.append((eval(order, None, row), i))
+        orders.sort()
+        new = Table(self.__cols)
+        for _, i in orders:
+            new.add_row(self.__rows[i].values())
+        return new
+
 
 class Row(object):
     def __init__(self, table, values):

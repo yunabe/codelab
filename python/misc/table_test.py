@@ -22,6 +22,27 @@ class TableTest(unittest.TestCase):
         self.assertEquals((1, 2), (rows[0].a, rows[0].b))
         self.assertEquals((5, 6), (rows[1].a, rows[1].b))
 
+    def testWhere(self):
+        table = Table(['a', 'b'])
+        row = table.add_row([1, 5])
+        row = table.add_row([7, 4])
+        row = table.add_row([5, 6])
+
+        table = table.orderby('a')
+        rows = list(table.rows())
+        self.assertEquals(3, len(rows))
+        self.assertEquals((1, 5), (rows[0].a, rows[0].b))
+        self.assertEquals((5, 6), (rows[1].a, rows[1].b))
+        self.assertEquals((7, 4), (rows[2].a, rows[2].b))
+
+        table = table.orderby('b')
+        rows = list(table.rows())
+        self.assertEquals(3, len(rows))
+        self.assertEquals((7, 4), (rows[0].a, rows[0].b))
+        self.assertEquals((1, 5), (rows[1].a, rows[1].b))
+        self.assertEquals((5, 6), (rows[2].a, rows[2].b))
+
+
     def testPrettyPrint(self):
         io = StringIO()
         table = Table(['a', 'b'])
