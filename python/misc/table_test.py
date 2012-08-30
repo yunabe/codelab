@@ -9,6 +9,7 @@ class TableTest(unittest.TestCase):
         row = table.add_row([1, 2])
         self.assertEquals((1, 2), (row['a'], row['b']))
         self.assertEquals((1, 2), (row.a, row.b))
+        self.assertEquals(1, len(list(table)))
 
     def testWhere(self):
         table = Table(['a', 'b'])
@@ -41,7 +42,6 @@ class TableTest(unittest.TestCase):
         self.assertEquals((7, 4), (rows[0].a, rows[0].b))
         self.assertEquals((1, 5), (rows[1].a, rows[1].b))
         self.assertEquals((5, 6), (rows[2].a, rows[2].b))
-
 
     def testPrettyPrint(self):
         io = StringIO()
