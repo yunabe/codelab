@@ -1,6 +1,6 @@
 import unittest
 
-from task_manager import Runner
+from task_manager import IdentityTask, Runner
 
 class Fib(object):
     def __init__(self, n):
@@ -153,6 +153,54 @@ class TaskManagerTest(unittest.TestCase):
         self.assertEquals('dispose:Child', log[0])
         self.assertEquals('dispose:RaiseException', log[1])
         self.assertEquals('dispose:DisposeWithException', log[2])
+
+    def testDisponseWithMultiChild(self):
+        class DisposeWithException(object):
+            def __init__(self, log):
+                self.__log = log
+
+            def start(self, cont):
+                cont.call(RaiseException(self.__log, 'foo'), 'child')
+                cont.call(RaiseException(self.__log, 'bar'), 'child')
+
+            def resume(self, cont, state, response):
+                pass
+
+            def dispose(self):
+                self.__log.append('dispose:DisposeWithException')
+
+        class RaiseException(object):
+            def __init__(self, log, name):
+                self.__log = log
+                self.__name = name
+
+            def start(self, cont):
+                cont.sync_call(IdentityTask(None), '')
+
+            def resume(self, cont, state, response):
+                raise Exception('Exception:' + self.__name)
+
+            def dispose(self):
+                self.__log.append('dispose:RaiseException:' + self.__name)
+
+        log = []
+        runner = Runner(DisposeWithException(log))
+        ok = False
+        try:
+            while not runner.done:
+                runner.run()
+        except Exception, e:
+            if e.message != 'Exception:foo' and e.message != 'Exception:bar':
+                raise
+            else:
+                ok = True
+        self.assertTrue(ok)
+        self.assertEquals(3, len(log))
+        self.assertEquals('dispose:DisposeWithException', log[2])
+        log = sorted(log[:2])
+        # We don't care order of child logs.
+        self.assertEquals('dispose:RaiseException:bar', log[0])
+        self.assertEquals('dispose:RaiseException:foo', log[1])
 
 
 if __name__ == '__main__':
