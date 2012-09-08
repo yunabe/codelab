@@ -202,6 +202,47 @@ class TaskManagerTest(unittest.TestCase):
         self.assertEquals('dispose:RaiseException:bar', log[0])
         self.assertEquals('dispose:RaiseException:foo', log[1])
 
+    def testDisponsePendingChild(self):
+        class Dispose(object):
+            def __init__(self, log):
+                self.__log = log
+
+            def start(self, cont):
+                cont.call(Child(self.__log, 'foo'), 'child')
+                cont.call(Child(self.__log, 'bar'), 'child')
+
+            def resume(self, cont, state, response):
+                cont.done(None)
+
+            def dispose(self):
+                self.__log.append('dispose:Dispose')
+
+        class Child(object):
+            def __init__(self, log, name):
+                self.__log = log
+                self.__name = name
+
+            def start(self, cont):
+                cont.sync_call(IdentityTask(None), '')
+
+            def resume(self, cont, state, response):
+                log.append('done:Child:' + self.__name)
+                cont.done(response)
+
+            def dispose(self):
+                self.__log.append('dispose:Child:' + self.__name)
+
+        log = []
+        runner = Runner(Dispose(log))
+        ok = False
+        while not runner.done:
+            runner.run()
+        self.assertEquals(4, len(log))
+        self.assertEquals('done:Child:foo', log[0])
+        self.assertEquals('dispose:Child:foo', log[1])
+        self.assertEquals('dispose:Child:bar', log[2])
+        self.assertEquals('dispose:Dispose', log[3])
+
 
 if __name__ == '__main__':
     unittest.main()
