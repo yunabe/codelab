@@ -1,4 +1,5 @@
 from StringIO import StringIO
+import math
 import unittest
 
 from table import Table, Row
@@ -42,6 +43,15 @@ class TableTest(unittest.TestCase):
         self.assertEquals((7, 4), (rows[0].a, rows[0].b))
         self.assertEquals((1, 5), (rows[1].a, rows[1].b))
         self.assertEquals((5, 6), (rows[2].a, rows[2].b))
+
+        def f(a):
+            return a % 2
+        table = table.orderby('math.pow(f(b), 1)', globals(), locals())
+        rows = list(table.rows())
+        self.assertEquals(3, len(rows))
+        self.assertEquals((7, 4), (rows[0].a, rows[0].b))
+        self.assertEquals((5, 6), (rows[1].a, rows[1].b))
+        self.assertEquals((1, 5), (rows[2].a, rows[2].b))
 
     def testPrettyPrint(self):
         io = StringIO()
