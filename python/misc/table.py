@@ -56,11 +56,10 @@ class Table(object):
                 writer.write(('%% %ds' % max_width[col]) % str(row[col]))
             writer.write('\n')
 
-
-    def where(self, cond):
+    def where(self, cond, globals=None, locals=None):
         new = Table(self.__cols)
         for row in self.__rows:
-            if eval(cond, None, row):
+            if eval(cond, globals, VarDict(locals, row)):
                 new.add_row(row.values())
         return new
 

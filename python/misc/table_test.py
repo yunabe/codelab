@@ -18,11 +18,18 @@ class TableTest(unittest.TestCase):
         row = table.add_row([3, 4])
         row = table.add_row([5, 6])
 
-        table = table.where('a != 3')
-        rows = list(table.rows())
+        filtered = table.where('a != 3')
+        rows = list(filtered.rows())
         self.assertEquals(2, len(rows))
         self.assertEquals((1, 2), (rows[0].a, rows[0].b))
         self.assertEquals((5, 6), (rows[1].a, rows[1].b))
+
+        def f(x):
+            return x * x
+        filtered = table.where('math.pow(f(a), 2) == 81', globals(), locals())
+        rows = list(filtered.rows())
+        self.assertEquals(1, len(rows))
+        self.assertEquals((3, 4), (rows[0].a, rows[0].b))
 
     def testOrderBy(self):
         table = Table(['a', 'b'])
