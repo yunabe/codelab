@@ -24,7 +24,7 @@ class TableTest(unittest.TestCase):
         self.assertEquals((1, 2), (rows[0].a, rows[0].b))
         self.assertEquals((5, 6), (rows[1].a, rows[1].b))
 
-    def testWhere(self):
+    def testOrderBy(self):
         table = Table(['a', 'b'])
         row = table.add_row([1, 5])
         row = table.add_row([7, 4])
