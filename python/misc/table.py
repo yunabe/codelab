@@ -20,6 +20,9 @@ class Table(object):
         for i, col in enumerate(cols):
             self.__col_index[col] = i
 
+    def cols(self):
+        return self.__cols
+
     def __iter__(self):
         return self.__rows.__iter__()
 
@@ -34,7 +37,7 @@ class Table(object):
     def rows(self):
         return self.__rows
 
-    def pretty_print(self, writer, sep=' '):
+    def pretty_print(self, writer, sep=' |'):
         # key -> len(key)
         max_width = dict(zip(self.__cols, map(len, self.__cols)))
         for row in self.__rows:
@@ -63,11 +66,15 @@ class Table(object):
                 new.add_row(row.values())
         return new
 
-    def orderby(self, order, globals=None, locals=None):
+    def orderby(self, order, asc=True, globals=None, locals=None):
         orders = []
         for i, row in enumerate(self.__rows):
             orders.append((eval(order, globals, VarDict(locals, row)), i))
-        orders.sort()
+        if asc:
+            comparator = cmp
+        else:
+            comparator = lambda x, y: cmp(y, x)
+        orders.sort(comparator)
         new = Table(self.__cols)
         for _, i in orders:
             new.add_row(self.__rows[i].values())
@@ -78,6 +85,9 @@ class Row(object):
     def __init__(self, table, values):
         self.__table = table
         self.__values = values
+
+    def table(self):
+        return self.__table
 
     def values(self):
         return self.__values
