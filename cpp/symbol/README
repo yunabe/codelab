@@ -1,0 +1,6 @@
+TODO:
+* Uderstand why 2 symbols for constructors are created.
+http://stackoverflow.com/questions/6921295/dual-emission-of-constructor-symbols
+* What are _Unwind_Resume and U __gxx_personality_v0 in class.cc?
+http://stackoverflow.com/questions/329059/what-is-gxx-personality-v0-for
+* What are n _ZN9InlineDefC5Ev and _ZN9InlineDefD5Ev in class.cc?
