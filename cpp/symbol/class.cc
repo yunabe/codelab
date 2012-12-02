@@ -55,6 +55,19 @@ void DeclAndDef::Run() {}
 
 void DeclAndDef::StaticRun() {}
 
+class StaticVal {
+public:
+  // "U"
+  static int declared;
+  // "B"
+  static int defined_uninit;
+  // "B"
+  static int defined_init;
+};
+
+int StaticVal::defined_uninit;
+int StaticVal::defined_init = 0;
+
 void use_symbols() {
   DefaultConstructor default_constructor;
   default_constructor.value = 10;
@@ -79,4 +92,8 @@ void use_symbols() {
   ClassDecl::StaticRun();
   InlineDef::StaticRun();
   DeclAndDef::StaticRun();
+
+  StaticVal::declared = 10;
+  StaticVal::defined_init = 20;
+  StaticVal::defined_uninit = 30;
 }
