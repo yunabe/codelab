@@ -14,8 +14,10 @@ using std::vector;
 // ulimit -n
 //
 // Limit 2: # of file descriptors in OS.
-// /proc/sys/fs/file-max
+// /proc/sys/fs/file-max.
+// You can check current # of opened files by /proc/sys/fs/file-nr.
 // Set fs.file-max to /etc/sysctl.conf to modify the value.
+
 
 static const int kNum = 5000;
 static const int kPort = 9898;
