@@ -10,6 +10,13 @@
 
 using std::vector;
 
+// Limit 1: # of file descriptors per process in ulimit.
+// ulimit -n
+//
+// Limit 2: # of file descriptors in OS.
+// /proc/sys/fs/file-max
+// Set fs.file-max to /etc/sysctl.conf to modify the value.
+
 static const int kNum = 5000;
 static const int kPort = 9898;
 
