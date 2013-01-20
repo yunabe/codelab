@@ -1,0 +1,8 @@
+* Prerequisite
+sudo apt-get install libcglib-java
+
+* Build
+make
+
+* Run
+java -classpath /usr/share/java/cglib.jar:/usr/share/java/asm3.jar:. Main
