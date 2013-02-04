@@ -1,0 +1,4 @@
+Note:
+
+1. package-private is not accessible from libraries in the same package,
+   if libraries are loaded by different class loaders.
