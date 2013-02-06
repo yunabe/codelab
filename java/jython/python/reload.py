@@ -1,5 +1,7 @@
 import time
 
+print 'Reloading reload.py'
+
 count = 0
 
 def method():
