@@ -56,8 +56,12 @@ public class Embed {
     inter.exec("print map(lambda x: x * 2, range(5))");
 
     // Calling Python instances that inherits Java interfaces or classes.
-    inter.exec("import embed");
-    PyObject embedMod = Py.getSystemState().modules.__getitem__(Py.newString("embed"));
+    PyObject importer = Py.getSystemState().getBuiltins().__getitem__(Py.newString("__import__"));
+    PyObject embedMod = importer.__call__(Py.newString("embed"));
+    // Another implementation:
+    // inter.exec("import embed");
+    // PyObject embedMod = Py.getSystemState().modules.__getitem__(Py.newString("embed"));
+    
     PyObject myimp = embedMod.__getattr__("myimp");
     // Object.class can be replaced with MyImp.class (MyChild.class).
     // Any parent of MyImp (MyChild) may be fine.
