@@ -1,4 +1,4 @@
-all: run_hello
+all: run_hello run_loadtime_hello
 
 # Compile-time weaving
 run_hello: compile/HelloWorld.class compile/HelloWorldTracing.class
@@ -9,7 +9,7 @@ compile/HelloWorld.class compile/HelloWorldTracing.class: HelloWorld.java HelloW
 
 # Load-time weaving
 run_loadtime_hello: loadtime/HelloWorld.class loadtime/HelloWorldTracing.class loadtime/META-INF/aop.xml
-	java -classpath /home/yunabe/local/aspectj1.7/lib/aspectjrt.jar:loadtime:weaver.jar -javaagent:/home/yunabe/local/aspectj1.7/lib/aspectjweaver.jar HelloWorld
+	java -classpath /home/yunabe/local/aspectj1.7/lib/aspectjrt.jar:loadtime -javaagent:/home/yunabe/local/aspectj1.7/lib/aspectjweaver.jar HelloWorld
 
 loadtime/HelloWorld.class: HelloWorld.java
 	mkdir -p loadtime && javac -d loadtime HelloWorld.java
