@@ -8,7 +8,10 @@ public class HelloWorld {
   }
 
   void sayHello() {
-    System.out.println("Hello world!");
+    System.out.println(createMessage("world"));
+  }
+
+  String createMessage(String name) {
+    return "Hello '" + name + "'!";
   }
 }
-
