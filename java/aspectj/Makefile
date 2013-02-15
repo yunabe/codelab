@@ -1,4 +1,4 @@
-all: run_hello run_loadtime_hello
+all: run_hello run_loadtime_hello run_hello_weave_after_compile
 
 # Compile-time weaving
 run_hello: compile/HelloWorld.class compile/HelloWorldTracing.class
@@ -19,6 +19,13 @@ loadtime/HelloWorldTracing.class: HelloWorldTracing.aj loadtime/HelloWorld.class
 
 loadtime/META-INF/aop.xml: aop.xml
 	mkdir -p loadtime/META-INF && cp aop.xml loadtime/META-INF/aop.xml
+
+# Weaving aspects to class files (-inpath can be jar file too)
+run_hello_weave_after_compile: weave_after_compile/HelloWorld.class
+	java -classpath /home/yunabe/local/aspectj1.7/lib/aspectjrt.jar:weave_after_compile HelloWorld
+
+weave_after_compile/HelloWorld.class: loadtime/HelloWorld.class
+	mkdir -p weave_after_compile && ajc -d weave_after_compile -classpath /home/yunabe/local/aspectj1.7/lib/aspectjrt.jar -inpath loadtime HelloWorldTracing.aj
 
 clean:
 	rm -rf *.class compile loadtime
