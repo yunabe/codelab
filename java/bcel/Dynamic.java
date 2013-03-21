@@ -35,7 +35,7 @@ class Dynamic {
       MethodGen addGen = new MethodGen(Constants.ACC_PUBLIC,
                                        Type.INT,
                                        new Type[]{Type.INT},
-                                       new String[]{"a"},  // null?
+                                       null,
                                        "add",
                                        className,  // for what?
                                        ilist,
@@ -49,7 +49,8 @@ class Dynamic {
 
       addGen.setMaxStack();
       // We don't need to call addGen.setMaxLocals().
-
+      
+      // NOTE: getMethod fails with NullPointerException if ilist has no instruction.
       cgen.addMethod(addGen.getMethod());
       ilist.dispose();
       
