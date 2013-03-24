@@ -20,6 +20,165 @@ import java.util.List;
 
 class HookInjector {
 
+  public static void castToObject(InstructionFactory ifact,
+                                  InstructionList ilist,
+                                  Type type) {
+    switch (type.getType()) {
+    case Constants.T_OBJECT:
+    case Constants.T_ARRAY:
+      // No cast
+      break;
+    case Constants.T_INT:
+      ilist.append(ifact.createInvoke(
+          "java.lang.Integer",
+          "valueOf",
+          new ObjectType("java.lang.Integer"),
+          new Type[]{Type.INT},
+          Constants.INVOKESTATIC));
+      break;
+    default:
+      throw new RuntimeException("Unexpected type: " + type);
+    }
+  }
+
+  public static void castToPrimitive(
+      InstructionFactory ifact,
+      InstructionList ilist,
+      Type type) {
+    switch (type.getType()) {
+    case Constants.T_OBJECT:
+    case Constants.T_ARRAY:
+      // No cast
+      break;
+    case Constants.T_INT:
+      ilist.append(
+          ifact.createCheckCast(new ObjectType("java.lang.Integer")));
+      ilist.append(
+          ifact.createInvoke(
+              "java.lang.Integer",
+              "intValue",
+              Type.INT,
+              Type.NO_ARGS,
+              Constants.INVOKEVIRTUAL));
+      break;
+    default:
+      throw new RuntimeException("Unexpected type: " + type);
+    }
+  }
+
+  public static JavaClass createRunner(String className, String innerName, Method method) {
+    ClassGen runner = new ClassGen(innerName, "java.lang.Object", null,
+                                   Constants.ACC_PUBLIC,
+                                   new String[] {"Hook$Runner"});
+    runner.addEmptyConstructor(Constants.ACC_PUBLIC);
+
+    runner.addField(new FieldGen(Constants.ACC_PUBLIC | Constants.ACC_STATIC,
+                                 new ObjectType(innerName),
+                                 "INSTANT",
+                                 runner.getConstantPool()).getField());
+    InstructionFactory ifact = new InstructionFactory(runner);
+
+    InstructionList ilist = new InstructionList();
+    MethodGen staticBlock = new MethodGen(Constants.ACC_STATIC,
+                                          Type.VOID,
+                                          Type.NO_ARGS,
+                                          null,
+                                          "<clinit>",
+                                          innerName,  // for what?
+                                          ilist,
+                                          runner.getConstantPool());
+    ilist.append(ifact.createNew(new ObjectType(innerName)));
+    ilist.append(ifact.createDup(1));
+    ilist.append(ifact.createInvoke(innerName,
+                                    "<init>",
+                                    Type.VOID,
+                                    Type.NO_ARGS,
+                                    Constants.INVOKESPECIAL));
+    ilist.append(ifact.createPutStatic(innerName,
+                                       "INSTANT",
+                                       new ObjectType(innerName)));
+    ilist.append(ifact.createReturn(Type.VOID));
+    staticBlock.setMaxStack();
+    runner.addMethod(staticBlock.getMethod());
+    ilist.dispose();
+
+    ilist = new InstructionList();
+    MethodGen runMethod = new MethodGen(
+        Constants.ACC_PUBLIC,
+        Type.OBJECT,
+        Type.getArgumentTypes("([Ljava/lang/Object;)V"),
+        null,
+        "run",
+        innerName,  // for what?
+        ilist,
+        runner.getConstantPool());
+    Type[] argTypes = method.getArgumentTypes();
+    for (int i = 0; i < argTypes.length; ++i) {
+      ilist.append(ifact.createLoad(Type.OBJECT, 1));
+      ilist.append(ifact.createConstant(i));
+      ilist.append(ifact.createArrayLoad(Type.OBJECT));
+      castToPrimitive(ifact, ilist, argTypes[i]);
+    }
+    ilist.append(ifact.createInvoke(
+        className,
+        method.getName() + "$original",
+        method.getReturnType(),
+        method.getArgumentTypes(),
+        Constants.INVOKESTATIC));
+    castToObject(ifact, ilist, method.getReturnType());
+    ilist.append(ifact.createReturn(Type.OBJECT));
+
+    runMethod.setMaxStack();
+    runner.addMethod(runMethod.getMethod());
+    ilist.dispose();
+
+    return runner.getJavaClass();
+  }
+
+  public static Method createHookedMethod(ClassGen cgen, Method method, String innerName) {
+    InstructionFactory ifact = new InstructionFactory(cgen);
+    InstructionList ilist = new InstructionList();
+    MethodGen hookMethod = new MethodGen(
+        Constants.ACC_PUBLIC | Constants.ACC_STATIC,
+        method.getReturnType(),
+        method.getArgumentTypes(),
+        null,
+        method.getName(),
+        cgen.getClassName(),
+        ilist,
+        cgen.getConstantPool());
+    ilist.append(ifact.createConstant(
+        cgen.getClassName() + "." + method.getName()));
+    ilist.append(ifact.createGetStatic(
+        innerName,
+        "INSTANT",
+        new ObjectType(innerName)));
+    ilist.append(ifact.createConstant(method.getArgumentTypes().length));
+    ilist.append(ifact.createNewArray(Type.OBJECT, (short)1));
+    for (int i = 0; i < method.getArgumentTypes().length; ++i) {
+      ilist.append(ifact.createDup(1));
+      ilist.append(ifact.createConstant(i));
+      ilist.append(ifact.createLoad(method.getArgumentTypes()[i], i));
+      castToObject(ifact, ilist, method.getArgumentTypes()[i]);
+      ilist.append(ifact.createArrayStore(Type.OBJECT));
+    }
+    ilist.append(ifact.createInvoke(
+        "Hook",
+        "hook",
+        Type.OBJECT,
+        Type.getArgumentTypes(
+            "(Ljava/lang/String;LHook$Runner;[Ljava/lang/Object;)LV"),
+        Constants.INVOKESTATIC));
+    castToPrimitive(ifact, ilist, method.getReturnType());
+    ilist.append(ifact.createReturn(method.getReturnType()));
+
+    hookMethod.setMaxStack();
+
+    Method returnVal = hookMethod.getMethod();
+    ilist.dispose();
+    return returnVal;
+  }
+
   public static void injectHook(JavaClass cls, List<JavaClass> newClasses) {
     ClassGen cgen = new ClassGen(cls);
     ConstantPoolGen pgen = cgen.getConstantPool();
@@ -40,179 +199,10 @@ class HookInjector {
       originalGen.setName(originalGen.getName() + "$original");
       cgen.addMethod(originalGen.getMethod());
 
-      // args -> object list -> call hook.hook --> return it.
-      //
       String innerName = String.format("%s$runner%d", cgen.getClassName(), innerClassIndex);
       innerClassIndex++;
-      ClassGen runner = new ClassGen(innerName, "java.lang.Object", null,
-                                     Constants.ACC_PUBLIC,
-                                     new String[] {"Hook$Runner"});
-      runner.addEmptyConstructor(Constants.ACC_PUBLIC);
-
-      runner.addField(new FieldGen(Constants.ACC_PUBLIC | Constants.ACC_STATIC,
-                                   new ObjectType(innerName),
-                                   "INSTANT",
-                                   runner.getConstantPool()).getField());
-      InstructionFactory ifact = new InstructionFactory(runner);
-
-      InstructionList ilist = new InstructionList();
-      MethodGen staticBlock = new MethodGen(Constants.ACC_STATIC,
-                                            Type.VOID,
-                                            Type.NO_ARGS,
-                                            null,
-                                            "<clinit>",
-                                            innerName,  // for what?
-                                            ilist,
-                                            runner.getConstantPool());
-      ilist.append(ifact.createNew(new ObjectType(innerName)));
-      ilist.append(ifact.createDup(1));
-      ilist.append(ifact.createInvoke(innerName,
-                                      "<init>",
-                                      Type.VOID,
-                                      Type.NO_ARGS,
-                                      Constants.INVOKESPECIAL));
-      ilist.append(ifact.createPutStatic(innerName,
-                                         "INSTANT",
-                                         new ObjectType(innerName)));
-      ilist.append(ifact.createReturn(Type.VOID));
-      staticBlock.setMaxStack();
-      runner.addMethod(staticBlock.getMethod());
-      ilist.dispose();
-
-      ilist = new InstructionList();
-      MethodGen runMethod = new MethodGen(Constants.ACC_PUBLIC,
-                                          Type.OBJECT,
-                                          Type.getArgumentTypes("([Ljava/lang/Object;)V"),
-                                          null,
-                                          "run",
-                                          innerName,  // for what?
-                                          ilist,
-                                          runner.getConstantPool());
-      Type[] argTypes = method.getArgumentTypes();
-      for (int i = 0; i < argTypes.length; ++i) {
-        ilist.append(ifact.createLoad(Type.OBJECT, 1));
-        ilist.append(ifact.createConstant(i));
-        ilist.append(ifact.createArrayLoad(Type.OBJECT));
-        switch (argTypes[i].getType()) {
-        case Constants.T_OBJECT:
-        case Constants.T_ARRAY:
-          // No cast
-          break;
-        case Constants.T_INT:
-          ilist.append(ifact.createCheckCast(new ObjectType("java.lang.Integer")));
-          ilist.append(ifact.createInvoke("java.lang.Integer",
-                                          "intValue",
-                                          Type.INT,
-                                          Type.NO_ARGS,
-                                          Constants.INVOKEVIRTUAL));
-          break;
-        default:
-          throw new RuntimeException("Unexpected type: " + argTypes[i]);
-        }
-      }
-      ilist.append(ifact.createInvoke(cgen.getClassName(),
-                                      method.getName() + "$original",
-                                      method.getReturnType(),
-                                      method.getArgumentTypes(),
-                                      Constants.INVOKESTATIC));
-
-      switch (method.getReturnType().getType()) {
-      case Constants.T_OBJECT:
-      case Constants.T_ARRAY:
-        // No cast
-        break;
-      case Constants.T_INT:
-        ilist.append(ifact.createInvoke("java.lang.Integer",
-                                        "valueOf",
-                                        new ObjectType("java.lang.Integer"),
-                                        new Type[]{Type.INT},
-                                        Constants.INVOKESTATIC));
-        break;
-      default:
-        throw new RuntimeException("Unexpected type: " + method.getReturnType());
-      }
-      ilist.append(ifact.createReturn(Type.OBJECT));
-
-      runMethod.setMaxStack();
-      runner.addMethod(runMethod.getMethod());
-      ilist.dispose();
-
-      newClasses.add(runner.getJavaClass());
-
-      String runnerFieldName = String.format("runner%d", innerClassIndex - 1);
-
-      cgen.addField(new FieldGen(Constants.ACC_PUBLIC | Constants.ACC_STATIC,
-                                 new ObjectType("Hook$Runner"),
-                                 runnerFieldName,
-                                 pgen).getField());
-
-      ifact = new InstructionFactory(cgen);
-      ilist = new InstructionList();
-      MethodGen hookMethod = new MethodGen(Constants.ACC_PUBLIC |
-                                           Constants.ACC_STATIC,
-                                           method.getReturnType(),
-                                           method.getArgumentTypes(),
-                                           null,
-                                           method.getName(),
-                                           cgen.getClassName(),
-                                           ilist,
-                                           cgen.getConstantPool());
-      ilist.append(ifact.createConstant(cgen.getClassName() + "." + method.getName()));
-      ilist.append(ifact.createGetStatic(innerName,
-                                         "INSTANT",
-                                         new ObjectType(innerName)));
-      ilist.append(ifact.createConstant(method.getArgumentTypes().length));
-      ilist.append(ifact.createNewArray(Type.OBJECT, (short)1));
-      for (int i = 0; i < method.getArgumentTypes().length; ++i) {
-        ilist.append(ifact.createDup(1));
-        ilist.append(ifact.createConstant(i));
-        ilist.append(ifact.createLoad(method.getArgumentTypes()[i], i));
-        switch (method.getArgumentTypes()[i].getType()) {
-        case Constants.T_OBJECT:
-        case Constants.T_ARRAY:
-          // No cast
-          break;
-        case Constants.T_INT:
-          ilist.append(ifact.createInvoke("java.lang.Integer",
-                                          "valueOf",
-                                          new ObjectType("java.lang.Integer"),
-                                          new Type[]{Type.INT},
-                                          Constants.INVOKESTATIC));
-          break;
-        default:
-          throw new RuntimeException("Unexpected type: " + argTypes[i]);
-        }
-        ilist.append(ifact.createArrayStore(Type.OBJECT));
-      }
-      ilist.append(ifact.createInvoke("Hook",
-                                      "hook",
-                                      Type.OBJECT,
-                                      Type.getArgumentTypes("(Ljava/lang/String;LHook$Runner;[Ljava/lang/Object;)LV"),
-                                      Constants.INVOKESTATIC));
-      
-      switch (method.getReturnType().getType()) {
-      case Constants.T_OBJECT:
-      case Constants.T_ARRAY:
-        // No cast
-        break;
-      case Constants.T_INT:
-        ilist.append(ifact.createCheckCast(new ObjectType("java.lang.Integer")));
-        ilist.append(ifact.createInvoke("java.lang.Integer",
-                                        "intValue",
-                                        Type.INT,
-                                        Type.NO_ARGS,
-                                        Constants.INVOKEVIRTUAL));
-        break;
-      default:
-        throw new RuntimeException("Unexpected type: " + method.getReturnType());
-      }
-      ilist.append(ifact.createReturn(method.getReturnType()));
-
-      hookMethod.setMaxStack();
-      hookMethod.setMaxLocals();
-
-      cgen.replaceMethod(method, hookMethod.getMethod());
-      ilist.dispose();
+      newClasses.add(createRunner(cgen.getClassName(), innerName, method));
+      cgen.replaceMethod(method, createHookedMethod(cgen, method, innerName));
     }
 
     newClasses.add(cgen.getJavaClass());
