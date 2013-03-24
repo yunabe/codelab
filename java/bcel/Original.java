@@ -9,8 +9,17 @@ public class Original {
     return n > 0 ? n * fact(n - 1) : 1;
   }
 
+  public static int get10() {
+    return 10;
+  }
+
+  public static void voidFunc() {
+  }
+
   public static void main(String[] args) {
-    System.out.println("sum == " + sum(2, 3));
-    System.out.println("sum == " + fact(3));
+    System.out.println("sum  == " + sum(2, 3));
+    System.out.println("fact  == " + fact(3));
+    System.out.println("get10 == " + get10());
+    voidFunc();
   }
 }

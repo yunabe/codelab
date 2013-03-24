@@ -36,6 +36,9 @@ class HookInjector {
           new Type[]{Type.INT},
           Constants.INVOKESTATIC));
       break;
+    case Constants.T_VOID:
+      ilist.append(ifact.createNull(Type.OBJECT));
+      break;
     default:
       throw new RuntimeException("Unexpected type: " + type);
     }
@@ -60,6 +63,10 @@ class HookInjector {
               Type.INT,
               Type.NO_ARGS,
               Constants.INVOKEVIRTUAL));
+      break;
+    case Constants.T_VOID:
+      // TODO: Check the current val is null.
+      ilist.append(ifact.createPop(1));
       break;
     default:
       throw new RuntimeException("Unexpected type: " + type);
