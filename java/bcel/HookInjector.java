@@ -9,6 +9,7 @@ import org.apache.bcel.generic.InstructionList;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.InstructionFactory;
 import org.apache.bcel.generic.Type;
+import org.apache.bcel.generic.ReferenceType;
 import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.LDC;
 import org.apache.bcel.Constants;
@@ -55,7 +56,8 @@ class HookInjector {
     switch (type.getType()) {
     case Constants.T_OBJECT:
     case Constants.T_ARRAY:
-      // No cast
+      // Cast
+      ilist.append(ifact.createCheckCast((ReferenceType)type));
       break;
     case Constants.T_INT:
       ilist.append(
@@ -201,8 +203,7 @@ class HookInjector {
       if (!method.isStatic()) {
         continue;
       }
-      if (method.getName().equals("<clinit>") ||
-          method.getName().equals("main")) {
+      if (method.getName().equals("<clinit>")) {
         continue;
       }
       System.out.println("  " + method + "(static: " + method.getName() + ")");
