@@ -18,6 +18,10 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * Note:
+ *  This library makes private methods package private.
+ */
 class HookInjector {
 
   public static void castToObject(InstructionFactory ifact,
@@ -204,6 +208,11 @@ class HookInjector {
       System.out.println("  " + method + "(static: " + method.getName() + ")");
       MethodGen originalGen = new MethodGen(method, cgen.getClassName(), pgen);
       originalGen.setName(originalGen.getName() + "$original");
+      if (originalGen.isPrivate()) {
+        // Make private methods package private so that the runner can invoke
+        // this method.
+        originalGen.isPrivate(false);
+      }
       cgen.addMethod(originalGen.getMethod());
 
       String innerName = String.format("%s$runner%d", cgen.getClassName(), innerClassIndex);

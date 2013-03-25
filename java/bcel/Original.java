@@ -9,11 +9,11 @@ public class Original {
     return n > 0 ? n * fact(n - 1) : 1;
   }
 
-  public static int get10() {
+  static int get10() {
     return 10;
   }
 
-  public static void voidFunc() {
+  private static void voidFunc() {
   }
 
   public static void main(String[] args) {
