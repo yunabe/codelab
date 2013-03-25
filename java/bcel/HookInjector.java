@@ -57,6 +57,7 @@ class HookInjector {
     case Constants.T_OBJECT:
     case Constants.T_ARRAY:
       // Cast
+      // TODO(yunabe): Skip cast if type is java.lang.Object.
       ilist.append(ifact.createCheckCast((ReferenceType)type));
       break;
     case Constants.T_INT:
@@ -125,6 +126,7 @@ class HookInjector {
         innerName,  // for what?
         ilist,
         runner.getConstantPool());
+    // TODO: Check the size of input array.
     Type[] argTypes = method.getArgumentTypes();
     for (int i = 0; i < argTypes.length; ++i) {
       ilist.append(ifact.createLoad(Type.OBJECT, 1));
