@@ -28,6 +28,10 @@ public class Original {
     return doubled;
   }
 
+  public String sayHello(String name) {
+    return "Hello " + name + "!";
+  }
+
   public static void main(String[] args) {
     System.out.println("sum  == " + sum(2, 3));
     System.out.println("fact  == " + fact(3));
@@ -36,5 +40,10 @@ public class Original {
     System.out.println("refArgReturn == " + refArgReturn(10));
     System.out.println("arrayArgReturn == " +
                        arrayArgReturn(new int[]{1, 2, 3}));
+
+    System.out.println("===========================");
+    Original original = new Original();
+    original.sayHello("original");
+    System.out.println("+++++++++++++++++++++++++++");
   }
 }

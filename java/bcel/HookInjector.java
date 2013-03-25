@@ -80,7 +80,8 @@ class HookInjector {
     }
   }
 
-  public static JavaClass createRunner(String className, String innerName, Method method) {
+  public static JavaClass createRunner(
+      String className, String innerName, Method method, boolean isVirtual) {
     ClassGen runner = new ClassGen(innerName, "java.lang.Object", null,
                                    Constants.ACC_PUBLIC,
                                    new String[] {"Hook$Runner"});
@@ -128,9 +129,15 @@ class HookInjector {
         runner.getConstantPool());
     // TODO: Check the size of input array.
     Type[] argTypes = method.getArgumentTypes();
+    if (isVirtual) {
+      ilist.append(ifact.createLoad(Type.OBJECT, 1));
+      ilist.append(ifact.createConstant(0));
+      ilist.append(ifact.createArrayLoad(Type.OBJECT));
+      castToPrimitive(ifact, ilist, new ObjectType(className));
+    }
     for (int i = 0; i < argTypes.length; ++i) {
       ilist.append(ifact.createLoad(Type.OBJECT, 1));
-      ilist.append(ifact.createConstant(i));
+      ilist.append(ifact.createConstant(i + (isVirtual ? 1 : 0)));
       ilist.append(ifact.createArrayLoad(Type.OBJECT));
       castToPrimitive(ifact, ilist, argTypes[i]);
     }
@@ -139,7 +146,7 @@ class HookInjector {
         method.getName() + "$original",
         method.getReturnType(),
         method.getArgumentTypes(),
-        Constants.INVOKESTATIC));
+        isVirtual ? Constants.INVOKEVIRTUAL : Constants.INVOKESTATIC));
     castToObject(ifact, ilist, method.getReturnType());
     ilist.append(ifact.createReturn(Type.OBJECT));
 
@@ -150,30 +157,44 @@ class HookInjector {
     return runner.getJavaClass();
   }
 
-  public static Method createHookedMethod(ClassGen cgen, Method method, String innerName) {
+  public static Method createHookedMethod(
+      ClassGen cgen, Method method, String innerName, boolean isVirtual) {
+    String className = cgen.getClassName();
     InstructionFactory ifact = new InstructionFactory(cgen);
     InstructionList ilist = new InstructionList();
+    int accessFlags = Constants.ACC_PUBLIC;
+    if (!isVirtual) {
+      accessFlags |= Constants.ACC_STATIC;
+    }
     MethodGen hookMethod = new MethodGen(
-        Constants.ACC_PUBLIC | Constants.ACC_STATIC,
+        accessFlags,
         method.getReturnType(),
         method.getArgumentTypes(),
         null,
         method.getName(),
-        cgen.getClassName(),
+        className,
         ilist,
         cgen.getConstantPool());
     ilist.append(ifact.createConstant(
-        cgen.getClassName() + "." + method.getName()));
+        className + "." + method.getName()));
     ilist.append(ifact.createGetStatic(
         innerName,
         "INSTANT",
         new ObjectType(innerName)));
-    ilist.append(ifact.createConstant(method.getArgumentTypes().length));
+    int additionalSize = isVirtual ? 1 : 0;
+    ilist.append(ifact.createConstant(method.getArgumentTypes().length + additionalSize));
     ilist.append(ifact.createNewArray(Type.OBJECT, (short)1));
+    if (isVirtual) {
+      ilist.append(ifact.createDup(1));
+      ilist.append(ifact.createConstant(0));
+      ilist.append(ifact.createLoad(new ObjectType(className), 0));
+      castToObject(ifact, ilist, new ObjectType(className));
+      ilist.append(ifact.createArrayStore(Type.OBJECT));
+    }
     for (int i = 0; i < method.getArgumentTypes().length; ++i) {
       ilist.append(ifact.createDup(1));
-      ilist.append(ifact.createConstant(i));
-      ilist.append(ifact.createLoad(method.getArgumentTypes()[i], i));
+      ilist.append(ifact.createConstant(i + additionalSize));
+      ilist.append(ifact.createLoad(method.getArgumentTypes()[i], i + additionalSize));
       castToObject(ifact, ilist, method.getArgumentTypes()[i]);
       ilist.append(ifact.createArrayStore(Type.OBJECT));
     }
@@ -203,6 +224,23 @@ class HookInjector {
     int innerClassIndex = 0;
     for (Method method : methods) {
       if (!method.isStatic()) {
+        if (method.getName().equals("<init>")) {
+          continue;
+        }
+        System.out.println("> " + method + "(non-static: " + method.getName() + ")");
+        MethodGen originalGen = new MethodGen(method, cgen.getClassName(), pgen);
+        originalGen.setName(originalGen.getName() + "$original");
+        if (originalGen.isPrivate()) {
+          // Make private methods package private so that the runner can invoke
+          // this method.
+          originalGen.isPrivate(false);
+        }
+        cgen.addMethod(originalGen.getMethod());
+        String innerName = String.format("%s$runner%d", cgen.getClassName(), innerClassIndex);
+        innerClassIndex++;
+        newClasses.add(createRunner(cgen.getClassName(), innerName, method, /* isVirtual */ true));
+        cgen.replaceMethod(method,
+                           createHookedMethod(cgen, method, innerName, /* isVirtual */ true));
         continue;
       }
       if (method.getName().equals("<clinit>")) {
@@ -220,8 +258,9 @@ class HookInjector {
 
       String innerName = String.format("%s$runner%d", cgen.getClassName(), innerClassIndex);
       innerClassIndex++;
-      newClasses.add(createRunner(cgen.getClassName(), innerName, method));
-      cgen.replaceMethod(method, createHookedMethod(cgen, method, innerName));
+      newClasses.add(createRunner(cgen.getClassName(), innerName, method, /* isVirtual */ false));
+      cgen.replaceMethod(method,
+                         createHookedMethod(cgen, method, innerName, /* isVirtual */ false));
     }
 
     newClasses.add(cgen.getJavaClass());
