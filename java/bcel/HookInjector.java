@@ -143,7 +143,7 @@ class HookInjector {
     }
     ilist.append(ifact.createInvoke(
         className,
-        method.getName() + "$original",
+        getOriginalMethodName(method.getName()),
         method.getReturnType(),
         method.getArgumentTypes(),
         isVirtual ? Constants.INVOKEVIRTUAL : Constants.INVOKESTATIC));
@@ -215,6 +215,13 @@ class HookInjector {
     return returnVal;
   }
 
+  static private String getOriginalMethodName(String methodName) {
+    if ("<clinit>".equals(methodName)) {
+      return "_clinit_$original";
+    }
+    return methodName + "$original";
+  }
+
   public static void injectHook(JavaClass cls, List<JavaClass> newClasses) {
     ClassGen cgen = new ClassGen(cls);
     ConstantPoolGen pgen = cgen.getConstantPool();
@@ -229,7 +236,7 @@ class HookInjector {
         }
         System.out.println("> " + method + "(non-static: " + method.getName() + ")");
         MethodGen originalGen = new MethodGen(method, cgen.getClassName(), pgen);
-        originalGen.setName(originalGen.getName() + "$original");
+        originalGen.setName(getOriginalMethodName(originalGen.getName()));
         if (originalGen.isPrivate()) {
           // Make private methods package private so that the runner can invoke
           // this method.
@@ -243,12 +250,9 @@ class HookInjector {
                            createHookedMethod(cgen, method, innerName, /* isVirtual */ true));
         continue;
       }
-      if (method.getName().equals("<clinit>")) {
-        continue;
-      }
       System.out.println("  " + method + "(static: " + method.getName() + ")");
       MethodGen originalGen = new MethodGen(method, cgen.getClassName(), pgen);
-      originalGen.setName(originalGen.getName() + "$original");
+      originalGen.setName(getOriginalMethodName(originalGen.getName()));
       if (originalGen.isPrivate()) {
         // Make private methods package private so that the runner can invoke
         // this method.

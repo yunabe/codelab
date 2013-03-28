@@ -32,7 +32,19 @@ public class Original {
     return "Hello " + name + "!";
   }
 
+  private static final String privateStr;
+
+  static {
+    System.out.println("<<static>>");
+    privateStr = "<private>";
+  }
+
+  private Original() {
+    System.out.println("<<init>>");
+  }
+
   public static void main(String[] args) {
+    System.out.println("privateStr == " + privateStr);
     System.out.println("sum  == " + sum(2, 3));
     System.out.println("fact  == " + fact(3));
     System.out.println("get10 == " + get10());
