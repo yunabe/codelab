@@ -22,6 +22,18 @@ import java.util.List;
 /*
  * Note:
  *  This library makes private methods package private.
+ *
+ * Known issues:
+ *  1. We need to skip abstract and native methods.
+ *  2. Only int is supported. To support long/double, don't forget that
+ *     long and double consumes 2 local variables.
+ *     http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-2.html#jvms-2.6
+ *  3. Infinite loop bug with super.method(...) because runner for method in parent class
+ *     calls instance.method$original and this invokes child method.
+ *     We need to make $original unique by, for example, appending unique id.
+ *  4. This approach does not work for constructor.
+ *  5. This approach does not work static-block in interface because interface can not have
+ *     static method.
  */
 class HookInjector {
 
