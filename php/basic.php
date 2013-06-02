@@ -28,10 +28,53 @@ function play_with_array() {
   print_r($array);
 }
 
+function play_with_map() {
+  echo "### play with array ###\n";
+  $map = array("a" => "apple", "b" => "banana");
+  $map["c"] = "cake";
+  $map["d"] = "donuts";
+  print_r($map);
+  echo 'size of $map == ' .  count($map) . "\n";
+  echo '$map["a"] == ' .  $map["a"] . "\n";
+  // Hmm...
+  unset($map["a"]);
+  print_r($map);
+}
+
+function play_with_if() {
+  echo "### play with if ###\n";
+  $x = true;
+  $y = true;
+  if ($x) {
+    echo "x is true.\n";
+  } elseif ($y) {
+    echo "y is true.\n";
+  } else {
+    echo "Neither x or y is true.\n";
+  }
+
+  if ($x)
+    echo "x is true.\n";
+  elseif ($y)
+    echo "y is true.\n";
+  else
+    echo "Neither x or y is true.\n";
+
+  if ($x) :
+    echo "x is true.\n";
+  elseif ($y) :
+    echo "y is true.\n";
+  else :
+    echo "Neither x or y is true.\n";
+  endif;  // Don't forget this semicolon.
+}
+
 function main() {
   $n = 6;
   echo "fact($n) == " . fact($n) . "\n";
   play_with_array();
+  play_with_map();
+  play_with_if();
 }
 
 main();
