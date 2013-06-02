@@ -69,12 +69,37 @@ function play_with_if() {
   endif;  // Don't forget this semicolon.
 }
 
+function play_with_loop() {
+  echo "### play with loop ###\n";
+  for ($i = 0; $i < 3; $i++ ) {
+    echo "\$i == " . $i . "\n";
+  }
+  for ($i = 0; $i < 3; $i++ ):
+    echo "\$i == " . $i . "\n";
+  endfor;
+
+  $array = array(5, 8, 9, 'a' => 'apple');
+  foreach ($array as $val) {
+    echo "\$val == " . $val . "\n";
+  }
+  foreach ($array as $key => $val) {
+    echo "(\$key, \$val) == (" . $key . ", " . $val . ")\n";
+  }
+
+  $count = 0;
+  while ($count < 5) {
+    echo "\$count == " . $count . "\n";
+    $count += 1;
+  }
+}
+
 function main() {
   $n = 6;
   echo "fact($n) == " . fact($n) . "\n";
   play_with_array();
   play_with_map();
   play_with_if();
+  play_with_loop();
 }
 
 main();
