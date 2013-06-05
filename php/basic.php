@@ -100,8 +100,15 @@ function play_with_string() {
   echo "[[ $val\t\n" . "]]\n";
   // (1) EOF; should not be indented.
   // (2) Newline before EOF is NOT included in a here-document.
+  // (3) Like double-quoted string, escaped-string and $val are evaluated.
   print <<< EOF
-This is here-document.
+This\tis\there-document (\$val == $val.)
+
+EOF;
+
+  // With '', escaped-string or $val are not converted.
+  print <<< 'EOF'
+This\tis\there-document (\$val == $val.)
 
 EOF;
 }
