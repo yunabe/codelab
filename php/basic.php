@@ -93,6 +93,19 @@ function play_with_loop() {
   }
 }
 
+function play_with_string() {
+  echo "### play with loop ###\n";
+  $val = 10;
+  echo '>> $val\t\n' . "<<\n";
+  echo "[[ $val\t\n" . "]]\n";
+  // (1) EOF; should not be indented.
+  // (2) Newline before EOF is NOT included in a here-document.
+  print <<< EOF
+This is here-document.
+
+EOF;
+}
+
 function main() {
   $n = 6;
   echo "fact($n) == " . fact($n) . "\n";
@@ -100,6 +113,7 @@ function main() {
   play_with_map();
   play_with_if();
   play_with_loop();
+  play_with_string();
 }
 
 main();
