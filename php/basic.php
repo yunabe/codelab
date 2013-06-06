@@ -114,6 +114,23 @@ EOF;
 This\tis\there-document (\$val == $val.)
 
 EOF;
+
+  $hello = "Hello world!";
+  echo 'strlen($hello) == ', strlen($hello) . "\n";
+  // Split by ' '.
+  print_r(explode(' ', $hello));
+  // substr(string, start, length)
+  echo 'substr($hello, 2) == "', substr($hello, 2) . "\n";
+  echo 'substr($hello, 2, 3) == "', substr($hello, 2, 3) . "\"\n";
+
+  // printf and sprintf
+  echo sprintf("%04d\n", 10);
+  printf("%04d\n", 12);
+
+  // str_replace. The first arg is not regex.
+  echo str_replace('lo', '**', $hello) .  "\n";
+
+  echo "[" . trim("  ab  cd \n") . "]\n";
 }
 
 function main() {
