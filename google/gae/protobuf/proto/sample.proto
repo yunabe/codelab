@@ -1,0 +1,8 @@
+
+package yunabe;
+
+message MyData {
+  optional string name = 1;
+  optional int32 age = 2;
+  repeated MyData child = 3;
+}
