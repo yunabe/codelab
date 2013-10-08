@@ -1,7 +1,12 @@
 #include <stdio.h>
+
+#include <map>
+#include <string>
 #include <vector>
 
 using std::vector;
+using std::map;
+using std::string;
 
 void iteration() {
   // initialization list
@@ -15,6 +20,11 @@ void iteration() {
   }
   for (auto& entry : nested) {
     printf("(len(entry), entry[0]) == (%zd, %d)\n", entry.size(), entry[0]);
+  }
+
+  map<string, string> mm{{"a", "b"}, {"c", "d"}};
+  for (auto& pair : mm) {
+    printf("key: %s, val: %s\n", pair.first.c_str(), pair.second.c_str());
   }
 }
 
