@@ -1,0 +1,17 @@
+This is README.
+
+* How to run
+1. Create a package
+>> python setup.py sdist
+
+2. Install a package
+>> Unpack .tar.gz/.zip file
+>> python setup.py install
+
+Note:
+* Don't forget to place __init__.py. sdist does not show any warning :{
+* sdist creates dist dir in this directory.
+
+References:
+http://docs.python.org/2/library/distutils.html
+http://docs.python.org/2/distutils/index.html
