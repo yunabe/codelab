@@ -42,6 +42,9 @@ func play_with_slice() {
 	fmt.Println("initial value of slice <")
 	fmt.Print("  slice == ")
 	fmt.Println(slice)  // an empty slice
+	// an empty slice (an initial value of slice) is nil.
+	// slice is a kind of pointer.
+	fmt.Printf("  (slice == nil) == %t\n", slice == nil)  // true
 	fmt.Printf("  len(slice) == %d\n", len(slice))  // 0
 	fmt.Printf("  cap(slice) == %d\n", cap(slice))  // 0
 	fmt.Println(">")
@@ -124,7 +127,9 @@ func play_with_map() {
 	m2["foo"] = 20.0
 	fmt.Println(m["foo"])  // Shows 20.0. map is a thin object like slice or pointer.
 
-	m2 = nil  // nil is an default initial value.
+	// nil is an default initial value.
+	// map is also a kind of pointer like slice.
+	m2 = nil
 	fmt.Println(m2)
 	fmt.Println(m2 == nil)
 
@@ -256,11 +261,11 @@ func play_with_label() {
 }
 
 func main() {
-  n := 5
-  fmt.Printf("fact(%d) = %d\n", n, fact(n))
-  play_with_array()
-	play_with_slice()
-  play_with_append()
+	n := 5
+	fmt.Printf("fact(%d) = %d\n", n, fact(n))
+	play_with_array()
+	lay_with_slice()
+	play_with_append()
 	play_with_pointer()
 	play_with_map()
 	play_with_if()
