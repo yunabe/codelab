@@ -9,5 +9,13 @@
 #import <Foundation/Foundation.h>
 
 @interface YNBPerson : NSObject
+@property NSString* name;
+@property (readonly) NSDate* birthday;
 
+// TODO: Understand why initXX returns "id" rather than (YNBPerson*) in Objective-C.
+- (id) initWithName: (NSString*)first birtyday: (NSDate*)birthday;
+- (NSInteger) age;
+- (NSInteger) ageAt: (NSDate*) at;
+
++ (YNBPerson*) personWithName: (NSString*)first birtyday: (NSDate*)birthday;
 @end

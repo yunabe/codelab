@@ -7,11 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "YNBPerson.h"
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        // insert code here...
-        NSLog(@"Hello, World!");
+        YNBPerson* person = [YNBPerson personWithName:@"Taro" birtyday: [NSDate dateWithTimeIntervalSince1970:0]];
+        NSLog(@"person == %@", [person description]);
+        NSLog(@"person.age == %ld", person.age);
     }
     return 0;
 }
