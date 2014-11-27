@@ -9,7 +9,10 @@
 #import "YNBPerson.h"
 
 @implementation YNBPerson {
-    // instance variables are zero-initialized.
+    // - instance variables are zero-initialized.
+    // - {} here is optional.
+    // - You can move this to .h file.
+    //   But instance variable are not visible even if they are defined in .h.
     NSInteger age;  // NSIntger == long.
 }
 

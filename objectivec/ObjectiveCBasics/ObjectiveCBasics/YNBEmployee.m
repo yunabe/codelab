@@ -24,4 +24,11 @@
 -(id)initWithName:(NSString *)first birthday:(NSDate *)birthday {
     return [self initWithName:first birtyday:birthday salary:50.0];
 }
+
+// description is "toString" in Objective-C.
+- (NSString *)description {
+    // self.name is a syntax sugar of [self name];
+    return [NSString stringWithFormat:@"<Name: %@, Birthday: %@, Salary: %.2f>", self.name, [self birthday], self.salary];
+}
+
 @end

@@ -10,14 +10,21 @@
 #import "YNBPerson.h"
 #import "YNBEmployee.h"
 
+void LearnObjectLifeCycle();
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         YNBPerson* person = [YNBPerson personWithName:@"Taro" birthday: [NSDate dateWithTimeIntervalSince1970:0]];
         NSLog(@"person == %@", [person description]);
         NSLog(@"person.age == %ld", person.age);
         
-        YNBEmployee* emp = [[YNBEmployee alloc] initWithName:@"Jiro" birtyday:[NSDate dateWithTimeIntervalSince1970:1000] salary:72.5];
-        NSLog(@"emp.salary == %f", emp.salary);
+        YNBEmployee* emp = [[YNBEmployee alloc] initWithName:@"Jiro" birtyday:[NSDate dateWithTimeIntervalSince1970:86400 * 365 * 10] salary:72.5];
+        NSLog(@"emp == %@", emp);
+        NSLog(@"emp.salary == %.2f", emp.salary);
+        NSLog(@"emp.age == %ld", emp.age);
+        
+        LearnObjectLifeCycle();
     }
     return 0;
 }
+
