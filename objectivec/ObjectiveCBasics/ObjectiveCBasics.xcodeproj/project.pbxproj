@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B60741621A2625D300C2F9C4 /* YNBEmployee.m in Sources */ = {isa = PBXBuildFile; fileRef = B60741611A2625D300C2F9C4 /* YNBEmployee.m */; };
 		B61E79C11A26166D004A56C3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B61E79C01A26166D004A56C3 /* main.m */; };
 		B61E79C91A26170B004A56C3 /* YNBPerson.m in Sources */ = {isa = PBXBuildFile; fileRef = B61E79C81A26170B004A56C3 /* YNBPerson.m */; };
 /* End PBXBuildFile section */
@@ -24,6 +25,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B60741601A2625D300C2F9C4 /* YNBEmployee.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YNBEmployee.h; sourceTree = "<group>"; };
+		B60741611A2625D300C2F9C4 /* YNBEmployee.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YNBEmployee.m; sourceTree = "<group>"; };
 		B61E79BD1A26166D004A56C3 /* ObjectiveCBasics */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ObjectiveCBasics; sourceTree = BUILT_PRODUCTS_DIR; };
 		B61E79C01A26166D004A56C3 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		B61E79C71A26170B004A56C3 /* YNBPerson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YNBPerson.h; sourceTree = "<group>"; };
@@ -63,6 +66,8 @@
 				B61E79C01A26166D004A56C3 /* main.m */,
 				B61E79C71A26170B004A56C3 /* YNBPerson.h */,
 				B61E79C81A26170B004A56C3 /* YNBPerson.m */,
+				B60741601A2625D300C2F9C4 /* YNBEmployee.h */,
+				B60741611A2625D300C2F9C4 /* YNBEmployee.m */,
 			);
 			path = ObjectiveCBasics;
 			sourceTree = "<group>";
@@ -123,6 +128,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B60741621A2625D300C2F9C4 /* YNBEmployee.m in Sources */,
 				B61E79C91A26170B004A56C3 /* YNBPerson.m in Sources */,
 				B61E79C11A26166D004A56C3 /* main.m in Sources */,
 			);
@@ -238,6 +244,7 @@
 				B61E79C61A26166D004A56C3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

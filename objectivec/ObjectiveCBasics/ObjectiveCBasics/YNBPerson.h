@@ -13,9 +13,9 @@
 @property (readonly) NSDate* birthday;
 
 // TODO: Understand why initXX returns "id" rather than (YNBPerson*) in Objective-C.
-- (id) initWithName: (NSString*)first birtyday: (NSDate*)birthday;
+- (id) initWithName: (NSString*)first birthday: (NSDate*)birthday;
 - (NSInteger) age;
 - (NSInteger) ageAt: (NSDate*) at;
 
-+ (YNBPerson*) personWithName: (NSString*)first birtyday: (NSDate*)birthday;
++ (YNBPerson*) personWithName: (NSString*)first birthday: (NSDate*)birthday;
 @end

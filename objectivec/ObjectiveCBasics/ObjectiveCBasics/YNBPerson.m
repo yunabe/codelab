@@ -9,13 +9,14 @@
 #import "YNBPerson.h"
 
 @implementation YNBPerson {
+    // instance variables are zero-initialized.
     NSInteger age;  // NSIntger == long.
 }
 
 // Rename the instant variable implicitly defined by @property.
 @synthesize birthday = internalBirthday;
 
-- (id) initWithName: (NSString*)name birtyday: (NSDate*)birthday {
+- (id) initWithName: (NSString*)name birthday: (NSDate*)birthday {
     // See "Access Instance Variables Directly from Initializer Methods" in
     // https://developer.apple.com/library/mac/documentation/cocoa/conceptual/ProgrammingWithObjectiveC/EncapsulatingData/EncapsulatingData.html#//apple_ref/doc/uid/TP40011210-CH5-SW1
     self = [super init];
@@ -48,8 +49,8 @@
     return age;
 }
 
-+ (YNBPerson *)personWithName:(NSString *)first birtyday:(NSDate *)birthday {
-    return [[YNBPerson alloc] initWithName:first birtyday:birthday];
++ (YNBPerson *)personWithName:(NSString *)first birthday:(NSDate *)birthday {
+    return [[YNBPerson alloc] initWithName:first birthday:birthday];
 }
 
 @end
