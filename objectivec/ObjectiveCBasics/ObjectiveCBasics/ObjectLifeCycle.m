@@ -8,9 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
-@interface YNBMyObj : NSObject
+@interface YNBMyObj : NSObject {
+    YNBMyObj* strongRefVar;  // __string is declared implicitly.
+    YNBMyObj* __weak weakRefVar;
+}
+
 @property NSString* name;
-@property YNBMyObj* strongRef;
+@property YNBMyObj* strongRefProp;  // (string) is declared implicitly.
+@property (weak) YNBMyObj* weakRefProp;
+
+- (void) setStrongRefVar:(YNBMyObj *)ref;
+- (YNBMyObj *)strongRefVar;
+- (void) setWeakRefVar:(YNBMyObj *)ref;
+- (YNBMyObj*) weakRefVar;
+
 @end
 
 @implementation YNBMyObj
@@ -22,20 +33,69 @@
     return self;
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<myobj: %@>", self.name];
+}
+
 - (void)dealloc {
     NSLog(@"dealloc: %@", [self name]);
+}
+
+- (void) setStrongRefVar:(YNBMyObj *)ref {
+    strongRefVar = ref;
+}
+
+- (YNBMyObj *)strongRefVar {
+    return weakRefVar;
+}
+
+- (void) setWeakRefVar:(YNBMyObj *)ref {
+    weakRefVar = ref;
+}
+
+- (YNBMyObj *)weakRefVar {
+    return weakRefVar;
 }
 
 @end
 
 void LearnObjectLifeCycle() {
-    NSLog(@"########## LearnObjectLifeCycle #############");
-    
+    // Objects are managed by reference counting.
+    NSLog(@"########## begin: LearnObjectLifeCycle #############");
     YNBMyObj* a = [[YNBMyObj alloc] initWithName:@"a"];
     YNBMyObj* b = [[YNBMyObj alloc] initWithName:@"b"];
     NSLog(@"reset a...");  // a is dealloced here.
     a = nil;
-    b.strongRef = [[YNBMyObj alloc] initWithName:@"c"];
-    // b.strongRef.strongRef = b;  // cyclic ref. Memory Leak!
-    NSLog(@"############# end ################");
+    NSLog(@"Set strong ref to b.");
+    b.strongRefProp = [[YNBMyObj alloc] initWithName:@"c"];
+    NSLog(@"reset b...");  // a is dealloced here.
+    b = nil;  // b and c are deallocated.
+    
+    YNBMyObj* d = [[YNBMyObj alloc] initWithName:@"d"];
+    YNBMyObj* e = [[YNBMyObj alloc] initWithName:@"e"];
+    d.weakRefProp = e;
+    NSLog(@"d.weakRefProp == %@", d.weakRefProp);  // d.weakRef is e.
+    NSLog(@"Reset e");
+    e = nil;  // e is deallocated because d.weakRef is a weak reference.
+    NSLog(@"d.weakRefProp == %@", d.weakRefProp);  // d.weakRef is nil.
+    d = nil;
+    
+    YNBMyObj* f = [[YNBMyObj alloc] initWithName:@"f"];
+    YNBMyObj* g = [[YNBMyObj alloc] initWithName:@"g"];
+    [f setStrongRefVar:g];
+    NSLog(@"reset g");
+    g = nil;
+    NSLog(@"reset f");
+    f = nil;
+    
+    YNBMyObj* h = [[YNBMyObj alloc] initWithName:@"h"];
+    YNBMyObj* i = [[YNBMyObj alloc] initWithName:@"i"];
+    [h setWeakRefVar:i];
+    NSLog(@"h.weakRefVar == %@", h.weakRefVar);  // h.weakRef is i.
+    NSLog(@"Reset i");
+    i = nil;  // g is deallocated because g is held by a __weak variable.
+    NSLog(@"h.weakRefVar == %@", h.weakRefVar);  // h.weakRef is nil.
+    NSLog(@"############# end: LearnObjectLifeCycle ################");
+    
+    // TODO: Learn __unsafe_unretained.
 }
