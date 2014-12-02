@@ -79,6 +79,10 @@ type AbsInterface interface {
 	Abs() float64
 }
 
+// Checkes whehter *Point implements AbsInterface.
+// http://golang.org/doc/effective_go.html#blank_implements
+var _ AbsInterface = (*Point)(nil)
+
 type Point2 struct {
 	x float64
 	y float64
@@ -88,12 +92,24 @@ func (p Point2) Abs() float64 {
 	return math.Sqrt(p.x*p.x + p.y*p.y)
 }
 
+// Either struct and pointer works as AbsInterface
+// when struct is receiver (though it's unusual).
+// If the receiver is pointer (e.g. Point), struct does not work as AbsInterface.
+var _ AbsInterface = Point2{0, 0}
+var _ AbsInterface = (*Point2)(nil)
+
 func play_with_interface() {
 	fmt.Println("### play_with_interface ###")
 	var ai AbsInterface
 	p := Point{3, 4}
 	ai = &p
 	fmt.Println(ai)
+	ai = nil
+	fmt.Println(ai == nil) // true
+	ai = (*Point2)(nil)
+	// BE CAREFUL!
+	// https://golang.org/doc/faq#nil_error
+	fmt.Println(ai == nil) // false
 	p2 := Point2{3, 4}
 	ai = p2
 	p2.x = 100
