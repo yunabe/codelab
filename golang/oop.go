@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"reflect"
 )
 
 type MyInt int
@@ -105,15 +106,22 @@ func play_with_interface() {
 	ai = &p
 	fmt.Println(ai)
 	ai = nil
-	fmt.Println(ai == nil) // true
-	ai = (*Point2)(nil)
+	fmt.Println(ai == nil)          // true
+	fmt.Println(reflect.TypeOf(ai)) // <nil>
+
+	ai = (*Point)(nil)
 	// BE CAREFUL!
 	// https://golang.org/doc/faq#nil_error
-	fmt.Println(ai == nil) // false
+	fmt.Println(ai == nil)          // false
+	fmt.Println(reflect.TypeOf(ai)) // *main.Point
+
 	p2 := Point2{3, 4}
+	// IMPORTANT!
+	// p2 is copied here! An interface is not an pointer!
 	ai = p2
 	p2.x = 100
 	fmt.Println(ai)
+	fmt.Println(reflect.TypeOf(ai)) // main.Point2
 }
 
 type FooInterface interface {
