@@ -25,14 +25,14 @@ func play_with_struct() {
 	d.y = 4
 	d.string = "hoge"
 	fmt.Printf("d.x, d.y, d.string == %d, %d, %s\n",
-		         d.x, d.y, d.string)
+		d.x, d.y, d.string)
 
 	var pd *Data = new(Data)
 	pd.x = 7
 	pd.y = 8
 	pd.string = "piyo"
 	fmt.Printf("pd.x, pd.y, pd.string == %d, %d, %s\n",
-		         pd.x, pd.y, pd.string)
+		pd.x, pd.y, pd.string)
 
 	// without "type"
 	var a struct {
@@ -44,7 +44,7 @@ func play_with_struct() {
 	// Initialization
 	d = Data{}
 	d = Data{10, 20, "hoge"}
-	d = Data{y:10, string:"hoge", x:10}
+	d = Data{y: 10, string: "hoge", x: 10}
 	pd = &Data{10, 20, "hoge"}
 
 	// An anonymous struct field
@@ -53,7 +53,7 @@ func play_with_struct() {
 	md.y = 20
 	md.string = "piyoo"
 	fmt.Printf("md.x, md.y, md.string == %d, %d, %s\n",
-		         md.x, md.y, md.string)
+		md.x, md.y, md.string)
 	fmt.Println("md.Data ==", md.Data)
 
 	// Initialization of struct with an anonymous struct field
@@ -66,7 +66,7 @@ type Point struct {
 }
 
 func (p *Point) Abs() float64 {
-	return math.Sqrt(p.x * p.x + p.y * p.y)
+	return math.Sqrt(p.x*p.x + p.y*p.y)
 }
 
 func play_with_method() {
@@ -85,7 +85,7 @@ type Point2 struct {
 }
 
 func (p Point2) Abs() float64 {
-	return math.Sqrt(p.x * p.x + p.y * p.y)
+	return math.Sqrt(p.x*p.x + p.y*p.y)
 }
 
 func play_with_interface() {
@@ -112,15 +112,15 @@ type FooBar struct {
 }
 
 // Not func Foo (*FooBar) ()...
-func (*FooBar) Foo () {
+func (*FooBar) Foo() {
 }
 
-func (*FooBar) Bar () {
+func (*FooBar) Bar() {
 }
 
 func play_with_type_assertion() {
 	fmt.Println("### play_with_type_assertion ###")
-	var any interface {}
+	var any interface{}
 	any = int(100)
 
 	x := any.(int)
@@ -149,7 +149,7 @@ func play_with_type_assertion() {
 
 	foobar := &FooBar{}
 	foo := FooInterface(foobar)
-	bar := foo.(BarInterface)  // It is allowed.
+	bar := foo.(BarInterface) // It is allowed.
 	fmt.Println("bar (foobar) =", bar)
 }
 
