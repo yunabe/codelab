@@ -264,7 +264,7 @@ func main() {
 	n := 5
 	fmt.Printf("fact(%d) = %d\n", n, fact(n))
 	play_with_array()
-	lay_with_slice()
+	play_with_slice()
 	play_with_append()
 	play_with_pointer()
 	play_with_map()
