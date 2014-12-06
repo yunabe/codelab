@@ -6,6 +6,13 @@
 //  Copyright (c) 2014年 yunabe. All rights reserved.
 //
 
+// You don't need
+// #ifndef ObjectiveCBasics_YNBPerson_h
+// #define ObjectiveCBasics_YNBPerson_h
+// ...
+// #endif
+// macro because "#import" makes sure that the same file is never included more than once.
+
 #import <Foundation/Foundation.h>
 
 // 3 chars prefix was required as convention.
@@ -22,3 +29,4 @@
 
 + (YNBPerson*) personWithName: (NSString*)first birthday: (NSDate*)birthday;
 @end
+

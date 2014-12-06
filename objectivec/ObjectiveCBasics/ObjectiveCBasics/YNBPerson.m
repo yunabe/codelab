@@ -8,6 +8,21 @@
 
 #import "YNBPerson.h"
 
+// "class extension" overrides class declarations.
+// By class extension, you can
+// * define "private" properties.
+// * override definitoins of properties.
+//   (e.g. readonly -> readwrite: adds a "private" default setter method.)
+// * define "private" methods (methods that are ).
+//
+// Note:
+// "private" means "not visible" from other files at "compile" time because
+// mothds/properties are not declared in public .h file.
+// At runtime, no difference between properties/methods in the header file and those in the class extension
+@interface YNBPerson ()
+- (NSInteger)ageAtInternal:(NSDate *)at;
+@end
+
 @implementation YNBPerson {
     // - instance variables are zero-initialized.
     // - {} here is optional.
@@ -46,10 +61,14 @@
     if (age >= 0) {
         return age;
     }
+    age = [self ageAtInternal:at];
+    return age;
+}
+
+- (NSInteger)ageAtInternal:(NSDate *)at {
     NSCalendar* cal = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDateComponents *components = [cal components:NSCalendarUnitYear fromDate:self.birthday toDate:at options:0];
-    age = components.year;
-    return age;
+    return components.year;
 }
 
 + (YNBPerson *)personWithName:(NSString *)first birthday:(NSDate *)birthday {
