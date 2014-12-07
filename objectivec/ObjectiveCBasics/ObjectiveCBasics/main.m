@@ -26,11 +26,13 @@ void ObjectBasic() {
 }
 
 void LearnObjectLifeCycle();
+void LearnProtocol();
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         ObjectBasic();
         LearnObjectLifeCycle();
+        LearnProtocol();
     }
     return 0;
 }
