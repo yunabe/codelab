@@ -13,6 +13,7 @@
 		B61E79C11A26166D004A56C3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B61E79C01A26166D004A56C3 /* main.m */; };
 		B61E79C91A26170B004A56C3 /* YNBPerson.m in Sources */ = {isa = PBXBuildFile; fileRef = B61E79C81A26170B004A56C3 /* YNBPerson.m */; };
 		B6824D861A34582B0010CFA8 /* LearnProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = B6824D851A34582B0010CFA8 /* LearnProtocol.m */; };
+		B6824D881A347A1F0010CFA8 /* LearnValuesCollections.m in Sources */ = {isa = PBXBuildFile; fileRef = B6824D871A347A1F0010CFA8 /* LearnValuesCollections.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -38,6 +39,7 @@
 		B61E79C71A26170B004A56C3 /* YNBPerson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YNBPerson.h; sourceTree = "<group>"; };
 		B61E79C81A26170B004A56C3 /* YNBPerson.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YNBPerson.m; sourceTree = "<group>"; };
 		B6824D851A34582B0010CFA8 /* LearnProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LearnProtocol.m; sourceTree = "<group>"; };
+		B6824D871A347A1F0010CFA8 /* LearnValuesCollections.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LearnValuesCollections.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +81,7 @@
 				B60741611A2625D300C2F9C4 /* YNBEmployee.m */,
 				B6824D851A34582B0010CFA8 /* LearnProtocol.m */,
 				B60741631A27685400C2F9C4 /* ObjectLifeCycle.m */,
+				B6824D871A347A1F0010CFA8 /* LearnValuesCollections.m */,
 			);
 			path = ObjectiveCBasics;
 			sourceTree = "<group>";
@@ -144,6 +147,7 @@
 				B61E79C91A26170B004A56C3 /* YNBPerson.m in Sources */,
 				B61E79C11A26166D004A56C3 /* main.m in Sources */,
 				B6824D861A34582B0010CFA8 /* LearnProtocol.m in Sources */,
+				B6824D881A347A1F0010CFA8 /* LearnValuesCollections.m in Sources */,
 				B60741641A27685400C2F9C4 /* ObjectLifeCycle.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

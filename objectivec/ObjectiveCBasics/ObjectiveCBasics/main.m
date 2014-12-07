@@ -27,12 +27,14 @@ void ObjectBasic() {
 
 void LearnObjectLifeCycle();
 void LearnProtocol();
+void LearnValuesCollections();
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         ObjectBasic();
         LearnObjectLifeCycle();
         LearnProtocol();
+        LearnValuesCollections();
     }
     return 0;
 }
