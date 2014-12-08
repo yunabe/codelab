@@ -28,6 +28,7 @@ void ObjectBasic() {
 void LearnObjectLifeCycle();
 void LearnProtocol();
 void LearnValuesCollections();
+void LearnBlock();
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
@@ -35,6 +36,7 @@ int main(int argc, const char * argv[]) {
         LearnObjectLifeCycle();
         LearnProtocol();
         LearnValuesCollections();
+        LearnBlock();
     }
     return 0;
 }
