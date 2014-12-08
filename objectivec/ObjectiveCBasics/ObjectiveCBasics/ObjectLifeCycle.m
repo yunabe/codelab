@@ -96,6 +96,28 @@ void LearnObjectLifeCycle() {
     i = nil;  // g is deallocated because g is held by a __weak variable.
     NSLog(@"h.weakRefVar == %@", h.weakRefVar);  // h.weakRef is nil.
     NSLog(@"############# end: LearnObjectLifeCycle ################");
+
+    // Objects created by [NSSomething somethingWithX] are not released immediately.
+    // because they are owned by "autoreleasepool".
+    NSLog(@"Initialize an array with YNBMyObj");
+    NSArray* array = [NSArray arrayWithObjects:
+                      [[YNBMyObj alloc] initWithName:@"j"],
+                      [[YNBMyObj alloc] initWithName:@"k"],
+                      nil];
+    NSLog(@"Reset array...");
+    array = nil;
+    NSLog(@"array is not released...");
     
+    @autoreleasepool {
+        NSArray* ar_array = [NSArray arrayWithObjects:
+                             [[YNBMyObj alloc] initWithName:@"l"],
+                             [[YNBMyObj alloc] initWithName:@"m"],
+                             nil];
+        ar_array = nil;
+        NSLog(@"ar_array is reset.");
+    }
+    NSLog(@"ar_array is released by autoreleasepool.");
+
+    NSLog(@"end of ObjLifeCycle");
     // TODO: Learn __unsafe_unretained.
 }
