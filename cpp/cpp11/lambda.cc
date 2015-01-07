@@ -14,8 +14,14 @@ class Wrapper {
 std::function<int(int)> hoge(int n) {
   Wrapper w(n);
   //  [w] must not be [&w] because the life time of w is this function scope.
-  std::function<int(int)> func = [w](int x) { return x + w.value; };
-  return func;
+  return [w](int x) { return x + w.value; };
+}
+
+void hoge2(int n) {
+  Wrapper w(n);
+  //  [w] must not be [&w] because the life time of w is this function scope.
+  auto k = [w](int x) { return x + w.value; };
+  k(3);
 }
 
 void basic() {
@@ -31,6 +37,10 @@ void basic() {
   auto plus7 = hoge(7);
   printf("plus5(3) == %d\n", plus5(3));
   printf("plus7(3) == %d\n", plus7(3));
+  // This copies 'Wrapper'!.
+  // It means, I think, all captured variable are copied in std::function.
+  auto copied = plus5;
+  printf("copied(3) == %d\n", copied(3));
 }
 
 int main(int argc, char** argv) {
