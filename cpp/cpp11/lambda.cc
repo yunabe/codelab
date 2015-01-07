@@ -17,13 +17,6 @@ std::function<int(int)> hoge(int n) {
   return [w](int x) { return x + w.value; };
 }
 
-void hoge2(int n) {
-  Wrapper w(n);
-  //  [w] must not be [&w] because the life time of w is this function scope.
-  auto k = [w](int x) { return x + w.value; };
-  k(3);
-}
-
 void basic() {
   int m = 1;
   int n = 2;
