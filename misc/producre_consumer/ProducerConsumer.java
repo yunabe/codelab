@@ -1,5 +1,8 @@
 import java.util.concurrent.SynchronousQueue;
 
+// SynchronousQueue version is faster than "raw" version maybe because it seems like
+// SynchronousQueue uses spin-lock on a busy synchronous queues.
+// See comments of SynchronousQueue.java.html.
 public class ProducerConsumer {
 
   private static final int LOOP_SIZE = 1000 * 1000;
