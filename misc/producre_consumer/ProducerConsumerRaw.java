@@ -4,7 +4,7 @@ public class ProducerConsumerRaw {
 
   private static final int LOOP_SIZE = 1000 * 1000;
 
-  private static int value = -1;
+  private static volatile int value = -1;
 
   private static final Object sync = new Object();
 

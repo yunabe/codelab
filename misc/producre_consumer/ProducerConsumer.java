@@ -1,3 +1,4 @@
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
 // SynchronousQueue version is faster than "raw" version maybe because it seems like
@@ -7,14 +8,14 @@ public class ProducerConsumer {
 
   private static final int LOOP_SIZE = 1000 * 1000;
 
-  private static void Produce(SynchronousQueue<Integer> queue) throws InterruptedException {
+  private static void Produce(BlockingQueue<Integer> queue) throws InterruptedException {
     for (int i = 0; i < LOOP_SIZE; i++) {
       queue.put(i);
     }
     queue.put(-1);
   }
 
-  private static void Consume(SynchronousQueue<Integer> queue) throws InterruptedException{
+  private static void Consume(BlockingQueue<Integer> queue) throws InterruptedException{
     while (true) {
       int value = queue.take();
       if (value % (100 * 1000) == 0) {
@@ -27,7 +28,7 @@ public class ProducerConsumer {
   }
 
   private static void mainInternal() throws InterruptedException {
-    final SynchronousQueue<Integer> queue = new SynchronousQueue<Integer>();
+    final BlockingQueue<Integer> queue new SynchronousQueue<Integer>();;
     Thread producer = new Thread(new Runnable() {
         @Override
         public void run() {
