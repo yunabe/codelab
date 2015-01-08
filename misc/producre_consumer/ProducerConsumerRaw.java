@@ -29,7 +29,7 @@ public class ProducerConsumerRaw {
         int i = value;
         value = -1;
         sync.notify();
-        if (i % (10 * 1000) == 0) {
+        if (i % (100 * 1000) == 0) {
           System.out.println("i == " + i);
         }
         if (i + 1 == LOOP_SIZE) {

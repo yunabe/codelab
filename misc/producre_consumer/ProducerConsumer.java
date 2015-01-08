@@ -14,7 +14,7 @@ public class ProducerConsumer {
   private static void Consume(SynchronousQueue<Integer> queue) throws InterruptedException{
     while (true) {
       int value = queue.take();
-      if (value % (10 * 1000) == 0) {
+      if (value % (100 * 1000) == 0) {
         System.out.println("i == " + value);
       }
       if (value < 0) {

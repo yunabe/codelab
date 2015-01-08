@@ -34,7 +34,7 @@ void* Consume(void* data) {
     shared->value = -1;
     pthread_cond_signal(shared->cond);  // pthread_cond_broadcast?
     pthread_mutex_unlock(shared->mutex);
-    if (i % (10 * 1000) == 0) {
+    if (i % (100 * 1000) == 0) {
       printf("i == %d\n", i);
     }
     if (i + 1 == LOOP_SIZE) {

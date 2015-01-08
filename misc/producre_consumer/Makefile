@@ -1,5 +1,11 @@
 all: producer_consumer_c producer_consumer ProducerConsumer.class ProducerConsumerRaw.class
 
+run: all
+	time ./producer_consumer
+	time ./producer_consumer_c
+	time java ProducerConsumer
+	time java ProducerConsumerRaw
+
 producer_consumer_c: producer_consumer.c
 	gcc producer_consumer.c -o producer_consumer_c -pthread -Wall -std=c99 -O3
 

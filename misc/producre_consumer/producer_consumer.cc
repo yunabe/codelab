@@ -6,27 +6,30 @@
 const int LOOP = 1000 * 1000;
 
 void Produce(int* value, std::mutex* mutex, std::condition_variable* cond) {
-  std::unique_lock<std::mutex> lock(*mutex);
   for (int i = 0; i < LOOP; i++) {
+    std::unique_lock<std::mutex> lock(*mutex);
     if (*value >= 0) {
       cond->wait(lock);
     }
     *value = i;
     cond->notify_one();
+    // lock->unlock implicitly.
   }
-  // lock->unlock implicitly.
 }
 
 void Consume(int* value, std::mutex* mutex, std::condition_variable* cond) {
-  std::unique_lock<std::mutex> lock(*mutex);
   while (true) {
-    if (*value < 0) {
-      cond->wait(lock);
+    int i;
+    {
+      std::unique_lock<std::mutex> lock(*mutex);
+      if (*value < 0) {
+        cond->wait(lock);
+      }
+      i = *value;
+      *value = -1;
+      cond->notify_one();
     }
-    int i = *value;
-    *value = -1;
-    cond->notify_one();
-    if (i % (10 * 1000) == 0) {
+    if (i % (100 * 1000) == 0) {
       printf("i == %d\n", i);
     }
     if (i + 1 == LOOP) {
