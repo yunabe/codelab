@@ -1,24 +1,40 @@
 import java.util.concurrent.SynchronousQueue;
 
-public class ProducerConsumer {
+public class ProducerConsumerRaw {
 
   private static final int LOOP_SIZE = 1000 * 1000;
 
-  private static void Produce(SynchronousQueue<Integer> queue) throws InterruptedException {
+  private static int value = -1;
+
+  private static final Object sync = new Object();
+
+  private static void Produce() throws InterruptedException {
     for (int i = 0; i < LOOP_SIZE; i++) {
-      queue.put(i);
+      synchronized (sync) {
+        if (value >= 0) {
+          sync.wait();
+        }
+        value = i;
+        sync.notify();
+      }
     }
-    queue.put(-1);
   }
 
-  private static void Consume(SynchronousQueue<Integer> queue) throws InterruptedException{
+  private static void Consume() throws InterruptedException{
     while (true) {
-      int value = queue.take();
-      if (value % (10 * 1000) == 0) {
-        System.out.println("i == " + value);
-      }
-      if (value < 0) {
-        break;
+      synchronized (sync) {
+        if (value < 0) {
+          sync.wait();
+        }
+        int i = value;
+        value = -1;
+        sync.notify();
+        if (i % (10 * 1000) == 0) {
+          System.out.println("i == " + i);
+        }
+        if (i + 1 == LOOP_SIZE) {
+          break;
+        }
       }
     }
   }
@@ -29,7 +45,7 @@ public class ProducerConsumer {
         @Override
         public void run() {
           try {
-            Produce(queue);
+            Produce();
           } catch(InterruptedException e) {
             System.err.println("producer thread is interrupted.");
           }
@@ -39,7 +55,7 @@ public class ProducerConsumer {
         @Override
         public void run() {
           try {
-            Consume(queue);
+            Consume();
           } catch(InterruptedException e) {
             System.err.println("consumer thread is interrupted.");
           }
