@@ -28,7 +28,7 @@ public class ProducerConsumer {
   }
 
   private static void mainInternal() throws InterruptedException {
-    final BlockingQueue<Integer> queue new SynchronousQueue<Integer>();;
+    final BlockingQueue<Integer> queue = new SynchronousQueue<Integer>();
     Thread producer = new Thread(new Runnable() {
         @Override
         public void run() {
