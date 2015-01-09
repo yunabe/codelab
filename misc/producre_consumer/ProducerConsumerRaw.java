@@ -4,7 +4,11 @@ public class ProducerConsumerRaw {
 
   private static final int LOOP_SIZE = 1000 * 1000;
 
-  private static volatile int value = -1;
+  // You don't need to declare "volatile".
+  // "Second, when a synchronized method exits, it automatically establishes a happens-before
+  //  relationship with any subsequent invocation of a synchronized method for the same object."
+  // http://docs.oracle.com/javase/tutorial/essential/concurrency/syncmeth.html
+  private static int value = -1;
 
   private static final Object sync = new Object();
 
