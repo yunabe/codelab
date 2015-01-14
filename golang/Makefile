@@ -1,4 +1,4 @@
-all: basic func oop concurrency websocket protobuf tls
+all: basic func oop concurrency iterator tls websocket protobuf
 
 basic: basic.go
 	go build basic.go
@@ -24,5 +24,8 @@ example.pb.go: example.proto
 tls: tls.go
 	go build tls.go
 
+iterator: iterator.go
+	go build iterator.go
+
 clean:
-	rm -rf *.pb.go basic func oop concurrency websocket protobuf tls
+	rm -rf *.pb.go basic func oop concurrency websocket protobuf tls iterator
