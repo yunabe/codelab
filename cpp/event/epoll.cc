@@ -6,6 +6,8 @@
 
 // http://man7.org/linux/man-pages/man2/signalfd.2.html
 
+#include <memory>  // unique_ptr
+#include <set>
 #include <iostream>
 #include <sstream>
 
@@ -23,6 +25,15 @@ const int MAX_EVENTS = 100;
 
 const int NUM_WRITERS = 10;
 
+class FdSet : public std::set<int> {
+public:
+  ~FdSet() {
+    for (int fd : *this) {
+      close(fd);
+    }
+  }
+};
+
 void child_writer(int id, int fd) {
   std::ostringstream stream;
   sleep(id);
@@ -38,7 +49,7 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  int read_fds[NUM_WRITERS];
+  std::unique_ptr<FdSet> read_fds(new FdSet());
   for (int i = 0; i < NUM_WRITERS; ++i) {
     int rwfd[2];
     pipe(rwfd);
@@ -46,25 +57,23 @@ int main(int argc, char** argv) {
       fprintf(stderr, "Start of a child writer: %d\n", i);
       close(epfd);
       close(rwfd[0]);
-      for (int j = 0; j < i; ++j) {
-        close(read_fds[j]);
-      }
+      read_fds.reset(nullptr);
       child_writer(i, rwfd[1]);
       fprintf(stderr, "End of a child writer: %d\n", i);
       return 0;
     } else {
       close(rwfd[1]);
-      read_fds[i] = rwfd[0];
+      read_fds->insert(rwfd[0]);
     }
   }
 
-  for (int i = 0; i < NUM_WRITERS; ++i) {
+  for (int rfd: *read_fds) {
     struct epoll_event event;
     memset(&event, 0, sizeof(event));
     event.events = EPOLLIN;
-    event.data.fd = read_fds[i];
+    event.data.fd = rfd;
     // fd should not be regular file.
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, read_fds[i], &event) == -1) {
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, rfd, &event) == -1) {
       int err = errno;
       fprintf(stderr, "error: epoll_ctl(): %d\n", err);
       // fprintf(stderr, "%d, %d, %d, %d, %d, %d, %d\n", EBADF, EEXIST, EINVAL, ENOENT, ENOMEM, ENOSPC, EPERM);
