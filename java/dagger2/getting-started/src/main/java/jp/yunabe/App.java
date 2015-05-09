@@ -1,5 +1,6 @@
 package jp.yunabe;
 
+import java.util.Set;
 import javax.inject.Inject;
 
 import dagger.Component;
@@ -11,45 +12,65 @@ import dagger.Provides;
  */
 public class App {
   public static void main( String[] args ) {
-    MyComponent component = DaggerMyComponent.create();
-    Client client = component.getClient();
-    client.sayHello();
+    ClassA a = DaggerMyComponent.create().getClassA();
+    System.out.println(a.b.c);
+    System.out.println(a.items.size());
   }
 }
 
-class Client {
-  private Service service;
+class ClassA {
+  ClassB b;
+  MyInterface i;
+  Set<MyItem> items;
 
   @Inject
-  Client(Service service) {
-    this.service = service;
-  }
-
-  public void sayHello() {
-    System.out.println("Invoke service.sayHello.");
-    service.sayHello();
+  ClassA(ClassB b, MyInterface i, Set<MyItem> items) {
+    this.b = b;
+    this.i = i;
+    this.items = items;
   }
 }
 
-interface Service {
-  public void sayHello();
+class ClassB {
+  @Inject
+  ClassC c;
+
+  @Inject
+  ClassB() {
+  }
 }
 
-class MyServiceImpl implements Service {
-  public void sayHello() {
-    System.out.println("Hello MyServiceImpl!");
+class ClassC {
+  @Inject
+  ClassC() {
   }
+}
+
+interface MyInterface {
+}
+
+class MyInterfaceImpl implements MyInterface {
+}
+
+interface MyItem {
 }
 
 @Module
 class MyModule {
+  // For interface and abstract class, you can not use @Inject. Use @Provides.
   @Provides
-  Service createRealService() {
-    return new MyServiceImpl();
+  MyInterface createMyService() {
+    return new MyInterfaceImpl();
+  }
+
+  @Provides(type=Provides.Type.SET)
+  MyItem createItem() {
+    return new MyItem() {
+    };
   }
 }
 
 @Component(modules = MyModule.class)
 interface MyComponent {
-  Client getClient();
+  ClassA getClassA();
 }
