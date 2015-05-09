@@ -1,7 +1,7 @@
 # How to run
 
+    mvn package
     mvn exec:java -Dexec.mainClass="jp.yunabe.App"
-
 
 # Notes
 The template of this maven project was generated with
