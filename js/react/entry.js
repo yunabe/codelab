@@ -318,25 +318,13 @@ class SettingDialog extends React.Component {
   }
 }
 
-var Hoge = React.createClass({
-  render: function() {
-      setTimeout(this.mycallback, 1000);
-      return <div>Hoge</div>;
-    },
-  mycallback: function() {
-      console.log(this.props);
-    }
-  });
-
 var main = function() {
   var num = 4;
   var pieceWidth = Math.floor((document.body.clientWidth - 20) / num);
   var fifteenState = new FifteenState(num, pieceWidth);
   fifteenState.shuffle(shuffleRepeat);
   
-  // ReactDOM.render(<App state={fifteenState} />,
-  //                document.getElementById('example'));
-  ReactDOM.render(<Hoge />,
+  ReactDOM.render(<App state={fifteenState} />,
                   document.getElementById('example'));
 };
 
