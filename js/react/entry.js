@@ -1,5 +1,3 @@
-require("./content.js")
-
 const injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
 
