@@ -208,9 +208,11 @@ class FifteenBoard extends React.Component {
 }
 
 class FifteenPiece extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
+    this._onClick = this._onClick.bind(this);
   }
+
   render() {
     var pieceSize = this.props.state.pieceWidth;
     var pos = this.props.pos;
@@ -220,12 +222,13 @@ class FifteenPiece extends React.Component {
     var text = number == 0 ? '*' : String(number);
     var style = {
       'position': 'absolute',
-      'top': top,
-      'left': left,
+      'top': '0',
+      'left': '0',
+      '-webkit-transform': 'translate(' + left + ',' + top + ')',
       'width': (pieceSize - 8)+ 'px',
       'height': (pieceSize - 8)+ 'px',
       'border': '1px solid',
-      'WebkitTransition': 'top 0.2s, left 0.2s',
+      'WebkitTransition': '-webkit-transform 0.2s',
       'boxShadow': 'rgba(0, 0, 0, 0.317647) 0px 0px 3px 1px',
       'margin': '4px',
       'backgroundColor': '#fff',
@@ -235,7 +238,7 @@ class FifteenPiece extends React.Component {
       'borderRadius': '6px',
     };
     var this_ = this;
-    return <div style={style} onTouchTap={this._onClick.bind(this)}>{text}</div>;
+    return <div style={style} onTouchTap={this._onClick}>{text}</div>;
   }
 
   _onClick() {
@@ -247,9 +250,17 @@ class FifteenPiece extends React.Component {
   }
 }
 
+console.log(React.Component);
+
 class App extends React.Component {
+  constructor() {
+    super();
+    this._onChange = this._onChange.bind(this);
+    this._onShowSetting = this._onShowSetting.bind(this);
+  }
+
   componentDidMount() {
-    this.props.state.registerHandler(this._onChange.bind(this));
+    this.props.state.registerHandler(this._onChange);
   }
 
   _onChange() {
@@ -265,7 +276,7 @@ class App extends React.Component {
     return <div style={{textAlign:'center'}}>
              <FifteenBoard state={this.props.state} />
              <RaisedButton label="Setting"
-                           onTouchTap={this._onShowSetting.bind(this)} />
+                           onTouchTap={this._onShowSetting} />
              <SettingDialog opened={this.props.state.settingShown}
                             state={this.props.state}/>
            </div>;
@@ -273,20 +284,26 @@ class App extends React.Component {
 }
 
 class SettingDialog extends React.Component {
+  constructor() {
+    super();
+    this._handleRequestClose = this._handleRequestClose.bind(this);
+    this._handleRequestStart = this._handleRequestStart.bind(this);
+  }
+
   render() {
     let customActions = [
       <FlatButton label="Cancel"
                   secondary={true}
-                  onTouchTap={this._handleRequestClose.bind(this)} />,
+                  onTouchTap={this._handleRequestClose} />,
       <FlatButton label="Reset"
                   primary={true}
-                  onTouchTap={this._handleRequestStart.bind(this)} />
+                  onTouchTap={this._handleRequestStart} />
     ];
 
     return (<Dialog title={this.props.state.settingTitle}
                 actions={customActions}
                 actionFocus="submit"
-                onRequestClose={this._handleRequestClose.bind(this)}
+                onRequestClose={this._handleRequestClose}
                 open={this.props.opened}>
               <RadioButtonGroup ref="sizeRadio" defaultSelected={String(this.props.state.n_)}>
                 <RadioButton value="3"
