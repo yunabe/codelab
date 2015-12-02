@@ -1,8 +1,10 @@
 require("./content.js")
 
-var injectTapEventPlugin = require("react-tap-event-plugin");
-var React = require('react');
-var ReactDOM = require('react-dom');
+const injectTapEventPlugin = require("react-tap-event-plugin");
+injectTapEventPlugin();
+
+const React = require('react');
+const ReactDOM = require('react-dom');
 const Dialog = require('material-ui/lib/dialog');
 const FlatButton = require('material-ui/lib/flat-button');
 const RaisedButton = require('material-ui/lib/raised-button');
@@ -10,9 +12,8 @@ const DropDownMenu = require('material-ui/lib/drop-down-menu');
 const RadioButton = require('material-ui/lib/radio-button');
 const RadioButtonGroup = require('material-ui/lib/radio-button-group');
 
-injectTapEventPlugin();
 
-const shuffleRepeat = 100;
+const SHUFFLE_REPEAT = 100;
 
 class FifteenState {
   constructor(n, pieceWidth) {
@@ -185,8 +186,7 @@ class FifteenState {
 class FifteenBoard extends React.Component {
   render() {
     var posMap = {};
-    var size = this.props.state.state.length;
-    for (var i = 0; i < size; i++) {
+    for (var i = 0; i < this.props.state.state.length; i++) {
       posMap[this.props.state.state[i]] = i;
     }
     var pieces = [];
@@ -198,6 +198,7 @@ class FifteenBoard extends React.Component {
     }
     var width = this.props.state.pieceWidth * this.props.state.n_ + 'px';
     var style = {
+      // This div is the origin point of children with position:absolute.
       'position': 'relative',
       'width': width,
       'height': width,
@@ -209,6 +210,8 @@ class FifteenBoard extends React.Component {
 
 class FifteenPiece extends React.Component {
   constructor() {
+    // We do not need to pass params to the parent class because React framework
+    // friendly fills the fields.
     super();
     this._onClick = this._onClick.bind(this);
   }
@@ -224,7 +227,7 @@ class FifteenPiece extends React.Component {
       'position': 'absolute',
       'top': '0',
       'left': '0',
-      '-webkit-transform': 'translate(' + left + ',' + top + ')',
+      'WebkitTransform': 'translate(' + left + ',' + top + ')',
       'width': (pieceSize - 8)+ 'px',
       'height': (pieceSize - 8)+ 'px',
       'border': '1px solid',
@@ -249,8 +252,6 @@ class FifteenPiece extends React.Component {
     }
   }
 }
-
-console.log(React.Component);
 
 class App extends React.Component {
   constructor() {
@@ -330,7 +331,7 @@ class SettingDialog extends React.Component {
     var num = Number(this.refs.sizeRadio.getSelectedValue());
     var pieceWidth = Math.floor((document.body.clientWidth - 20) / num);
     this.props.state.resetBoard(num, pieceWidth);
-    this.props.state.shuffle(shuffleRepeat);
+    this.props.state.shuffle(SHUFFLE_REPEAT);
     this.props.state.hideSetting();
   }
 }
@@ -339,7 +340,7 @@ var main = function() {
   var num = 4;
   var pieceWidth = Math.floor((document.body.clientWidth - 20) / num);
   var fifteenState = new FifteenState(num, pieceWidth);
-  fifteenState.shuffle(shuffleRepeat);
+  fifteenState.shuffle(SHUFFLE_REPEAT);
   
   ReactDOM.render(<App state={fifteenState} />,
                   document.getElementById('example'));
