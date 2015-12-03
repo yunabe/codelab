@@ -183,8 +183,9 @@ class FifteenState {
 
 class FifteenBoard extends React.Component {
   render() {
+    var size = this.props.state.state.length;
     var posMap = {};
-    for (var i = 0; i < this.props.state.state.length; i++) {
+    for (var i = 0; i < size; i++) {
       posMap[this.props.state.state[i]] = i;
     }
     var pieces = [];
@@ -327,7 +328,11 @@ class SettingDialog extends React.Component {
 
   _handleRequestStart() {
     var num = Number(this.refs.sizeRadio.getSelectedValue());
-    var pieceWidth = Math.floor((document.body.clientWidth - 20) / num);
+    var clientWidth = document.body.clientWidth;
+    if (clientWidth > 500) {
+      clientWidth = 500;
+    }
+    var pieceWidth = Math.floor((clientWidth - 20) / num);
     this.props.state.resetBoard(num, pieceWidth);
     this.props.state.shuffle(SHUFFLE_REPEAT);
     this.props.state.hideSetting();
@@ -336,7 +341,11 @@ class SettingDialog extends React.Component {
 
 var main = function() {
   var num = 4;
-  var pieceWidth = Math.floor((document.body.clientWidth - 20) / num);
+  var clientWidth = document.body.clientWidth;
+  if (clientWidth > 500) {
+    clientWidth = 500;
+  }
+  var pieceWidth = Math.floor((clientWidth - 20) / num);
   var fifteenState = new FifteenState(num, pieceWidth);
   fifteenState.shuffle(SHUFFLE_REPEAT);
   
