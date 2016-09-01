@@ -166,10 +166,87 @@ void play_with_class_template() {
   delete ps;
 }
 
+//////////////////////////////////////////////
+/// Implement Tuple with variadic template ///
+//////////////////////////////////////////////
+
+// The helper class to get n'th type.
+template <int n, typename Head, typename... Tail> struct NthType {
+  typedef typename NthType<n - 1, Tail...>::type type;
+};
+
+// Template-specialization (n == 0).
+template <typename Head, typename... Tail> struct NthType<0, Head, Tail...> {
+  typedef Head type;
+};
+
+// Declaration of Tuple.
+template <typename Head, typename... Tail> class Tuple;
+
+// The helper class to get n'th value from a Tuple.
+template <int n, typename Head, typename... Tail> struct TupleGetHelper {
+  static const typename NthType<n, Head, Tail...>::type&
+  get(const Tuple<Head, Tail...>& tuple) {
+    return TupleGetHelper<n - 1, Tail...>::get(tuple.tail_);
+  }
+};
+
+// Template-specialization (n == 0).
+template <typename Head, typename... Tail> struct TupleGetHelper<0, Head, Tail...> {
+  static const Head&
+  get(const Tuple<Head, Tail...>& tuple) {
+    return tuple.value_;
+  }
+};
+
+// Definition of Tuple.
+template <typename Head, typename... Tail>
+class Tuple {
+public:
+  Head value_;
+  Tuple<Tail...> tail_;
+
+  explicit Tuple(Head value, Tail... tail) : value_(value), tail_(tail...) {}
+
+  template <int n>
+  const typename NthType<n, Head, Tail...>::type&
+  get() const {
+    return TupleGetHelper<n, Head, Tail...>::get(*this);
+  }
+};
+
+// Template specialization of Tuple (with one template param).
+template <typename Head>
+class Tuple<Head> {
+public:
+  Head value_;
+
+  explicit Tuple(Head value) : value_(value) {}
+
+  template <int n>
+  const typename NthType<n, Head>::type&
+  get() const {
+    return TupleGetHelper<n, Head>::get(*this);
+  }
+};
+
+void play_with_my_tuple() {
+  std::cout << "=== play_with_my_tuple ===" << std::endl;
+  Tuple<int, int, int> tuple(1, 2, 3);
+  std::cout << "sizeof(tuple) == " << sizeof(tuple) << std::endl;
+  std::cout << "0: " << tuple.get<0>() << std::endl;
+  std::cout << "1: " << tuple.get<1>() << std::endl;
+  std::cout << "2: " << tuple.get<2>() << std::endl;
+
+  // Naturally, this causes a compile error which is not human readable.
+  // std::cout << "3: " << tuple.get<3>() << std::endl;
+}
+
 int main(int argc, char** argv) {
   play_with_function_template();
   play_with_template_with_value();
   play_with_variadic_template();
   play_with_class_template();
+  play_with_my_tuple();
   return 0;
 }
