@@ -203,43 +203,68 @@ template <typename Head, typename... Tail> struct TupleGetHelper<0, Head, Tail..
 template <typename Head, typename... Tail>
 class Tuple {
 public:
-  Head value_;
-  Tuple<Tail...> tail_;
-
-  explicit Tuple(Head value, Tail... tail) : value_(value), tail_(tail...) {}
+  // You can set const and & (or *) to the variadic template argument.
+  explicit Tuple(const Head& value, const Tail&... tail)
+    : value_(value), tail_(tail...) {}
 
   template <int n>
   const typename NthType<n, Head, Tail...>::type&
   get() const {
     return TupleGetHelper<n, Head, Tail...>::get(*this);
   }
+
+private:
+  template <int n, typename H, typename...T>
+  friend struct TupleGetHelper;
+
+  Head value_;
+  Tuple<Tail...> tail_;
 };
 
 // Template specialization of Tuple (with one template param).
 template <typename Head>
 class Tuple<Head> {
 public:
-  Head value_;
-
-  explicit Tuple(Head value) : value_(value) {}
+  explicit Tuple(const Head& value) : value_(value) {}
 
   template <int n>
   const typename NthType<n, Head>::type&
   get() const {
     return TupleGetHelper<n, Head>::get(*this);
   }
+
+private:
+  // Here, we declare friend with an instantiated class.
+  // (Of course, we can declare friend in the same way as above.)
+  // From C++11, you do not need to put `struct` after friend.
+  friend TupleGetHelper<0, Head>;
+
+  Head value_;
 };
+
+// Helper function for type inference.
+template <typename... T>
+Tuple<T...>
+MakeTuple(const T&... elems) {
+  return Tuple<T...>(elems...);
+}
 
 void play_with_my_tuple() {
   std::cout << "=== play_with_my_tuple ===" << std::endl;
-  Tuple<int, int, int> tuple(1, 2, 3);
+  auto tuple = MakeTuple(1, 3.4, 'x');
   std::cout << "sizeof(tuple) == " << sizeof(tuple) << std::endl;
   std::cout << "0: " << tuple.get<0>() << std::endl;
   std::cout << "1: " << tuple.get<1>() << std::endl;
   std::cout << "2: " << tuple.get<2>() << std::endl;
 
-  // Naturally, this causes a compile error which is not human readable.
+  // As expected, this causes a compile error, which is not human readable though.
   // std::cout << "3: " << tuple.get<3>() << std::endl;
+
+  auto one = MakeTuple(std::string("hello"));
+  std::cout << "one.get<0>(): " << one.get<0>() << std::endl;
+
+  delete tuple;
+  delete one;
 }
 
 int main(int argc, char** argv) {
