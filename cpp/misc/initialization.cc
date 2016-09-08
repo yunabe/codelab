@@ -5,6 +5,53 @@
 
 using namespace std;
 
+// Primitive global variables are always zero-initialized.
+
+// static const int CONST_INT0; <-- compile error.
+static const int CONST_INT1{};  // zero-initialized.
+static const int CONST_INT2 = {};  // zero-initialized.
+static const int CONST_INT3 = 123;
+static const int CONST_INT4 = {456};
+static int static_int0;  // zero-initialized. important!
+static int static_int1{};  // zero-initialized.
+static int static_int2 = {};  // zero-initialized.
+static int static_int3 = 123;
+static int static_int4 = 456;
+
+void learn_variable_init() {
+  cout << "#### learn_variable_init ####" << endl;
+  {
+    cout << "CONST_INT1: " << CONST_INT1 << endl;
+    cout << "CONST_INT2: " << CONST_INT2 << endl;
+    cout << "CONST_INT3: " << CONST_INT3 << endl;
+    cout << "CONST_INT4: " << CONST_INT4 << endl;
+
+    cout << "static_int0: " << static_int0 << endl;
+    cout << "static_int1: " << static_int1 << endl;
+    cout << "static_int2: " << static_int2 << endl;
+    cout << "static_int3: " << static_int3 << endl;
+    cout << "static_int4: " << static_int4 << endl;
+  }
+  {
+    // l0 is not initialized (undefined).
+    int l0;
+    // l1, l2 are zero-initialized (int + {} may look weired though).
+    int l1{};
+    int l2 = {};
+    // Assign 123 and 456.
+    int l3 = 123;
+    int l4 = {456};
+
+    // No compile error/warning though l0 is not initialized.
+    cout << "l0: " << l0
+         << ", l1: " << l1
+         << ", l2: " << l2
+         << ", l3: " << l3
+         << ", l4: " << l4
+         << endl;
+  }
+}
+
 // Actually, the only difference between struct and class in C++ is
 // that members are public by default in struct and private in class.
 // But I wrote both struct and class to confirm it.
@@ -186,6 +233,7 @@ void learn_class_member_init() {
 }
 
 int main(int argc, char** argv) {
+  learn_variable_init();
   learn_class_member_init();
   return 0;
 }
