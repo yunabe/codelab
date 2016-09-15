@@ -112,7 +112,8 @@ struct S3 {
   double y;
 };
 
-struct C3 {
+class C3 {
+public:
   explicit C3(int val) : x(val) {
     // x is initialized val.
     // y is always uninitialized.
@@ -121,6 +122,20 @@ struct C3 {
   int x;
   double y;
 };
+
+// class/struct in class/struct.
+struct S4 {
+  S2 s2;
+  double x;
+};
+
+// class/struct in class/struct.
+struct C4 {
+public:
+  C2 c2;
+  double x;
+};
+
 
 void learn_class_member_init() {
   cout << "#### learn_class_member_init ####" << endl;
@@ -229,6 +244,19 @@ void learn_class_member_init() {
     // C3 c{};
     // S3 s{1, 2};
     // C3 c{1, 2};
+  }
+  {
+    cout << "=== class/struct in class/struct ===" << endl;
+    S4 s;
+    C4 c;
+    // s.x (c.x) is not initialized though s.s2 (c.c2) is initialized
+    // because S2 and C2 have their constructor.
+    cout << "s.s2.x: " << s.s2.x
+         << "s.s2.y: " << s.s2.x
+         << ", s.x: " << s.x << endl;
+    cout << "c.c2.x: " << c.c2.x
+         << "c.c2.y: " << c.c2.x
+         << ", c.x: " << c.x << endl;
   }
 }
 
