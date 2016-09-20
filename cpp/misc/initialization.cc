@@ -136,6 +136,14 @@ public:
   double x;
 };
 
+struct S5 {
+  int x = 123;
+};
+
+struct C5 {
+public:
+  int x = 456;
+};
 
 void learn_class_member_init() {
   cout << "#### learn_class_member_init ####" << endl;
@@ -257,6 +265,13 @@ void learn_class_member_init() {
     cout << "c.c2.x: " << c.c2.x
          << "c.c2.y: " << c.c2.x
          << ", c.x: " << c.x << endl;
+  }
+  {
+    cout << "=== Initialization with var = val in class/struct ===" << endl;
+    S5 s;
+    C5 c;
+    cout << "s.x: " << s.x << endl;
+    cout << "c.x: " << c.x << endl;
   }
 }
 
