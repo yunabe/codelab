@@ -1,6 +1,8 @@
 // Naing conventions
 // https://doc.rust-lang.org/style/style/naming/README.html
 
+use std::mem;
+
 // 1. Variable Bindings
 // https://doc.rust-lang.org/book/variable-bindings.html
 fn play_with_variables() {
@@ -100,6 +102,48 @@ fn play_with_functions(panic: bool) {
 // https://doc.rust-lang.org/book/primitive-types.html
 fn play_with_primitives() {
     println!("=== play_with_primitives ===");
+
+    {
+        // Boaleans
+        let b: bool = true;  // or false.
+        println!("b is {}", b);
+    }
+    {
+        // char is a single Unicode scalar value.
+        let c: char = 'x';
+        let multi_c: char = '犬';
+        let emoji: char = '😺';
+        println!("c: {}, multi_c: {}, emoji: {}", c, multi_c, emoji);
+    }
+    {
+        // Numeric types
+        // https://doc.rust-lang.org/book/primitive-types.html#numeric-types
+
+        // signed integers. a and b are overflowing (warning).
+        let (a, b, c, d): (i8, i16, i32, i64) = (70000, 70000, 70000, 70000);
+        println!("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+        // unsigned integers.
+        let (a, b, c, d): (u8, u16, u32, u64) = (70000, 70000, 70000, 70000);
+        println!("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+
+        // isize (signed) and usize (unsigned) depend on the underlying machine architecture.
+        let (is, us): (isize, usize) = (2, 3);
+        println!("is: {}, us: {}", is, us);
+        println!("sizeof(is): {}, sizeof(us): {}",
+                 mem::size_of_val(&is),
+                 mem::size_of_val(&us));
+
+        let (f0, f1): (f32, f64) = (1.2, 3.4);
+        println!("f0: {}, f1: {}", f0, f1);
+    }
+    {
+        // Arrays
+        // https://doc.rust-lang.org/book/primitive-types.html#Arrays
+        let a = [1, 2, 3];  // a: [i32; 3]
+        // initialized array.
+        let b = [0; 20];  // a: [i32: 20]
+        println!("a: {:?}, b: {:?}", a, b);
+    }
 }
 
 fn main() {
