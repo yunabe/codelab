@@ -72,7 +72,7 @@ fn return_multiple_values() -> (i32, i32) {
 
 // ! is diverges.
 // https://doc.rust-lang.org/book/functions.html#diverging-functions
-fn always_panic(n: i32) -> ! {
+fn always_panic() -> ! {
     panic!("always_panic should not be called.");
 }
 
@@ -92,7 +92,8 @@ fn play_with_functions(panic: bool) {
         println!("a = {}, b = {}", a, b);
     }
     if panic {
-        let (x, y): (i32, f32) = always_panic(10);
+        // diverges can be assigned to any type of variables.
+        let (x, y): (i32, f32) = always_panic();
         println!("x, y = {}, {}", x, y);
     }
     receive_fn(naive_fib);
@@ -102,7 +103,6 @@ fn play_with_functions(panic: bool) {
 // https://doc.rust-lang.org/book/primitive-types.html
 fn play_with_primitives() {
     println!("=== play_with_primitives ===");
-
     {
         // Boaleans
         let b: bool = true;  // or false.
@@ -141,13 +141,55 @@ fn play_with_primitives() {
         // https://doc.rust-lang.org/book/primitive-types.html#Arrays
         let a = [1, 2, 3];  // a: [i32; 3]
         // initialized array.
-        let b = [0; 20];  // a: [i32: 20]
+        let mut b = [0; 10];  // a: [i32: 10]
+        b[1] = 1;
         println!("a: {:?}, b: {:?}", a, b);
+        println!("b.len() == {}", b.len());
+
+        // Slices
+        {
+            let s = &b[1..4];
+            println!("s: {:?}, s.len(): {}", s, s.len());
+        }
+        {
+            // the mutable slice type.
+            // https://doc.rust-lang.org/std/primitive.slice.html
+            // ms can not exist together with s above.
+            let ms = &mut b[..];
+            ms[0] = 9;
+            println!("ms: {:?}, ms.len(): {}", ms, ms.len());
+        }
+        // `ms[0] = 9` affects to `b`.
+        println!("b: {:?}", b);
     }
+    {
+        // Tuples
+        // https://doc.rust-lang.org/book/primitive-types.html#tuples
+        let t: (i32, &str) = (42, "Hello");
+        println!("t: {:?}", t);
+        let (x, y) = t;
+        println!("x: {}, y: {}", x, y);
+        println!("t.0: {}, t.1: {}", t.0, t.1);
+
+        // single-element tuple
+        let single = (8,);
+        println!("single: {:?}", single);
+    }
+}
+
+// 4. Comments
+// https://doc.rust-lang.org/book/comments.html
+
+// 5, 6. Flow controls
+// if: https://doc.rust-lang.org/book/if.html
+// Loops: https://doc.rust-lang.org/book/loops.html
+fn play_with_flow_controls() {
+    println!("=== play_with_flow_controls ===");
 }
 
 fn main() {
     play_with_variables();
     play_with_functions(false);
     play_with_primitives();
+    play_with_flow_controls();
 }
