@@ -185,6 +185,75 @@ fn play_with_primitives() {
 // Loops: https://doc.rust-lang.org/book/loops.html
 fn play_with_flow_controls() {
     println!("=== play_with_flow_controls ===");
+    let n = 10;
+    if n % 5 == 0 && n % 3 == 0 {
+        println!("Fizz Buzz");
+    } else if n % 3 == 0 {
+        println!("Fizz");
+    } else if n % 5 == 0 {
+        println!("Buzz");
+    } else {
+        println!("{}", n);
+    }
+
+    let mut index = 0;
+    // infinite-loop.
+    loop {
+        if index > 5 {
+            break;
+        }
+        println!("in loop : index: {}", index);
+        index += 1;
+    }
+    // while-loop.
+    while index < 10 {
+        println!("in while: index: {}", index);
+        index += 1;
+    }
+    // for-loop.
+    // C-style for is not supported in Rust.
+    for index in 10..15 {
+        // index = 10, 11, 12, 13, 14.
+        // the new variable `index` is defined in this scope.
+        println!("index: {}", index);
+    }
+    println!("in while: index: {}", index);
+
+    // Labeled-break/continue
+    'outer: for i in 0..10 {
+        for j in 0..10 {
+            if i * j > 15 {
+                println!("i * j exceeded 15 ({}, {})", i, j);
+                break 'outer;
+            }
+        }
+    }
+    {
+        // In Rust, almost everything is expression.
+        // `if` is expression too in Rust.
+        let n = 10;
+        let a = if n % 2 == 0 { "even" } else { "odd" };
+        println!("n is {}", a);
+
+        // if (w/o else), while, loop is evaluated as () (an empty tuple).
+        // Personally, I do not like the Rust's philosophy to handle
+        // everything as expression so much. It looks just error-prone for me.
+        let ifonly_val = if true {
+            println!("inside-if!");
+        };
+        let while_val = while n > 0 {
+            println!("inside-while!");
+            break;
+        };
+        let loop_val = loop {
+            println!("inside-loop!");
+            break;
+        };
+        println!("ifonly_val: {:?}, while_val: {:?}, loop_val: {:?}",
+                 ifonly_val,
+                 while_val,
+                 loop_val);
+    }
 }
 
 fn main() {
