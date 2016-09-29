@@ -256,9 +256,37 @@ fn play_with_flow_controls() {
     }
 }
 
+// 6. Vectors
+// https://doc.rust-lang.org/book/vectors.html
+fn play_with_vectors() {
+    let v = vec![1, 2, 3, 4, 5];
+    // zero-initialized.
+    let zero = vec![0; 10];
+    println!("v = {:?}, zero = {:?}", v, zero);
+
+    let i: i32 = 1;
+    let j: isize = i as isize;
+    // v[i], v[j] are error. index must be usize.
+    // println!("v[i32] = {}, v[isize] = {}", v[i], v[j]);
+    let k: usize = j as usize;
+    println!("v[{}] = {}", k, v[k]);
+
+    // assignment and push. the vector must be mutable.
+    let mut w: Vec<i32> = vec![0; 3];
+    w[0] = 1;
+    w.push(4);
+    println!("w = {:?}", w);
+
+    // Iterating. Without &, for-loop takes the ownsership of v.
+    for val in &v {
+        println!("v[*]: {}", val);
+    }
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
     play_with_primitives();
     play_with_flow_controls();
+    play_with_vectors();
 }
