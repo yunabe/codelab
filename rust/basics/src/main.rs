@@ -303,11 +303,20 @@ fn borrow_ownership(v: &Vec<i32>) {
     println!("borowed ownership of: {:?}", v);
 }
 
+fn borrow_mutable(v: &mut Vec<i32>, val: &mut i32) {
+    // &mut is a mutable reference.
+    // As the pointer in C/C++, &mut can be "dereference"d by *.
+    //
+    // Note: `mut v: &i32` is different from `v: &mut i32`.
+    *v = vec![0; 5];
+    v[0] = 1;
+    *val = 123;
+}
+
 fn play_with_ownership() {
     println!("=== play_with_ownership ===");
     let v = vec![0, 1, 2];
     take_ownership(v);
-
     // error: use of moved value: `v`
     // println!("v[0]: {}", v[0]);
 
@@ -320,6 +329,12 @@ fn play_with_ownership() {
     borrow_ownership(&v);
     // OK
     println!("v after borrow_ownership: {:?}", v);
+
+    let mut v = vec![9, 10, 11];
+    let mut val = 0;
+    borrow_mutable(&mut v, &mut val);
+    println!("v after borrow_mutable: {:?}", v);
+    println!("val after borrow_mutable: {:?}", val);
 }
 
 fn main() {
