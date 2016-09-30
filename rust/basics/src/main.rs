@@ -283,10 +283,50 @@ fn play_with_vectors() {
     }
 }
 
+// 8. Ownership
+// https://doc.rust-lang.org/book/ownership.html
+
+// The type that does not implement Copy trait is moved
+// if it is passed by the argument without &.
+fn take_ownership(v :Vec<i32>) {
+    println!("took ownership of: {:?}", v);
+}
+
+// Returns the ownership to the caller.
+fn take_then_return(v :Vec<i32>) -> Vec<i32> {
+    println!("took ownership of: {:?}. Then, returning it to the caller.", v);
+    return v;
+}
+
+// Borrow: Simple way to implement take and return the ownership.
+fn borrow_ownership(v: &Vec<i32>) {
+    println!("borowed ownership of: {:?}", v);
+}
+
+fn play_with_ownership() {
+    println!("=== play_with_ownership ===");
+    let v = vec![0, 1, 2];
+    take_ownership(v);
+
+    // error: use of moved value: `v`
+    // println!("v[0]: {}", v[0]);
+
+    let v = vec![3, 4, 5];
+    let v = take_then_return(v);  // borrow_ownership(&v);
+    // OK
+    println!("v after take_then_return: {:?}", v);
+
+    let v = vec![6, 7, 8];
+    borrow_ownership(&v);
+    // OK
+    println!("v after borrow_ownership: {:?}", v);
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
     play_with_primitives();
     play_with_flow_controls();
     play_with_vectors();
+    play_with_ownership();
 }
