@@ -288,13 +288,14 @@ fn play_with_vectors() {
 
 // The type that does not implement Copy trait is moved
 // if it is passed by the argument without &.
-fn take_ownership(v :Vec<i32>) {
+fn take_ownership(v: Vec<i32>) {
     println!("took ownership of: {:?}", v);
 }
 
 // Returns the ownership to the caller.
-fn take_then_return(v :Vec<i32>) -> Vec<i32> {
-    println!("took ownership of: {:?}. Then, returning it to the caller.", v);
+fn take_then_return(v: Vec<i32>) -> Vec<i32> {
+    println!("took ownership of: {:?}. Then, returning it to the caller.",
+             v);
     return v;
 }
 
@@ -337,6 +338,55 @@ fn play_with_ownership() {
     println!("val after borrow_mutable: {:?}", val);
 }
 
+fn play_with_structs() {
+    println!("play_with_structs");
+
+    // `derive` is required to print the struct with {:?}.
+    #[derive(Debug)]
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    let origin = Point { x: 0, y: 0 };
+    println!("origin: x = {}, y = {}, debug = {:?}",
+             origin.x,
+             origin.y,
+             origin);
+
+    #[derive(Debug)]
+    struct PointRef<'a> {
+        x: &'a i32,
+        y: &'a i32, // z: &i32,  // error: missing lifetime specifier [E0106]
+    }
+    let (mut a, mut b) = (3, 4);
+    {
+        let pref = PointRef { x: &a, y: &b };
+        println!("pref: {:?}", pref);
+        // error: cannot assign to `a` because it is borrowed [E0506]
+        // a = 13;
+    }
+    a = 13;
+    b = 14;
+    println!("pref1: {:?}", PointRef { x: &a, y: &b });
+
+    // Tuple structs
+    struct Color(u8, u8, u8);
+    let color = Color(128, 255, 10);
+    println!("color: ({}, {}, {})", color.0, color.1, color.2);
+    let Color(r, g, b) = color;
+    println!("r = {}, g = {}, b = {}", r, g, b);
+
+    // unit-like structs.
+    #[derive(Debug)]
+    struct Electron {};
+    #[derive(Debug)]
+    struct Atom;
+
+    let electron = Electron {};  // Electron; is an error.
+    let atom = Atom;  // Atom{}; is also fine.
+    println!("electron: {:?}, atom: {:?}", electron, atom);
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
@@ -344,4 +394,5 @@ fn main() {
     play_with_flow_controls();
     play_with_vectors();
     play_with_ownership();
+    play_with_structs();
 }
