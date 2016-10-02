@@ -387,6 +387,45 @@ fn play_with_structs() {
     println!("electron: {:?}, atom: {:?}", electron, atom);
 }
 
+// 13. Enums
+// https://doc.rust-lang.org/book/enums.html
+fn play_with_enums() {
+    println!("=== play_with_enums ===");
+
+    #[derive(Debug)]
+    enum Message {
+        Quit,
+        ChangeColor(i32, i32, i32),
+        Move { x: i32, y: i32 },
+        Write(String),
+    }
+    let messages = [Message::Quit,
+                    Message::ChangeColor(10, 20, 30),
+                    Message::Move { x: 100, y: 200 },
+                    Message::Write("WriteThis!".to_string())];
+    for message in &messages {
+        // Note: message: &Message.
+
+        // The enum is like union in C. The size is larger than integers and pointers.
+        println!("sizeof(message): {} bytes", mem::size_of_val(message));
+        match message {
+            &Message::Quit => {
+                println!("Quit");
+            }
+            &Message::ChangeColor(r, g, b) => {
+                println!("ChangeColor(r = {}, g = {}, b = {})", r, g, b);
+            }
+            &Message::Move { x: a, y: b } => {
+                // Note: you can get rid of `x: ` and `y: ` if a and b are x and y.
+                println!("Move(x: {}, y: {})", a, b);
+            }
+            &Message::Write(ref s) => {
+                println!("Write(s = {})", s);
+            }
+        }
+    }
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
@@ -395,4 +434,5 @@ fn main() {
     play_with_vectors();
     play_with_ownership();
     play_with_structs();
+    play_with_enums();
 }
