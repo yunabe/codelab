@@ -426,6 +426,93 @@ fn play_with_enums() {
     }
 }
 
+// 15, 16. Pattern Matching
+// https://doc.rust-lang.org/book/match.html
+// https://doc.rust-lang.org/book/patterns.html
+fn play_with_match_and_pattern() {
+    println!("==== play_with_match_and_pattern ====");
+    let n = 5;
+    match n {
+        1 => println!("one"),
+        2 | 3 => {
+            if n == 2 {
+                println!("two");
+            } else {
+                println!("three");
+            }
+        }
+        // Unreachable and detected by the compiler.
+        // error: unreachable pattern
+        // 3 => {},
+        //
+        // For ..., the right number is inclusive unlike `..` of for-loop.
+        // It looks confusing to me.
+        4...9 => println!("from four to nine"),
+        // Though this code block is unreachable,
+        // the compiler does not detect it.
+        3...4 => println!("unreachable but not detected."),
+        _ => println!("something else"),
+    }
+    // match is also expression.
+    let s: &str = match n {
+        1 => "one",
+        2 => "two",
+        // Hmm... `,` is optional after {}.
+        3 => "three",
+        _ => "others",
+    };
+    println!("n = {}, s = {}", n, s);
+
+    // See play_with_enums for enum match.
+
+    // Patterns.
+    let a = 3;
+    let b = 4;
+    match b {
+        // Warning: a here matches to any value (equivalent to _), not to 3.
+        // This `a` shadows `a` outside.
+        a => println!("in match: a = {}, b = {}", a, b),
+    }
+    // (a, b) = (3, 4).
+    println!("a: {}, b: {}", a, b);
+
+    // Destructuring
+    // https://doc.rust-lang.org/book/patterns.html#destructuring
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+    let point = Point { x: 2, y: 3 };
+    // match does not take the ownership of point.
+    // I'm not sure how useful this feature is, though.
+    match point {
+        Point { x, .. } => println!("x is {}", x),
+    }
+    println!("y is {}", point.y);
+
+    let x = 30;
+    match x {
+        // Bindings
+        // https://doc.rust-lang.org/book/patterns.html#destructuring
+        z @ 1...5 => {
+            println!("{} is in [1, 5]", z);
+        }
+        // Guards
+        // https://doc.rust-lang.org/book/patterns.html#guards
+        z @ 10...20 if z % 2 == 0 => {
+            println!("{} is in [10, 20] and even.", z);
+        }
+        z @ 10 | z @ 20 | z @ 30 | z @ 40 if z > 30 => {
+            // 30 is NOT captured by the above pattern because z > 30 is applied to
+            // all matches including z @ 30.
+            println!("{} matches to the complicated pattern", z);
+        }
+        _ => {
+            println!("uncaptured.");
+        }
+    }
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
@@ -435,4 +522,5 @@ fn main() {
     play_with_ownership();
     play_with_structs();
     play_with_enums();
+    play_with_match_and_pattern();
 }
