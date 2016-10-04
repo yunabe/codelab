@@ -513,6 +513,57 @@ fn play_with_match_and_pattern() {
     }
 }
 
+fn play_with_method() {
+    println!("==== play_with_method ====");
+    struct Circle {
+        x: f64,
+        y: f64,
+        radius: f64,
+    }
+
+    impl Circle {
+        fn area(&self) -> f64 {
+            std::f64::consts::PI * (self.radius * self.radius)
+        }
+        fn set_radius(&mut self, r: f64) {
+            self.radius = r;
+            // error[E0425]: unresolved name `method_noself`
+            // You need Circle:: prefix.
+            // method_noself(123);
+        }
+        // Static method.
+        fn method_noself(n: i32) {
+            println!("method_noself: {}", n);
+        }
+        fn new_at_orig(radius: f64) -> Circle {
+            Circle {
+                x: 0.0,
+                y: 0.0,
+                radius: radius,
+            }
+        }
+    }
+
+    let mut c = Circle {
+        x: 0.0,
+        y: 1.0,
+        radius: 3.0,
+    };
+    println!("area: {} (radius: {})", c.area(), c.radius);
+    c.set_radius(2.0);
+    println!("area: {} (radius: {})", c.area(), c.radius);
+
+    // error: no method named `method_noself` found for type `play_with_method::Circle` in the current scope
+    // c.method_noself(13);
+    Circle::method_noself(13);
+
+    let orig = Circle::new_at_orig(1.0);
+    println!("orig.x = {}, orig.y = {}, orig.radius = {}",
+             orig.x,
+             orig.y,
+             orig.radius);
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
@@ -523,4 +574,5 @@ fn main() {
     play_with_structs();
     play_with_enums();
     play_with_match_and_pattern();
+    play_with_method();
 }
