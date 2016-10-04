@@ -3,6 +3,7 @@
 
 use std::mem;
 
+
 // 1. Variable Bindings
 // https://doc.rust-lang.org/book/variable-bindings.html
 fn play_with_variables() {
@@ -513,6 +514,8 @@ fn play_with_match_and_pattern() {
     }
 }
 
+// Method
+// https://doc.rust-lang.org/book/method-syntax.html
 fn play_with_method() {
     println!("==== play_with_method ====");
     struct Circle {
@@ -564,6 +567,26 @@ fn play_with_method() {
              orig.radius);
 }
 
+// Strings
+// https://doc.rust-lang.org/book/strings.html
+fn play_with_strings() {
+    println!("==== play_with_strings ====");
+    // The type of string literal is &str.
+    let greeting: &str = "Hello there.";
+    println!("greeting: {}", greeting);
+    let s = "foo\
+      bar";
+    assert_eq!(s, "foobar");
+    let s = "foo
+    bar";
+    assert_eq!(s, "foo\n    bar");
+
+    // String type.
+    let mut s: String = "Hello".to_string();
+    s.push_str(" World!");
+    println!("s == {}", s.replace("e", "ee"));
+}
+
 fn main() {
     play_with_variables();
     play_with_functions(false);
@@ -575,4 +598,5 @@ fn main() {
     play_with_enums();
     play_with_match_and_pattern();
     play_with_method();
+    play_with_strings();
 }
