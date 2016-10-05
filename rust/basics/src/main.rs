@@ -729,6 +729,56 @@ fn play_with_traits() {
     // Note: you can not omit `&` because SayHello is "unsized type".
     (&h as &SayHello).hello();
     (&h as &AnotherSayHello).hello("Rust");
+
+    // https://doc.rust-lang.org/book/traits.html#trait-bounds-on-generic-structs
+    // It is possible to implement
+    struct Rect<T> {
+        x: T,
+        y: T,
+        width: T,
+        height: T,
+    }
+    // In other words, T support == operator.
+    impl<T: PartialEq> Rect<T> {
+        fn is_square(&self) -> bool {
+            self.width == self.height
+        }
+    }
+
+    let r = Rect {
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+    };
+    assert!(r.is_square());
+
+    #[derive(Debug)]
+    struct MyType;
+
+    let rs = Rect {
+        x: MyType,
+        y: MyType,
+        width: MyType,
+        height: MyType,
+    };
+    println!("rs.x: {:?}, rs.y: {:?}", rs.x, rs.y);
+    // error: no method named `is_square` found for type.
+    // assert!(rs.is_square());
+
+    // More complicated pattern.
+    // trait with generics with trait!
+    trait GenericHasArea<T: std::ops::Mul> {
+        fn area(&self) -> <T as std::ops::Mul>::Output;
+    }
+    impl<T: std::ops::Mul + Copy> GenericHasArea<T> for Rect<T> {
+        fn area(&self) -> <T as std::ops::Mul>::Output {
+            self.width * self.height
+        }
+    }
+    println!("r.area(): {}", r.area());
+    // error: no method named `area` found for type ...
+    // println!("rs.area(): {}", rs.area());
 }
 
 fn main() {
