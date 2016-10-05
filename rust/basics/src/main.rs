@@ -569,6 +569,10 @@ fn play_with_method() {
 
 // Strings
 // https://doc.rust-lang.org/book/strings.html
+// - Primitive Type str
+// https://doc.rust-lang.org/std/primitive.str.html#method.len
+// - Struct std::string::String
+// https://doc.rust-lang.org/std/string/struct.String.html
 fn play_with_strings() {
     println!("==== play_with_strings ====");
     // The type of string literal is &str.
@@ -585,6 +589,146 @@ fn play_with_strings() {
     let mut s: String = "Hello".to_string();
     s.push_str(" World!");
     println!("s == {}", s.replace("e", "ee"));
+
+    // println!("s[0] = {}", s[0]);
+
+    // Multi-bytes strings.
+    let jp = "忠犬ハチ公";
+    // len() returns byte-size.
+    println!("jp = {}, bytes = {}, num chars: {}",
+             jp,
+             jp.len(),
+             jp.chars().count());
+
+    // error: str, String does not support [index].
+    // println!("jp[1] = {}", jp[1]);
+
+    // substring. Though [] is not supported, substring by **byte-offsets** is supported.
+    let jpsubstr: &str = &jp[0..6];
+    println!("substr = {}", jpsubstr);
+
+    // Runtime crash: index 0 and/or 7 in `忠犬ハチ公` do not lie on character boundary
+    // println!("substr = {}", &jp[0..7]);
+
+    // Other operations:
+    // Concat.
+    let hello = "Hello ".to_string();
+    let world = "World";
+    let helloworld = hello + world;
+    println!("helloworld = {}", helloworld);
+
+    // `Deref` coercions
+    let hello = "Hello ".to_string();
+    let h0: &String = &hello;
+    // `Deref` coercions
+    // https://doc.rust-lang.org/book/deref-coercions.html
+    let h1: &str = &hello;
+    println!("h0 = {}, h1 = {}", h0, h1);
+}
+
+fn play_with_generics() {
+    println!("==== play_with_generics ====");
+    enum MyOption<T> {
+        MySome(T),
+        MyNone,
+    }
+    // Note: You can not omit MyOptions:: prefix.
+    let x: MyOption<i32> = MyOption::MySome(5);
+    // You can not omit MyOption:: here either.
+    match x {
+        MyOption::MySome(n) => {
+            println!("x: value = {}", n);
+        }
+        MyOption::MyNone => {}
+    }
+
+    // Result
+    // https://doc.rust-lang.org/std/result/enum.Result.html
+    // Is there any way to infer theses types?
+    let ok: Result<i32, &str> = Result::Ok(3);
+    let err: Result<i32, &str> = Result::Err("error");
+    match ok {
+        Result::Ok(val) => {
+            println!("ok (ok): {}", val);
+        }
+        Result::Err(err) => {
+            println!("ok (error): {}", err);
+        }
+    }
+
+    // Generics function.
+    // std::ops::Add trait is necessary to use `+` operator.
+    // https://doc.rust-lang.org/std/ops/trait.Add.html
+    fn sum<T: std::ops::Add>(x: T, y: T) -> <T as std::ops::Add>::Output {
+        return x + y;
+    }
+    println!("sum(3, 4) = {}", sum(3, 4));
+}
+
+// Traits
+// https://doc.rust-lang.org/book/traits.html
+//
+// Trait is something like Java/Go interface on C++ template.
+// Everything is resolved statically (at compile time).
+fn play_with_traits() {
+    println!("==== play_with_traits ====");
+
+    trait HasArea {
+        fn area(&self) -> f64;
+    }
+
+    struct Circle {
+        x: f64,
+        y: f64,
+        radius: f64,
+    }
+
+    impl HasArea for Circle {
+        fn area(&self) -> f64 {
+            std::f64::consts::PI * (self.radius * self.radius)
+        }
+    }
+
+    fn print_area<T: HasArea>(x: &T) {
+        println!("x.area == {}", x.area());
+    }
+
+    let c = Circle {
+        x: 0.0,
+        y: 0.0,
+        radius: 2.0,
+    };
+    print_area(&c);
+    println!("c.area == {}", c.area());
+
+    // Method name conflict
+    trait SayHello {
+        fn hello(&self);
+    }
+    trait AnotherSayHello {
+        fn hello(&self, name: &str);
+    }
+
+    struct HelloWorld;
+
+    impl SayHello for HelloWorld {
+        fn hello(&self) {
+            println!("Hello World!");
+        }
+    }
+    impl AnotherSayHello for HelloWorld {
+        fn hello(&self, name: &str) {
+            println!("Hello {}!", name);
+        }
+    }
+    let h = HelloWorld;
+    // error[E0034]: multiple applicable items in scope
+    // h.hello();
+
+    // Cast to traits to call the conflicted method.
+    // Note: you can not omit `&` because SayHello is "unsized type".
+    (&h as &SayHello).hello();
+    (&h as &AnotherSayHello).hello("Rust");
 }
 
 fn main() {
@@ -599,4 +743,6 @@ fn main() {
     play_with_match_and_pattern();
     play_with_method();
     play_with_strings();
+    play_with_generics();
+    play_with_traits();
 }
