@@ -931,6 +931,19 @@ fn play_with_closures() {
         }
         dynamic_dispatch(&sum);
     }
+    {
+        // TODO: Understand 'static after F.
+        fn apply_twice<T, F: 'static>(f: F) -> Box<Fn(T) -> T> where F: Fn(T) -> T {
+            println!("sizeof(F) = {}", mem::size_of_val(&f));
+            return Box::new(move |x| f(f(x)));
+        }
+
+        let twice = apply_twice(|x: i32| x * 2);
+        println!("twice(3): {}", twice(3));
+        let num = 5;
+        let twice = apply_twice(move |x: i32| x +num);
+        println!("twice(3): {}", twice(3));
+    }
 }
 
 fn main() {
