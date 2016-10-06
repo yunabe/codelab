@@ -692,6 +692,16 @@ fn play_with_traits() {
     fn print_area<T: HasArea>(x: &T) {
         println!("x.area == {}", x.area());
     }
+    // You can also use `where` to add the trait restriction.
+    // https://doc.rust-lang.org/book/traits.html#where-clause
+    // It's readable than the previous way when there are a lot of args.
+    // I'm not sure it's good idea to have two different ways to
+    // write the same thing in one language, though.
+    fn print_area_with_where<T>(x: &T)
+        where T: HasArea
+    {
+        println!("x.area (with where) == {}", x.area());
+    }
 
     let c = Circle {
         x: 0.0,
@@ -699,6 +709,7 @@ fn play_with_traits() {
         radius: 2.0,
     };
     print_area(&c);
+    print_area_with_where(&c);
     println!("c.area == {}", c.area());
 
     // Method name conflict
@@ -727,6 +738,7 @@ fn play_with_traits() {
 
     // Cast to traits to call the conflicted method.
     // Note: you can not omit `&` because SayHello is "unsized type".
+    // TODO: Confirm this involves dynamic-dispatch and `vtable` lookup.
     (&h as &SayHello).hello();
     (&h as &AnotherSayHello).hello("Rust");
 
@@ -779,6 +791,146 @@ fn play_with_traits() {
     println!("r.area(): {}", r.area());
     // error: no method named `area` found for type ...
     // println!("rs.area(): {}", rs.area());
+
+    // Trait with default methods
+    // https://doc.rust-lang.org/book/traits.html#default-methods
+    trait WithDefault {
+        fn is_valid(&self) -> bool;
+        fn is_invalid(&self) -> bool {
+            !self.is_valid()
+        }
+    }
+    struct StructWithDefault;
+    impl WithDefault for StructWithDefault {
+        fn is_valid(&self) -> bool {
+            return false;
+        }
+    }
+
+    let swd = StructWithDefault;
+    println!("swd.is_invalid(): {}", swd.is_invalid());
+
+    struct HasDrop {
+        id: i32,
+    }
+    impl Drop for HasDrop {
+        fn drop(&mut self) {
+            println!("Dropping: {}", self.id);
+        }
+    }
+    {
+        let d = HasDrop { id: 0 };
+        let moved = d;
+        let moved = 3;
+        // drop is executed immediately! What?
+        let _ = HasDrop { id: 1 };
+        println!("Before drop.");
+        // Drop with `0` is called after this.
+    }
+}
+
+// https://doc.rust-lang.org/book/if-let.html
+fn play_with_iflet() {
+    println!("==== play_with_iflet ====");
+    let mut opt = Option::Some(3);
+    if let Some(val) = opt {
+        println!("if-let: {}", val);
+    }
+    while let Some(val) = opt {
+        println!("while-let: {}", val);
+        if val > 0 {
+            opt = Option::Some(val - 1);
+        } else {
+            opt = Option::None;
+        }
+    }
+}
+
+// Trait Objects.
+// https://doc.rust-lang.org/book/trait-objects.html
+// Trait can also behave as Java/Go interface.
+fn play_with_trait_objects() {
+    println!("==== play_with_trait_objects ====");
+    // Dynamic dispatch
+    trait SayHello {
+        fn hello(&self);
+    }
+    struct Hello {
+        name: String,
+    }
+    impl SayHello for Hello {
+        fn hello(&self) {
+            println!("Hello {}", self.name);
+        }
+    }
+
+    fn static_dispatch_hello<H: SayHello>(h: &H) {
+        println!("static_dispatch_hello...");
+        h.hello();
+    }
+    // Trait Objects!
+    // https://doc.rust-lang.org/book/trait-objects.html#representation
+    fn dynamic_dispatch_hello(h: &Hello) {
+        println!("dynamic_dispatch_hello...");
+        h.hello();
+    }
+
+    let h = Hello { name: "Rust".to_string() };
+    static_dispatch_hello(&h);
+
+    dynamic_dispatch_hello(&h as &Hello);
+    // coercing. It's equivalent to the above one.
+    dynamic_dispatch_hello(&h);
+
+    // Object Safety
+    // https://doc.rust-lang.org/stable/book/trait-objects.html#object-safety
+    // TODO: Understand this part well.
+    //
+    // trait Sized:
+    // https://doc.rust-lang.org/std/marker/trait.Sized.html
+    trait MySized: Sized {}
+
+    // error: the trait `Fuga` cannot be made into an object.
+    // note: the trait cannot require that `Self : Sized`
+    // fn hello(m: &MySized) {}
+}
+
+fn play_with_closures() {
+    println!("==== play_with_closures ====");
+    let plus_one = |x: i32| x + 1;
+    assert_eq!(4, plus_one(3));
+
+    {
+        let mut num = 5;
+        let plus_num = |x: i32| x + num;
+        // error: cannot assign to `num` because it is borrowed
+        // num = 10;
+        assert_eq!(7, plus_num(2));
+    }
+    {
+        let mut num = 0;
+        {
+            let mut assign_num = |x: i32| {
+                num = x;
+            };  // Do not omit this `;`
+            assign_num(10);
+            // error: cannot borrow `num` as immutable because it is also borrowed as mutable
+            // assert_eq!(10, num);
+        }
+        assert_eq!(10, num);
+    }
+    {
+        // closure implements Fn traits.
+        let sum = |x: i32, y: i32| x + y;
+        fn static_dispatch<F: Fn(i32, i32) -> i32>(f: &F) {
+            println!("static: f(3, 4) = {}", f(3, 4));
+        }
+        static_dispatch(&sum);
+        fn dynamic_dispatch(f: &Fn(i32, i32) -> i32) {
+            println!("dynamic: f(3, 4) = {}", f(3, 4));
+        }
+        dynamic_dispatch(&sum);
+    }
 }
 
 fn main() {
@@ -795,4 +947,7 @@ fn main() {
     play_with_strings();
     play_with_generics();
     play_with_traits();
+    play_with_iflet();
+    play_with_trait_objects();
+    play_with_closures();
 }
