@@ -897,17 +897,27 @@ fn play_with_trait_objects() {
 
 fn play_with_closures() {
     println!("==== play_with_closures ====");
-    let plus_one = |x: i32| x + 1;
-    assert_eq!(4, plus_one(3));
-
     {
-        let mut num = 5;
-        let plus_num = |x: i32| x + num;
-        // error: cannot assign to `num` because it is borrowed
-        // num = 10;
-        assert_eq!(7, plus_num(2));
+        // basic syntax.
+        let plus_one = |x: i32| x + 1;
+        assert_eq!(4, plus_one(3));
+        // It's not very different from fn.
+        fn plus_one_fn(x: i32) -> i32 {
+            x + 1
+        }
+        assert_eq!(4, plus_one_fn(3));
     }
     {
+        // borrow variables from the environment.
+        let mut num = 5;
+        num += 1;
+        let plus_num = |x: i32| x + num;
+        // error: cannot assign to `num` because it is borrowed
+        // num += 1;
+        assert_eq!(8, plus_num(2));
+    }
+    {
+        // borrow mutable variables from the environment.
         let mut num = 0;
         {
             let mut assign_num = |x: i32| {
@@ -918,6 +928,37 @@ fn play_with_closures() {
             // assert_eq!(10, num);
         }
         assert_eq!(10, num);
+    }
+    {
+        println!("-- move closure --");
+        let mut num = 0;
+        struct Movable {
+            x: i32,
+        }
+        let m0: Movable = Movable { x: 10 };
+        let m1: Movable = Movable { x: 20 };
+
+        // The `move` closure captures the environment by move semantic.
+        // - num is copied because it satisfis Copy trait.
+        // - m0 is moved.
+        // - m1 is not moved because it's not accessed from the closure.
+        let mut move_closure = move |expected_num: i32| {
+            assert_eq!(expected_num, num);
+            num += 1;
+            println!("m0.x = {}", m0.x);
+        };
+        // error: use of moved value: `m0.x`
+        // println!("m0.x = {}", m0.x);
+        println!("m1.x = {}", m1.x);
+
+        // It does not affect to num inside the closure because it was copied.
+        num = 100;
+        // This increments `num` inside the closure. But it does not affect to
+        // the original num.
+        move_closure(0);
+        move_closure(1);
+        // num is not incremented by move_closure.
+        assert_eq!(100, num);
     }
     {
         // closure implements Fn traits.
@@ -933,16 +974,29 @@ fn play_with_closures() {
     }
     {
         // TODO: Understand 'static after F.
-        fn apply_twice<T, F: 'static>(f: F) -> Box<Fn(T) -> T> where F: Fn(T) -> T {
+        fn apply_twice<T, F: 'static>(f: F) -> Box<Fn(T) -> T>
+            where F: Fn(T) -> T
+        {
             println!("sizeof(F) = {}", mem::size_of_val(&f));
             return Box::new(move |x| f(f(x)));
         }
-
-        let twice = apply_twice(|x: i32| x * 2);
-        println!("twice(3): {}", twice(3));
-        let num = 5;
-        let twice = apply_twice(move |x: i32| x +num);
-        println!("twice(3): {}", twice(3));
+        {
+            let twice = apply_twice(|x: i32| x * 2);
+            println!("twice(3): {}", twice(3));
+            let num = 5;
+            let twice = apply_twice(move |x: i32| x + num);
+            println!("twice(3): {}", twice(3));
+        }
+        {
+            let n = 10;
+            let mut add_n = |x: i32| {
+                return x + n;
+            };
+            println!("add_n(5) = {}", add_n(5));
+            // Because of `F: 'static,` all borrows in F should be 'static lifetime.
+            // error: closure may outlive the current function, but it borrows `n`, which is owned by the current function
+            // let twice = apply_twice(add_n);
+        }
     }
 }
 
