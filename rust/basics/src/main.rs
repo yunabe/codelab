@@ -971,6 +971,13 @@ fn play_with_closures() {
             println!("dynamic: f(3, 4) = {}", f(3, 4));
         }
         dynamic_dispatch(&sum);
+
+        // A function pointer.
+        fn sum_fn(x: i32, y: i32) -> i32 {
+            x + y
+        }
+        static_dispatch(&sum_fn);
+        dynamic_dispatch(&sum_fn);
     }
     {
         // TODO: Understand 'static after F.
@@ -989,13 +996,70 @@ fn play_with_closures() {
         }
         {
             let n = 10;
-            let mut add_n = |x: i32| {
+            let add_n = |x: i32| {
                 return x + n;
             };
             println!("add_n(5) = {}", add_n(5));
             // Because of `F: 'static,` all borrows in F should be 'static lifetime.
             // error: closure may outlive the current function, but it borrows `n`, which is owned by the current function
             // let twice = apply_twice(add_n);
+        }
+    }
+}
+
+fn play_with_lifetime() {
+    println!("==== play_with_lifetime ====");
+    {
+        fn identify_expl<'a>(x: &'a i32) -> &'a i32 {
+            x
+        }
+        // identify_impl is equivalent of identify_expl.
+        // Rust compiler assumes that the lifetime of the return value
+        // is the same as the arg.
+        fn identify_impl(x: &i32) -> &i32 {
+            x
+        }
+        {
+            let mut m = 0;
+            // The borrowed reference &m is released immediately in this case.
+            println!("m = {}", identify_expl(&m));
+            m += 1;
+            // &m is not released immediately, because it has the same lifetime as r.
+            let r = identify_expl(&m);
+            // Thus, we can not modify m here because the reference of m is borrowd by r.
+            // error: cannot assign to `m` because it is borrowed
+            // m += 1;
+            println!("r = {}", r);
+        }
+        {
+            // Double check the behavior of identify_impl.
+            let mut m = 0;
+            println!("m = {}", identify_impl(&m));
+            m += 1;
+            let r = identify_impl(&m);
+            // error: cannot assign to `m` because it is borrowed
+            // m += 1;
+            println!("r = {}", r);
+        }
+
+        // The case where we need to specify explicit lifetimes.
+        fn select_first<'a, 'b>(x: &'a i32, y: &'b i32) -> &'a i32 {
+            x
+        }
+        // error: missing lifetime specifier
+        // We need to specify the life time of the return value is same as
+        // &x or &y. Rust compiler does not infer it from the function body.
+        //
+        // fn select_first_impl(x: &i32, y: &i32) -> &i32 {
+        //    x
+        // }
+        {
+            let (mut m, mut n) = (10, 20);
+            let r = select_first(&m, &n);
+            n += 1;
+            // error: cannot assign to `m` because it is borrowed
+            // m += 1;
+            println!("m = {}, n = {}, r = {}", m, n, r);
         }
     }
 }
@@ -1017,4 +1081,5 @@ fn main() {
     play_with_iflet();
     play_with_trait_objects();
     play_with_closures();
+    play_with_lifetime();
 }
