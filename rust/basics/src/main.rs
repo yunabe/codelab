@@ -1062,6 +1062,44 @@ fn play_with_lifetime() {
             println!("m = {}, n = {}, r = {}", m, n, r);
         }
     }
+    {
+        // struct and lifetime.
+        struct SimpleStruct {
+            x: i32,
+        }
+        impl SimpleStruct {
+            // The lifetime of the return value of the method is same as
+            // the lifetime of &self.
+            fn get_x_ref(&self) -> &i32 {
+                return &self.x;
+            }
+            // You can not omit 'a.
+            fn identify<'a>(&self, n: &'a i32) -> &'a i32 {
+                return n;
+            }
+            // The lifetime of the return value is same as (or narrower than)
+            // the lifetime of self and or.
+            fn get_x_ref_or<'a>(&'a self, or: &'a i32) -> &'a i32 {
+                if self.x >= 0 {&self.x} else {&or}
+            }
+        }
+    }
+}
+
+fn play_with_smart_pointers() {
+    println!("==== play_with_smart_pointers ====");
+    {
+        // Box is the unique pointer in Rust.
+        #[derive(Debug)]
+        struct Disposable;
+        impl Drop for Disposable {
+            fn drop(&mut self) {
+                println!("Drop Disposal");
+            }
+        }
+        let d = Box::new(Disposable);
+        println!("d = {:?}", d);
+    }
 }
 
 fn main() {
@@ -1082,4 +1120,5 @@ fn main() {
     play_with_trait_objects();
     play_with_closures();
     play_with_lifetime();
+    play_with_smart_pointers();
 }
