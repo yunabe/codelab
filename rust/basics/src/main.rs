@@ -2,7 +2,7 @@
 // https://doc.rust-lang.org/style/style/naming/README.html
 
 use std::mem;
-
+use std::f64::consts;
 
 // 1. Variable Bindings
 // https://doc.rust-lang.org/book/variable-bindings.html
@@ -136,6 +136,13 @@ fn play_with_primitives() {
 
         let (f0, f1): (f32, f64) = (1.2, 3.4);
         println!("f0: {}, f1: {}", f0, f1);
+
+        let mut u: u8 = 254;
+        u += 1;
+        // In debug build, Rust program crashes with a panic when a int variable overflows.
+        // thread 'main' panicked at 'attempt to add with overflow', src/main.rs
+        // u += 1;
+        println!("u = {}", u);
     }
     {
         // Arrays
@@ -560,6 +567,11 @@ fn play_with_method() {
     // c.method_noself(13);
     Circle::method_noself(13);
 
+    // It is also possible to use Circle:: syntax to dispatch non-static methods.
+    // (c.f. Universal Function Call Syntax)
+    // https://doc.rust-lang.org/book/ufcs.html#angle-bracket-form
+    println!("Circle::area(&c) = {}", Circle::area(&c));
+
     let orig = Circle::new_at_orig(1.0);
     println!("orig.x = {}, orig.y = {}, orig.radius = {}",
              orig.x,
@@ -721,7 +733,6 @@ fn play_with_traits() {
     }
 
     struct HelloWorld;
-
     impl SayHello for HelloWorld {
         fn hello(&self) {
             println!("Hello World!");
@@ -733,12 +744,22 @@ fn play_with_traits() {
         }
     }
     let h = HelloWorld;
-    // error[E0034]: multiple applicable items in scope
+    // error: multiple applicable items in scope
     // h.hello();
 
-    // Cast to traits to call the conflicted method.
-    // Note: you can not omit `&` because SayHello is "unsized type".
-    // TODO: Confirm this involves dynamic-dispatch and `vtable` lookup.
+    // Use "universal function call syntax" to resolve the conflict.
+    // https://doc.rust-lang.org/book/ufcs.html
+    SayHello::hello(&h);
+    AnotherSayHello::hello(&h, "Rust");
+    // Angle-bracket Form
+    // https://doc.rust-lang.org/book/ufcs.html#angle-bracket-form
+    <HelloWorld as SayHello>::hello(&h);
+    <HelloWorld as AnotherSayHello>::hello(&h, "Rust");
+
+    // Technically, it's also possible to use "Trait Objects" to resolve
+    // the conflict. But this solution has some overhead because it dispatches
+    // methods dynamically (vtable).
+    // https://doc.rust-lang.org/book/trait-objects.html
     (&h as &SayHello).hello();
     (&h as &AnotherSayHello).hello("Rust");
 
@@ -1010,33 +1031,33 @@ fn play_with_closures() {
 fn play_with_lifetime() {
     println!("==== play_with_lifetime ====");
     {
-        fn identify_expl<'a>(x: &'a i32) -> &'a i32 {
+        fn identity_expl<'a>(x: &'a i32) -> &'a i32 {
             x
         }
-        // identify_impl is equivalent of identify_expl.
+        // identity_impl is equivalent of identity_expl.
         // Rust compiler assumes that the lifetime of the return value
         // is the same as the arg.
-        fn identify_impl(x: &i32) -> &i32 {
+        fn identity_impl(x: &i32) -> &i32 {
             x
         }
         {
             let mut m = 0;
             // The borrowed reference &m is released immediately in this case.
-            println!("m = {}", identify_expl(&m));
+            println!("m = {}", identity_expl(&m));
             m += 1;
             // &m is not released immediately, because it has the same lifetime as r.
-            let r = identify_expl(&m);
+            let r = identity_expl(&m);
             // Thus, we can not modify m here because the reference of m is borrowd by r.
             // error: cannot assign to `m` because it is borrowed
             // m += 1;
             println!("r = {}", r);
         }
         {
-            // Double check the behavior of identify_impl.
+            // Double check the behavior of identity_impl.
             let mut m = 0;
-            println!("m = {}", identify_impl(&m));
+            println!("m = {}", identity_impl(&m));
             m += 1;
-            let r = identify_impl(&m);
+            let r = identity_impl(&m);
             // error: cannot assign to `m` because it is borrowed
             // m += 1;
             println!("r = {}", r);
@@ -1074,31 +1095,216 @@ fn play_with_lifetime() {
                 return &self.x;
             }
             // You can not omit 'a.
-            fn identify<'a>(&self, n: &'a i32) -> &'a i32 {
+            fn identity<'a>(&self, n: &'a i32) -> &'a i32 {
                 return n;
             }
             // The lifetime of the return value is same as (or narrower than)
             // the lifetime of self and or.
             fn get_x_ref_or<'a>(&'a self, or: &'a i32) -> &'a i32 {
-                if self.x >= 0 {&self.x} else {&or}
+                if self.x >= 0 { &self.x } else { &or }
+            }
+        }
+        let mut s = SimpleStruct { x: 10 };
+        {
+            let r = s.get_x_ref();
+            println!("r (get_x_ref) = {}", r);
+            // s is borrowed with &self reference which has the same lifetime as r.
+            // error: cannot assign to `s.x` because it is borrowed
+            // s.x = 3;
+        }
+        // s is returned. We can edit it.
+        s.x = 11;
+        {
+            let n = 3;
+            let r = s.identity(&n);
+            println!("r (identity) = {}", r);
+            // s is not borrowed.
+            s.x = 12;
+        }
+        {
+            let a = 3;
+            let r0: &i32;
+            {
+                let b = 3;
+                // error: `b` does not live long enough
+                // r0 = s.get_x_ref_or(&b);
+                r0 = s.get_x_ref_or(&a);
+                let r1 = s.get_x_ref_or(&b);
+                println!("r0 = {}, r1 = {}", r0, r1);
             }
         }
     }
 }
 
+fn play_with_const_and_static() {
+    println!("==== play_with_const_and_static ====");
+
+    // `const` is a immutable global variable.
+    const N: i32 = 4 + 5;
+    const DOUBLE_PI: f64 = consts::PI * 4.0;
+    println!("N = {}, DOUBLE_PI = {}", N, DOUBLE_PI);
+
+    // You can not omit `: i32` for const and static.
+    // error: expected `:`, found `=`
+    // const M = 10;
+    //
+    // Of course, you can not make const mutable.
+    // error: const globals cannot be mutable
+    // const mut M = 10;
+
+    // It is allowed to get an reference of const.
+    let rcn: &i32 = &N;
+    println!("rcn = {}", rcn);
+    // But the lifetime is not static.
+    // TODO: Why the lifetime is shorter?
+    // error: borrowed value does not live long enough
+    // let srcn: &'static i32 = &N;
+
+    // error: calls in constants are limited to struct and enum constructors
+    // use std::f64;
+    // const SIN_PI4: f64 = (consts::PI/4.0).sin();
+
+    // error: calls in statics are limited to struct and enum constructors
+    static SN: i32 = 3 + 4;
+    let rsn: &'static i32 = &SN;
+    println!("SN = {}, rsn = {}", SN, rsn);
+
+    // The value of static must be compile-time constant too.
+    // error: calls in statics are limited to struct and enum constructors
+    // static SIN_PI2: f64 = (consts::PI/2.0).sin();
+
+    // mutable static.
+    // To read and write a mutable static var, we need to use unsafe.
+    static mut ms: i32 = 0;
+    // error[E0133]: use of mutable static requires unsafe function or block
+    // ms = 10;
+    fn increment_ms() {
+        unsafe {
+            ms += 1;
+        }
+    }
+    fn print_ms() {
+        unsafe {
+            println!("ms = {}", ms);
+        }
+    }
+    increment_ms();
+    print_ms();
+    increment_ms();
+    print_ms();
+}
+
 fn play_with_smart_pointers() {
+    use std::rc::Rc;
+
     println!("==== play_with_smart_pointers ====");
+    #[derive(Debug)]
+    struct Disposable;
+    impl Drop for Disposable {
+        fn drop(&mut self) {
+            println!("Drop Disposal");
+        }
+    }
+    println!("-- Box --");
     {
         // Box is the unique pointer in Rust.
-        #[derive(Debug)]
-        struct Disposable;
-        impl Drop for Disposable {
-            fn drop(&mut self) {
-                println!("Drop Disposal");
+        {
+            let d = Box::new(Disposable);
+            println!("d = {:?}", d);
+        }
+        {
+            let b = Box::new(123);
+            println!("b = {}", b);
+            fn consume_box(b: Box<i32>) {
+                println!("consume b: {}", b);
+            }
+            consume_box(b);
+            // error: use of moved value: `b`
+            // println!("b = {}", b);
+        }
+    }
+    println!("-- Rc --");
+    {
+        // Reference counting
+        let p = Rc::new(Disposable);
+        // This moves p to q.
+        let q = p;
+        // error: use of moved value: `p`
+        // println!("p = {:?}", p);
+        println!("q = {:?}", q);
+    }
+    // https://doc.rust-lang.org/std/cell/
+}
+
+fn play_with_attributes() {
+    println!("==== play_with_attributes ====");
+    // you are not allowed to create your own attributes
+    // https://doc.rust-lang.org/book/attributes.html
+}
+
+fn play_with_type() {
+    println!("==== play_with_type ====");
+    // https://doc.rust-lang.org/book/type-aliases.html
+    type Num = i32;
+
+    let x: i32 = 5;
+    let y: i64 = 7;
+    let z: Num = 9;
+    // This is OK.
+    println!("x + z = {}", x + z);
+    // error: mismatched types
+    // println!("x + y = {}", x + y);
+
+    enum CustomError {
+        Invalid,
+        Timeout,
+    }
+    // partially bind template args.
+    type CustomResult<T> = Result<T, CustomError>;
+    let res: CustomResult<i32> = Result::Ok(3);
+    if let Result::Ok(val) = res {
+        println!("res(val) = {}", val);
+    }
+    let res: CustomResult<i32> = Result::Err(CustomError::Timeout);
+    if let Result::Err(err) = res {
+        match err {
+            CustomError::Invalid => {
+                println!("res(err) = Invalid");
+            }
+            CustomError::Timeout => {
+                println!("res(err) = Timeout");
             }
         }
-        let d = Box::new(Disposable);
-        println!("d = {:?}", d);
+    }
+}
+
+// https://doc.rust-lang.org/book/casting-between-types.html
+fn play_with_cast() {
+    println!("==== play_with_cast ====");
+    {
+        println!("--- coercion ---");
+        let mut n: i32 = 10;
+        let a: &mut i32 = &mut n;
+        {
+            // &mut T --> &T
+            let b: &i32 = a;
+            println!("b = {}", b);
+        }
+    }
+    {
+        // Numeric casts
+        // https://doc.rust-lang.org/stable/book/casting-between-types.html#numeric-casts
+        let i: i32 = 1;
+        let j: i64 = i as i64;
+        // The priority of as operator is high.
+        let k: i64 = (i * 2) as i64;
+
+        let f: f64 = i as f64;
+        // ls is 3.
+        let l: i32 = consts::PI as i32;
+        let us: usize = i as usize;
+        println!("i = {}, j = {}, k = {}, f = {}, l = {}", i, j, k, f, l);
+        println!("us = {}", us);
     }
 }
 
@@ -1120,5 +1326,9 @@ fn main() {
     play_with_trait_objects();
     play_with_closures();
     play_with_lifetime();
+    play_with_const_and_static();
     play_with_smart_pointers();
+    play_with_attributes();
+    play_with_type();
+    play_with_cast();
 }
