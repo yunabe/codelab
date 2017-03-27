@@ -51,4 +51,4 @@ RUN git clone git@github.com:yunabe/linux-user-config.git config && ./config/set
 RUN mkdir -p src && git clone git@github.com:yunabe/codelab.git src/codelab
 
 # bash
-CMD ["bash"]
+CMD ["sleep", "infinity"]

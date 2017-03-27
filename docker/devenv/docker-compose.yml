@@ -1,0 +1,9 @@
+version: "3"
+
+services:
+  devenv:
+    container_name: devenv
+    build:
+      context: .
+    volumes:
+      - ~/.zsh.d/.zsh-history:/home/yunabe/.zsh.d/.zsh-history
