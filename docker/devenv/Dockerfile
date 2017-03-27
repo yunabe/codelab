@@ -17,9 +17,15 @@ RUN apt-get update && apt-get install -y wget
 RUN apt-get update && apt-get install -y openjdk-8-jdk
 RUN apt-get update && apt-get install -y python-pip && pip install --upgrade pip
 
-# Install ML libraries.
+# Install Python ML libraries.
 # Note: Use scikit-learn, not sklearn.
 RUN pip install --upgrade pip && pip install -U numpy scipy matplotlib pandas scikit-learn jupyter
+RUN pip install --upgrade pip && pip install -U tensorflow
+
+# Install gcloud (https://cloud.google.com/sdk/downloads#apt-get)
+# lsb-release is for lsb_release. apt-transport-https is necessary to apt-get with https.
+RUN apt-get update && apt-get install -y lsb-release apt-transport-https
+RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && apt-get update && apt-get install -y google-cloud-sdk
 
 # https://docs.docker.com/engine/reference/builder/#arg
 # Do not move this to the head of Dockerfile because
