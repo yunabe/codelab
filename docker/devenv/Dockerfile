@@ -4,18 +4,8 @@
 FROM ubuntu
 
 # apt-get
-RUN apt-get update && apt-get install -y curl
-RUN apt-get update && apt-get install -y screen
-RUN apt-get update && apt-get install -y emacs
-RUN apt-get update && apt-get install -y git
-RUN apt-get update && apt-get install -y zsh
-RUN apt-get update && apt-get install -y python
-RUN apt-get update && apt-get install -y golang-go=2:1.6-1ubuntu4
-RUN apt-get update && apt-get install -y gcc
-RUN apt-get update && apt-get install -y clang
-RUN apt-get update && apt-get install -y wget
-RUN apt-get update && apt-get install -y openjdk-8-jdk
-RUN apt-get update && apt-get install -y python-pip && pip install --upgrade pip
+RUN apt-get update && apt-get install -y curl wget screen emacs git zsh openssh-server rsyslog
+RUN apt-get update && apt-get install -y python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4
 
 # Install Python ML libraries.
 # Note: Use scikit-learn, not sklearn.
@@ -39,6 +29,7 @@ ARG user=yunabe
 # You should not change the owner of the home dir or set USER before COPY operations
 # because COPY ignores USER (https://github.com/docker/docker/issues/6119).
 RUN groupadd -r developer && useradd -r -g developer $user
+RUN chsh -s /bin/zsh $user
 RUN mkdir -p /home/$user
 WORKDIR /home/$user
 
@@ -53,8 +44,13 @@ USER $user
 # Set up public dot files as $user.
 RUN git clone git@github.com:yunabe/linux-user-config.git config && ./config/setup.sh
 
-# Misc
+# Misc as the user
 RUN mkdir -p src && git clone git@github.com:yunabe/codelab.git src/codelab
 
-# bash
-CMD ["sleep", "infinity"]
+USER root
+# Add additional setup as root with minimum cache invalidation.
+
+# Run services as root and sleep.
+# - ssh: ssh server
+# - rsyslog: Record /var/log/auth.log from sshd.
+CMD service ssh start && service rsyslog start && sleep infinity
