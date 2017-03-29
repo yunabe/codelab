@@ -3,19 +3,30 @@
 
 FROM ubuntu
 
-# apt-get
-RUN apt-get update && apt-get install -y curl wget screen emacs git zsh openssh-server rsyslog
-RUN apt-get update && apt-get install -y python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4
+#############
+#  apt-get  #
+#############
+# Install openssh-server and set up server keys first to minimize the chance to invalidate
+# the cache and regenerate server keys.
+RUN apt-get update && apt-get install -y openssh-server
+
+# Install other apt-packages.
+RUN apt-get update && apt-get install -y\
+  zip unzip curl wget screen emacs git zsh rsyslog\
+  python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4
 
 # Install Python ML libraries.
 # Note: Use scikit-learn, not sklearn.
-RUN pip install --upgrade pip && pip install -U numpy scipy matplotlib pandas scikit-learn jupyter
-RUN pip install --upgrade pip && pip install -U tensorflow
+RUN pip install --upgrade pip && pip install -U numpy scipy matplotlib pandas scikit-learn jupyter tensorflow
 
 # Install gcloud (https://cloud.google.com/sdk/downloads#apt-get)
 # lsb-release is for lsb_release. apt-transport-https is necessary to apt-get with https.
 RUN apt-get update && apt-get install -y lsb-release apt-transport-https
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && apt-get update && apt-get install -y google-cloud-sdk
+
+# Install Go Appengine
+RUN cd /opt && wget -q https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.48.zip &&\
+  unzip -qq go_appengine_sdk_linux_amd64-1.9.48.zip
 
 # https://docs.docker.com/engine/reference/builder/#arg
 # Do not move this to the head of Dockerfile because
@@ -49,6 +60,10 @@ RUN mkdir -p src && git clone git@github.com:yunabe/codelab.git src/codelab
 
 USER root
 # Add additional setup as root with minimum cache invalidation.
+
+# Apply root_config.patch to rewrite root configurations.
+COPY root_config.patch /root_config.patch
+RUN cd / && patch -p0 < /root_config.patch && rm -f /root_config.patch
 
 # Run services as root and sleep.
 # - ssh: ssh server

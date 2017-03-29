@@ -25,4 +25,24 @@ docker-compose up --build -d
 - This container runs OpenSSH server on port `8156`.
   You can connect to the sshd with `ssh -p 8156 $USER@localhost`.
 - If you want to execute commands as `root` in the container, use `docker exec`.
-- For example, `docker exec -it devenv bash`.
+- For example, 
+
+# Login to the container via sshd as a non-root user
+This container runs OpenSSH server on port `8156`.
+To login to the container, execute
+
+```shell
+ssh -p 8156 $USER@localhost
+```
+
+When you rebuild the container image, the server-side key might change.
+If you see `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!` after you rebuild the container image,
+run the following command to remove the old server key from `.ssh/known_hosts`.
+
+```shell
+ssh-keygen -R [localhost]:8156
+```
+
+# Execute commands as root.
+- Interactive shell: `docker exec -it devenv bash`.
+- Other commands: `docker exec devenv whoami`.
