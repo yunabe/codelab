@@ -1,3 +1,4 @@
 # Ignore ssh keys
 _ssh/id_rsa*
 _ssh/id_dsa*
+local_config/.*

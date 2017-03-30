@@ -48,6 +48,10 @@ WORKDIR /home/$user
 COPY _ssh .ssh
 RUN chmod 700 .ssh
 
+# Copy dot files in local_config then remove local_config/README.md.
+COPY local_config/* ./
+RUN rm README.md
+
 # Finally, change the owner of the home dir and set USER.
 RUN chown -R $user:developer /home/$user
 USER $user
@@ -56,7 +60,7 @@ USER $user
 RUN git clone git@github.com:yunabe/linux-user-config.git config && ./config/setup.sh
 
 # Misc as the user
-RUN mkdir -p src && git clone git@github.com:yunabe/codelab.git src/codelab
+RUN mkdir -p local/gocode/src/github.com/$user && git clone git@github.com:yunabe/gae-codelab.git local/gocode/src/github.com/$user/gae-codelab
 
 USER root
 # Add additional setup as root with minimum cache invalidation.
