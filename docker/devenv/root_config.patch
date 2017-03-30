@@ -1,10 +1,11 @@
-Append
+Append /opt/go_appengine to PATH.
 --- /etc/environment
 +++ /etc/environment
 @@ -1,1 +1,1 @@
 -PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 +PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/opt/go_appengine"
-Pono
+
+Disable PasswordAuthentication in sshd.
 --- /etc/ssh/sshd_config
 +++ /etc/ssh/sshd_config
 @@ -49,7 +49,7 @@
