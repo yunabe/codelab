@@ -46,3 +46,7 @@ ssh-keygen -R [localhost]:8156
 # Execute commands as root.
 - Interactive shell: `docker exec -it devenv bash`.
 - Other commands: `docker exec devenv whoami`.
+
+## Miscs
+- [`docker build` and `docker-compose build` do not share the cache after `COPY` command.](https://github.com/docker/compose/issues/3148)
+- [*All published (`-p` or `-P`) ports are exposed, but not all exposed (`EXPOSE` or `--expose`) ports are published.*](https://www.ctl.io/developers/blog/post/docker-networking-rules/)
