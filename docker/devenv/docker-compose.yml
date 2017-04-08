@@ -7,6 +7,9 @@ services:
       context: .
     volumes:
       - ~/.zsh.d/.zsh-history:/home/yunabe/.zsh.d/.zsh-history
+    # priviledged is required to run docker in docker.
+    # https://blog.docker.com/2013/09/docker-can-now-run-within-docker/
+    privileged: true
     ports:
       # sshd
       - "8156:22"

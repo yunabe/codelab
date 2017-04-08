@@ -13,11 +13,16 @@ RUN apt-get update && apt-get install -y openssh-server
 # Install other apt-packages.
 RUN apt-get update && apt-get install -y\
   zip unzip curl wget screen emacs git zsh rsyslog\
-  python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4
+  python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4\
+  rustc
 
 # Install Python ML libraries.
 # Note: Use scikit-learn, not sklearn.
 RUN pip install --upgrade pip && pip install -U numpy scipy matplotlib pandas scikit-learn jupyter tensorflow
+
+# Install docker-ce for ubuntu
+# https://docs.docker.com/engine/installation/linux/ubuntu/
+RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl software-properties-common && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && apt-get update && apt-get install -y docker-ce
 
 # Install gcloud (https://cloud.google.com/sdk/downloads#apt-get)
 # lsb-release is for lsb_release. apt-transport-https is necessary to apt-get with https.
@@ -44,6 +49,10 @@ RUN chsh -s /bin/zsh $user
 RUN mkdir -p /home/$user
 WORKDIR /home/$user
 
+# Allow the user to run docker.
+# See https://docs.docker.com/engine/security/security/#docker-daemon-attack-surface
+RUN gpasswd -a $user docker
+
 # Set up .ssh keys
 COPY _ssh .ssh
 RUN chmod 700 .ssh
@@ -61,6 +70,7 @@ RUN git clone git@github.com:yunabe/linux-user-config.git config && ./config/set
 
 # Misc as the user
 RUN mkdir -p local/gocode/src/github.com/$user && git clone git@github.com:yunabe/gae-codelab.git local/gocode/src/github.com/$user/gae-codelab
+RUN mkdir -p src && cd src && git clone git@github.com:yunabe/codelab.git
 
 USER root
 # Add additional setup as root with minimum cache invalidation.
@@ -72,4 +82,4 @@ RUN cd / && patch -p0 < /root_config.patch && rm -f /root_config.patch
 # Run services as root and sleep.
 # - ssh: ssh server
 # - rsyslog: Record /var/log/auth.log from sshd.
-CMD service ssh start && service rsyslog start && sleep infinity
+CMD service ssh start && service rsyslog start && service docker start && sleep infinity
