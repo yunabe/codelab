@@ -1,0 +1,10 @@
+# Run `make` instaed of `docker-compose build`.
+
+version: "3"
+
+services:
+  simpleserver:
+    build:
+      context: .
+    ports:
+      - "8989:8989"
