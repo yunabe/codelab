@@ -1,6 +1,6 @@
 # A sample pure-Go server and docker config to deploy it
 - This sample builds a simple pure-Go server and a docker image to deploy it.
-- Because this leverages the cross-compile feature,
+- Because this leverages the cross-compile feature, you can run this sample on Mac and Windows as well as Linux.
 - `CGO_ENABLED=0` is the easiest way to generate a statically-linked binary in Go
   if you do not use `cgo`.
 - `CGO_ENABLED=0` is necessary if you use `net` package in linux.
