@@ -1,0 +1,119 @@
+---
+- hosts: all
+  become: yes
+  # Overwrite them with --extra-vars='{"user": "yunabe"}'
+  # http://docs.ansible.com/ansible/playbooks_variables.html
+  vars:
+    user: yunabe
+    group: developer
+  tasks:
+  - name: Ensure apt packages are installed
+    apt:
+      name: "{{ item }}"
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600
+    with_items:
+      # apptitude is required to execute apt: upgrade later.
+      # https://github.com/ansible/ansible/issues/16884#issuecomment-278138707
+      - aptitude
+      - cargo
+      - clang
+      - emacs
+      - gcc
+      - git
+      - golang
+      - openjdk-8-jdk
+      - python-pip
+      - rustc
+      - screen
+      - unzip
+      - zip
+      - zsh
+
+  - name: Update all packages to the latest version
+    apt: update_cache=yes cache_valid_time=3600 upgrade=safe
+
+  - name: autoclean unused apt packages.
+    apt: update_cache=yes cache_valid_time=3600 autoremove=true
+
+  # Run this before other pip modules.
+  # pip installed with apt-get is not up-to-date.
+  - name: Ensure pip is up-to-date.
+    pip: name=pip state=latest
+
+  # --no-cche-dir is required to avoid MemoryError.
+  # pip skips packages which were already installed even with --no-cache-dir option.
+  - name: Ensure popular ML python libraries are installed.
+    pip:
+      state: latest
+      extra_args: --no-cache-dir
+      name:
+      - matplotlib
+      - numpy
+      - pandas
+      - scikit-learn
+      - scipy
+      - jupyter
+
+  # Install the latest version of docker on ubuntu.
+  # https://docs.docker.com/engine/installation/linux/ubuntu/
+  - name: Install Docker GPG key
+    apt_key:
+      url: "https://download.docker.com/linux/ubuntu/gpg"
+      id: 0EBFCD88
+      
+  - name: Register docker apt-repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+      update_cache: yes
+
+  - name: Ensure docker-ce is installed
+    apt:
+      name: docker-ce
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600
+
+  # Set up users and groups.
+  - name: Ensure group:{{ group }} exists
+    group: name=developer
+
+  - name: Ensure user:{{ user }} exists
+    user:
+      # Why is "" necessary?
+      name: "{{ user }}"
+      groups:
+      - "{{ group }}"
+      - docker
+
+  - name: Create .ssh directory
+    file:
+      path: /home/{{ user }}/.ssh
+      state: directory
+      mode: 0700
+      owner: "{{ user }}"
+      group: "{{ group }}"
+
+  - name: Copy a ssh private key
+    copy:
+      src: ~/.ssh/id_rsa
+      dest: /home/{{ user }}/.ssh/id_rsa
+      owner: "{{ user }}"
+      group: "{{ group }}"
+      mode: 0600
+
+  - name: Copy a ssh public key
+    copy:
+      src: ~/.ssh/id_rsa.pub
+      dest: /home/{{ user }}/.ssh/id_rsa.pub
+      owner: "{{ user }}"
+      group: "{{ group }}"
+      mode: 0644
+
+  - name: Clone config git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/linux-user-config.git
+      dest: /home/{{ user }}/config
+      accept_hostkey: yes

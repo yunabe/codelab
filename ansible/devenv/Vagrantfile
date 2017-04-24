@@ -1,0 +1,25 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/xenial64"
+
+  # Ansible requires python to be installed on guest machines.
+  config.vm.provision "shell", inline: "apt-get install -y python"
+
+  # https://www.vagrantup.com/docs/provisioning/ansible_intro.html
+  # To execute ansible alone, run
+  # >> ansible-playbook playbook.yaml -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "playbook.yaml"
+  end
+
+  # In case you want to install your public key to the VM by Vagrant.
+  #
+  # config.vm.provision "shell" do |s|
+  #   ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+  #   s.inline = <<-SHELL
+  #     echo #{ssh_pub_key} >> /home/ubuntu/.ssh/authorized_keys
+  #   SHELL
+  # end
+end
