@@ -3,9 +3,16 @@
   become: yes
   # Overwrite them with --extra-vars='{"user": "yunabe"}'
   # http://docs.ansible.com/ansible/playbooks_variables.html
+  #
+  # Notes:
+  # 1. The default `ubuntu` user are groups like `sudo` to have some previledges.
+  #    If you want to use another user name, please be careful about it.
+  # 2. `developer` group is created to demostrate how to add a group with ansible.
+  #     The group is not used for any real task.
   vars:
-    user: yunabe
+    user: ubuntu
     group: developer
+
   tasks:
   - name: Ensure apt packages are installed
     apt:
@@ -77,12 +84,15 @@
 
   # Set up users and groups.
   - name: Ensure group:{{ group }} exists
-    group: name=developer
+    group: name={{ group }}
 
   - name: Ensure user:{{ user }} exists
     user:
       # Why is "" necessary?
       name: "{{ user }}"
+      # append is necessary because ubuntu needs to be in
+      # some default groups like sudo.
+      append: yes
       groups:
       - "{{ group }}"
       - docker
@@ -93,22 +103,22 @@
       state: directory
       mode: 0700
       owner: "{{ user }}"
-      group: "{{ group }}"
+      group: "{{ user }}"
 
   - name: Copy a ssh private key
     copy:
-      src: ~/.ssh/id_rsa
+      src: ~/.ssh/devenv_id_rsa
       dest: /home/{{ user }}/.ssh/id_rsa
       owner: "{{ user }}"
-      group: "{{ group }}"
+      group: "{{ user }}"
       mode: 0600
 
   - name: Copy a ssh public key
     copy:
-      src: ~/.ssh/id_rsa.pub
+      src: ~/.ssh/devenv_id_rsa.pub
       dest: /home/{{ user }}/.ssh/id_rsa.pub
       owner: "{{ user }}"
-      group: "{{ group }}"
+      group: "{{ user }}"
       mode: 0644
 
   - name: Clone config git repository
