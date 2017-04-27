@@ -86,6 +86,7 @@
   - name: Ensure group:{{ group }} exists
     group: name={{ group }}
 
+  # http://docs.ansible.com/ansible/user_module.html
   - name: Ensure user:{{ user }} exists
     user:
       # Why is "" necessary?
@@ -93,6 +94,8 @@
       # append is necessary because ubuntu needs to be in
       # some default groups like sudo.
       append: yes
+      # Remove default public password in Vagrant.
+      password: "*"
       groups:
       - "{{ group }}"
       - docker
@@ -105,7 +108,7 @@
       owner: "{{ user }}"
       group: "{{ user }}"
 
-  - name: Copy a ssh private key
+  - name: Copy a ssh private key for devenv
     copy:
       src: ~/.ssh/devenv_id_rsa
       dest: /home/{{ user }}/.ssh/id_rsa
@@ -113,7 +116,7 @@
       group: "{{ user }}"
       mode: 0600
 
-  - name: Copy a ssh public key
+  - name: Copy a ssh public key for devenv
     copy:
       src: ~/.ssh/devenv_id_rsa.pub
       dest: /home/{{ user }}/.ssh/id_rsa.pub
