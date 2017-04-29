@@ -4,6 +4,7 @@
 # Usage
 - Build and start devenv VM
   - `vagrant up`
+  - It takes about 1 hour for the initial provision.
 - Discard the VM
   - `vagrant destroy`
 - Run ansible
@@ -14,6 +15,7 @@
   - `vagrant ssh` or `ssh -p 2222 ubuntu@localhost -i .vagrant/machines/default/virtualbox/private_key`
 - Create a box
   - Optional: Execute `sudo dd if=/dev/zero of=/EMPTY bs=1M; sudo rm -f /EMPTY` in the guest VM.
+  - For example, the box file was compressed from 1.70GB to 1.44GB (16% reduction) by this.
   - `vagrant package --output devenv.box`
 
 # Misc

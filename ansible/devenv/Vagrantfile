@@ -14,7 +14,22 @@ Vagrant.configure("2") do |config|
     ansible.playbook = "playbook.yaml"
   end
 
+  # Port forwardings.
+  # host_ip: "127.0.0.1" disables public access.
+  # Run `vagrant reload` to reflect changes.
+  config.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1", id: "http_demo1"
+  config.vm.network "forwarded_port", guest: 8888, host: 8888, host_ip: "127.0.0.1", id: "http_demo2"
+
+  # In case you need to change ssh port.
+  # DO NOT FORGET TO SET HOST_IP to disable public access!
+  # Vagrant box images like ubuntu are usually unsafe for public access.
+  # https://www.vagrantup.com/docs/networking/forwarded_ports.html
+  #
+  # config.ssh.guest_port = 2345
+  # config.vm.network "forwarded_port", guest: 22, host: 2345, host_ip: "127.0.0.1", id: "ssh"
+
   # In case you want to install your public key to the VM by Vagrant.
+  # I usually do this in Ansible.
   #
   # config.vm.provision "shell" do |s|
   #   ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
