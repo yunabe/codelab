@@ -16,7 +16,7 @@
 - Create a box
   - Optional: Execute `sudo dd if=/dev/zero of=/EMPTY bs=1M; sudo rm -f /EMPTY` in the guest VM.
   - For example, the box file was compressed from 1.70GB to 1.44GB (16% reduction) by this.
-  - `vagrant package --output devenv.box`
+  - `vagrant package --vagrantfile VagrantfileForBox --output devenv.box`
 
 # Misc
 - List vagrant boxes: `vagrant box list`

@@ -6,3 +6,4 @@
 *.nexe
 *.nmf
 *.class
+.DS_Store

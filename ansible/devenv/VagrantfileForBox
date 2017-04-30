@@ -1,0 +1,8 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Vagrantfile exported to devenv box file.
+
+Vagrant.configure("2") do |config|
+  config.ssh.username = "ubuntu"
+end
