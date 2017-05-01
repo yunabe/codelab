@@ -96,6 +96,7 @@
       append: yes
       # Remove default public password in Vagrant.
       password: "*"
+      shell: /bin/zsh
       groups:
       - "{{ group }}"
       - docker
@@ -129,4 +130,11 @@
     git:
       repo: git@github.com:yunabe/linux-user-config.git
       dest: /home/{{ user }}/config
+      accept_hostkey: yes
+
+  - name: Clone config git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/codelab.git
+      dest: /home/{{ user }}/src/codelab
       accept_hostkey: yes

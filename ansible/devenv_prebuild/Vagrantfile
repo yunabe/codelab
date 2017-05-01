@@ -1,0 +1,17 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "devenv"
+
+  # In case you want to reconfigure the VM with ansible.
+  # config.vm.provision "ansible" do |ansible|
+  #   ansible.playbook = "../devenv/playbook.yaml"
+  # end
+
+  # Port forwardings.
+  # host_ip: "127.0.0.1" disables public access.
+  # Run `vagrant reload` to reflect changes.
+  config.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1", id: "http_demo1"
+  config.vm.network "forwarded_port", guest: 8888, host: 8888, host_ip: "127.0.0.1", id: "http_demo2"
+end
