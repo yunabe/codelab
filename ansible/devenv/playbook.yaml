@@ -132,7 +132,48 @@
       dest: /home/{{ user }}/config
       accept_hostkey: yes
 
-  - name: Clone config git repository
+  # Ansible version of config/setup.sh.
+  # Group these file modules as a role.
+  - name: Link .emacs file
+    file:
+      path: /home/{{ user }}/.emacs
+      src: /home/{{ user }}/config/_emacs
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .zshrc file
+    file:
+      path: /home/{{ user }}/.zsh.d
+      state: directory
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Make .zsh.d directory
+    file:
+      path: /home/{{ user }}/.zshrc
+      src: /home/{{ user }}/config/_zshrc
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .screenrc file
+    file:
+      path: /home/{{ user }}/.screenrc
+      src: /home/{{ user }}/config/_screenrc
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .gitconfig file
+    file:
+      path: /home/{{ user }}/.gitconfig
+      src: /home/{{ user }}/config/_gitconfig
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Clone codelab git repository
     become_user: "{{ user }}"
     git:
       repo: git@github.com:yunabe/codelab.git
