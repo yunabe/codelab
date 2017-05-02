@@ -82,6 +82,12 @@
       update_cache: yes
       cache_valid_time: 3600
 
+  # Apply a patch to disable sshd password authentication.
+  - name: Apply patches to modify configurations
+    patch:
+      src: root_config.patch
+      basedir: /
+
   # Set up users and groups.
   - name: Ensure group:{{ group }} exists
     group: name={{ group }}

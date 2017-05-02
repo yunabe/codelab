@@ -5,9 +5,9 @@ Vagrant.configure("2") do |config|
   config.vm.box = "devenv"
 
   # In case you want to reconfigure the VM with ansible.
-  # config.vm.provision "ansible" do |ansible|
-  #   ansible.playbook = "../devenv/playbook.yaml"
-  # end
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "../devenv/playbook.yaml"
+  end
 
   # Port forwardings.
   # host_ip: "127.0.0.1" disables public access.
