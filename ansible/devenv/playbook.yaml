@@ -30,6 +30,7 @@
       - gcc
       - git
       - golang
+      - npm
       - openjdk-8-jdk
       - python-pip
       - rustc
@@ -100,7 +101,7 @@
       # append is necessary because ubuntu needs to be in
       # some default groups like sudo.
       append: yes
-      # Remove default public password in Vagrant.
+      # Remove default public password in Vagrant. Double-quotes around * are necessary.
       password: "*"
       shell: /bin/zsh
       groups:
@@ -184,4 +185,32 @@
     git:
       repo: git@github.com:yunabe/codelab.git
       dest: /home/{{ user }}/src/codelab
+      accept_hostkey: yes
+
+  - name: Clone golang-codelab git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/golang-codelab.git
+      dest: /home/{{ user }}/local/gocode/src/github.com/yunabe/golang-codelab
+      accept_hostkey: yes
+
+  - name: Clone pysh git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/pysh.git
+      dest: /home/{{ user }}/src/pysh
+      accept_hostkey: yes
+
+  - name: Clone jekylldoc git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@bitbucket.org:yunabe/sphinx-doc.git
+      dest: /home/{{ user }}/src/jekylldoc
+      accept_hostkey: yes
+
+  - name: Clone plain git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@bitbucket.org:yunabe/plain.git
+      dest: /home/{{ user }}/src/plain
       accept_hostkey: yes
