@@ -57,12 +57,13 @@
       state: latest
       extra_args: --no-cache-dir
       name:
+      - jupyter
       - matplotlib
       - numpy
       - pandas
       - scikit-learn
       - scipy
-      - jupyter
+      - tensorflow
 
   # Install the latest version of docker on ubuntu.
   # https://docs.docker.com/engine/installation/linux/ubuntu/
