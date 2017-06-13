@@ -64,6 +64,7 @@
       - scikit-learn
       - scipy
       - tensorflow
+      - keras
 
   # Install the latest version of docker on ubuntu.
   # https://docs.docker.com/engine/installation/linux/ubuntu/
