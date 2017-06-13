@@ -35,3 +35,4 @@ A directory to build a ubuntu-based Linux development environment using Vagrant 
 - List vagrant boxes: `vagrant box list`
 - Update vagrant box: `vagrant box update --box ubuntu/xenial64`
 - Delete old boxes after the update: `vagrant box prune`
+- Run jupyter notebook accessible from the host: `jupyter notebook --port=8080 --ip=0.0.0.0`
