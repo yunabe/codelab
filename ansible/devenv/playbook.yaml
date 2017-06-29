@@ -30,6 +30,7 @@
       - gcc
       - git
       - golang
+      - golang-go.tools  # For godoc command
       - npm
       - openjdk-8-jdk
       - python-pip
