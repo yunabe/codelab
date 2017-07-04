@@ -1,0 +1,43 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    user: ubuntu
+    group: developer
+
+  tasks:
+  # Install Google Chrome
+  # https://www.google.com/linuxrepositories/
+  - name: Install Google APT Key
+    apt_key:
+      url: "https://dl-ssl.google.com/linux/linux_signing_key.pub"
+      id: D38B4796
+
+  - name: Register Google apt-repository
+    apt_repository:
+      repo: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
+      update_cache: yes
+
+  - name: Ensure Goole Chrome is installed
+    apt:
+      name: google-chrome-stable
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600
+
+  # Install Visual Studio Code
+  # https://code.visualstudio.com/docs/setup/linux#_debian-and-ubuntu-based-distributions
+  - name: Install Microsoft APT Key
+    apt_key:
+      url: "https://packages.microsoft.com/keys/microsoft.asc"
+      id: BE1229CF
+  - name: Register VSCode apt-repository
+    apt_repository:
+      repo: deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main
+      update_cache: yes
+  - name: Install VSCode
+    apt:
+      name: code
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600

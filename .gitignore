@@ -7,3 +7,5 @@
 *.nmf
 *.class
 .DS_Store
+# For Ansible
+playbook.retry
