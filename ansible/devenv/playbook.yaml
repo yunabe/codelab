@@ -197,6 +197,13 @@
       dest: /home/{{ user }}/local/gocode/src/github.com/yunabe/golang-codelab
       accept_hostkey: yes
 
+  - name: Clone gae-codelab git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/gae-codelab.git
+      dest: /home/{{ user }}/local/gocode/src/github.com/yunabe/gae-codelab
+      accept_hostkey: yes
+
   - name: Clone easycsv git repository
     become_user: "{{ user }}"
     git:
