@@ -1,20 +1,26 @@
 # References:
 # https://docs.docker.com/engine/reference/builder/
 
-FROM ubuntu
+FROM ubuntu:artful
 
 #############
 #  apt-get  #
 #############
 # Install openssh-server and set up server keys first to minimize the chance to invalidate
 # the cache and regenerate server keys.
-RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
 
 # Install other apt-packages.
+# https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#run
+# software-properties-common is required for add-apt-repository.
 RUN apt-get update && apt-get install -y\
   zip unzip curl wget screen emacs git zsh rsyslog\
-  python python-pip gcc clang openjdk-8-jdk golang-go=2:1.6-1ubuntu4\
-  rustc
+  python python-pip gcc clang openjdk-8-jdk rustc \
+  apt-transport-https ca-certificates curl software-properties-common lsb-release\
+  && rm -rf /var/lib/apt/lists/*
+
+# https://github.com/golang/go/wiki/Ubuntu
+RUN add-apt-repository ppa:gophers/archive && apt update && apt-get install golang-1.9-go -y && rm -rf /var/lib/apt/lists/*
 
 # Install Python ML libraries.
 # Note: Use scikit-learn, not sklearn.
@@ -22,16 +28,13 @@ RUN pip install --upgrade pip && pip install -U numpy scipy matplotlib pandas sc
 
 # Install docker-ce for ubuntu
 # https://docs.docker.com/engine/installation/linux/ubuntu/
-RUN apt-get update && apt-get install -y apt-transport-https ca-certificates curl software-properties-common && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && apt-get update && apt-get install -y docker-ce
+# As of 2017-12, we need to use edge channel to install Docker in ubuntu:artful.
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - &&\
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge" &&\
+  apt-get update && apt-get install -y docker-ce && rm -rf /var/lib/apt/lists/*
 
 # Install gcloud (https://cloud.google.com/sdk/downloads#apt-get)
-# lsb-release is for lsb_release. apt-transport-https is necessary to apt-get with https.
-RUN apt-get update && apt-get install -y lsb-release apt-transport-https
-RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && apt-get update && apt-get install -y google-cloud-sdk
-
-# Install Go Appengine
-RUN cd /opt && wget -q https://storage.googleapis.com/appengine-sdks/featured/go_appengine_sdk_linux_amd64-1.9.48.zip &&\
-  unzip -qq go_appengine_sdk_linux_amd64-1.9.48.zip
+RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && apt-get update && apt-get install -y google-cloud-sdk && rm -rf /var/lib/apt/lists/*
 
 # https://docs.docker.com/engine/reference/builder/#arg
 # Do not move this to the head of Dockerfile because
