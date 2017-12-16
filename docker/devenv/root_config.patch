@@ -1,3 +1,11 @@
+Append /usr/lib/go-1.9/bin to PATH.
+--- /etc/environment
++++ /etc/environment
+@@ -1,1 +1,1 @@
+-PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
++PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/go-1.9/bin"
+/opt/go_appengine"
+
 Disable PasswordAuthentication in sshd.
 --- /etc/ssh/sshd_config
 +++ /etc/ssh/sshd_config

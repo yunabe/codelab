@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/l
 RUN apt-get update && apt-get install -y\
   zip unzip curl wget screen emacs git zsh rsyslog\
   python python-pip gcc clang openjdk-8-jdk rustc \
-  apt-transport-https ca-certificates curl software-properties-common lsb-release\
+  apt-transport-https ca-certificates curl software-properties-common lsb-release \
+  libzmq3-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # https://github.com/golang/go/wiki/Ubuntu
@@ -63,6 +64,7 @@ RUN chmod 700 .ssh
 # Copy dot files in local_config then remove local_config/README.md.
 COPY local_config/* ./
 RUN rm README.md
+COPY Cask ./.emacs.d/Cask
 
 # Finally, change the owner of the home dir and set USER.
 RUN chown -R $user:developer /home/$user
@@ -70,10 +72,17 @@ USER $user
 
 # Set up public dot files as $user.
 RUN git clone git@github.com:yunabe/linux-user-config.git config && ./config/setup.sh
+RUN curl -fsSL https://raw.githubusercontent.com/cask/cask/master/go | python
+RUN cd .emacs.d && $HOME/.cask/bin/cask install
 
 # Misc as the user
-RUN mkdir -p local/gocode/src/github.com/$user && git clone git@github.com:yunabe/gae-codelab.git local/gocode/src/github.com/$user/gae-codelab
-RUN mkdir -p src && cd src && git clone git@github.com:yunabe/codelab.git
+RUN mkdir -p src && cd src && git clone git@github.com:yunabe/codelab.git && git clone git@github.com:yunabe/lgo-binder
+RUN mkdir -p local/gocode/src/github.com/yunabe && cd local/gocode/src/github.com/yunabe &&\
+  git clone git@github.com:yunabe/gae-codelab.git &&\
+  git clone git@github.com:yunabe/lgo &&\
+  git clone git@github.com:yunabe/easycsv
+RUN go get -u golang.org/x/tools/cmd/gorename github.com/nsf/gocode github.com/nfnt/resize github.com/yunabe/lgo/cmd/lgo &&\
+  go get -d github.com/yunabe/lgo/cmd/lgo-internal
 
 USER root
 # Add additional setup as root with minimum cache invalidation.
