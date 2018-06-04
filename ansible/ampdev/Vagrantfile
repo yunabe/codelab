@@ -1,0 +1,46 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+
+  # Ansible requires python to be installed on guest machines.
+  config.vm.provision "shell", inline: "apt-get install -y python"
+
+  # https://www.vagrantup.com/docs/provisioning/ansible_intro.html
+  # To execute ansible alone, run
+  # >> ansible-playbook playbook.yaml -i .vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "playbook.yml"
+  end
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 4096
+    v.cpus = 2
+  end
+
+  # Port forwardings.
+  # host_ip: "127.0.0.1" disables public access.
+  # Run `vagrant reload` to reflect changes.
+  # config.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1", id: "http_demo1"
+  # config.vm.network "forwarded_port", guest: 8888, host: 8888, host_ip: "127.0.0.1", id: "http_demo2"
+
+  # In case you need to change ssh port.
+  # DO NOT FORGET TO SET HOST_IP to disable public access!
+  # Vagrant box images like ubuntu are usually unsafe for public access.
+  # https://www.vagrantup.com/docs/networking/forwarded_ports.html
+  #
+  # config.ssh.guest_port = 2345
+  config.ssh.forward_x11 = true
+  # config.vm.network "forwarded_port", guest: 22, host: 2345, host_ip: "127.0.0.1", id: "ssh"
+
+  # In case you want to install your public key to the VM by Vagrant.
+  # I usually do this in Ansible.
+  #
+  # config.vm.provision "shell" do |s|
+  #   ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+  #   s.inline = <<-SHELL
+  #     echo #{ssh_pub_key} >> /home/ubuntu/.ssh/authorized_keys
+  #   SHELL
+  # end
+end

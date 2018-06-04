@@ -1,0 +1,174 @@
+---
+- hosts: all
+  become: yes
+  # Overwrite them with --extra-vars='{"user": "yunabe"}'
+  # http://docs.ansible.com/ansible/playbooks_variables.html
+  #
+  # Notes:
+  # 1. The default `ubuntu` user are groups like `sudo` to have some previledges.
+  #    If you want to use another user name, please be careful about it.
+  # 2. `developer` group is created to demostrate how to add a group with ansible.
+  #     The group is not used for any real task.
+  vars:
+    user: vagrant
+    group: developer
+
+  tasks:
+  # http://docs.ansible.com/ansible/user_module.html
+  - name: Ensure user:{{ user }} exists
+    user:
+      name: "{{ user }}"
+      # append is necessary because ubuntu needs to be in
+      # some default groups like sudo.
+        # Remove default public password in Vagrant. Double-quotes around * are necessary.
+      # password: "*"
+      shell: /bin/zsh
+  
+  - name: Create .ssh directory
+    file:
+      path: /home/{{ user }}/.ssh
+      state: directory
+      mode: 0700
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Copy a ssh private key for devenv
+    copy:
+      src: ~/.ssh/devenv_id_rsa
+      dest: /home/{{ user }}/.ssh/id_rsa
+      owner: "{{ user }}"
+      group: "{{ user }}"
+      mode: 0600
+
+  - name: Copy a ssh public key for devenv
+    copy:
+      src: ~/.ssh/devenv_id_rsa.pub
+      dest: /home/{{ user }}/.ssh/id_rsa.pub
+      owner: "{{ user }}"
+      group: "{{ user }}"
+      mode: 0644
+
+  - name: Ensure apt packages are installed
+    apt:
+      name: "{{ item }}"
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600
+    with_items:
+      # apptitude is required to execute apt: upgrade later.
+      # https://github.com/ansible/ansible/issues/16884#issuecomment-278138707
+      # openjdk is necessary to run closure compiler.
+      # Please double-check closure compiler works with Java9+ before incrementing the version.
+      - aptitude
+      - emacs
+      - git
+      - npm
+      - screen
+      - zsh
+      - openjdk-8-jdk
+  
+  - name: Update all packages to the latest version
+    apt: update_cache=yes cache_valid_time=3600 upgrade=safe
+
+  - name: autoclean unused apt packages.
+    apt: update_cache=yes cache_valid_time=3600 autoremove=true
+
+  - name: Clone config git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/linux-user-config.git
+      dest: /home/{{ user }}/config
+      accept_hostkey: yes
+
+  # Ansible version of config/setup.sh.
+  # TODO: Group these file modules as a role.
+  - name: Link .emacs file
+    file:
+      path: /home/{{ user }}/.emacs
+      src: /home/{{ user }}/config/_emacs
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .zshrc file
+    file:
+      path: /home/{{ user }}/.zsh.d
+      state: directory
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Make .zsh.d directory
+    file:
+      path: /home/{{ user }}/.zshrc
+      src: /home/{{ user }}/config/_zshrc
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .screenrc file
+    file:
+      path: /home/{{ user }}/.screenrc
+      src: /home/{{ user }}/config/_screenrc
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  - name: Link .gitconfig file
+    file:
+      path: /home/{{ user }}/.gitconfig
+      src: /home/{{ user }}/config/_gitconfig
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+  
+  - name: Link Cask file
+    file:
+      path: /home/{{ user }}/.emacs.d/Cask
+      src: /home/{{ user }}/config/Cask
+      state: link
+      owner: "{{ user }}"
+      group: "{{ user }}"
+
+  # Install emacs Cask
+  # http://cask.readthedocs.io/en/latest/guide/installation.html#manual-installation
+  # https://github.com/cask/cask/blob/master/go
+  - name: Clone emacs Cask repository
+    become_user: "{{ user }}"
+    git:
+      repo: https://github.com/cask/cask.git
+      dest: /home/{{ user }}/.cask
+      accept_hostkey: yes
+    register: git_cask
+  - name: Encure emacs Cask is up-to-date
+    become_user: "{{ user }}"
+    shell: /home/{{ user }}/.cask/bin/cask upgrade-cask
+    when: git_cask.changed
+
+  # Clone git repositories
+  - name: Clone amphtml git repository
+    become_user: "{{ user }}"
+    git:
+      repo: git@github.com:yunabe/amphtml.git
+      dest: /home/{{ user }}/src/amphtml
+      accept_hostkey: yes
+    tags:
+      - git
+
+  # Install Google Chrome
+  # https://www.google.com/linuxrepositories/
+  - name: Install Google APT Key
+    apt_key:
+      url: "https://dl-ssl.google.com/linux/linux_signing_key.pub"
+      id: D38B4796
+
+  - name: Register Google apt-repository
+    apt_repository:
+      repo: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
+      update_cache: yes
+
+  - name: Ensure Goole Chrome is installed
+    apt:
+      name: google-chrome-stable
+      force: yes
+      update_cache: yes
+      cache_valid_time: 3600
