@@ -1,6 +1,7 @@
 // Learning C++ template programming.
 // g++ template.cc -std=c++11 -o template && ./template
 
+#include <memory>
 #include <stdio.h>
 #include <iostream>
 #include <typeinfo>
@@ -262,9 +263,52 @@ void play_with_my_tuple() {
 
   auto one = MakeTuple(std::string("hello"));
   std::cout << "one.get<0>(): " << one.get<0>() << std::endl;
+}
 
-  delete tuple;
-  delete one;
+///////////////////////////////////////////////////////
+/// Understand lambda, std::function and template   ///
+/// by defining a custom std::function from scratch ///
+///////////////////////////////////////////////////////
+
+template <typename Ret, typename... Args> class callable_interface {
+ public:
+  virtual Ret operator()(Args...) = 0;
+  virtual ~callable_interface() {}
+};
+
+template <typename F, typename Ret, typename... Args> class callable_impl : public callable_interface<Ret, Args...> {
+public:
+  callable_impl(F functor) : functor(functor) {}
+  virtual Ret operator()(Args... args) {
+    return functor(args...);
+  }
+
+ private:
+  F functor;
+};
+
+template <typename T> class myfunc;
+
+// Template specialization is used to capture the func types in myfunc template args.
+template <typename Ret, typename... Args> class myfunc<Ret(Args...)> {
+ public:
+  template <typename F>
+  myfunc(F f) {
+    c.reset(new callable_impl<F, Ret, Args...>(f));
+  }
+  Ret operator()(Args... args) {
+    return (*c)(args...);
+  }
+ private:
+  std::unique_ptr<callable_interface<Ret, Args...>> c;
+};
+
+void play_with_custom_function() {
+  std::cout << "=== play_with_custom_function ===" << std::endl;
+  // #include <functional>
+  // std::function<int(int, int)> sum = [](int x, int y) {return x + y;};
+  myfunc<int(int, int)> sum = [](int x, int y) {return x + y;};
+  std::cout << "sum(3, 4) == " << sum(3, 4) << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -273,5 +317,6 @@ int main(int argc, char** argv) {
   play_with_variadic_template();
   play_with_class_template();
   play_with_my_tuple();
+  play_with_custom_function();
   return 0;
 }
