@@ -303,12 +303,46 @@ template <typename Ret, typename... Args> class myfunc<Ret(Args...)> {
   std::unique_ptr<callable_interface<Ret, Args...>> c;
 };
 
+// Define make_myfunc to understand C++11 templates and lambda expressions.
+template <typename M> class to_myfunc_type;
+
+// Used for make_myfunc with mul.
+template <typename Cls, typename Ret, typename... Args>
+struct to_myfunc_type<Ret (Cls::*)(Args...)> {
+  using type = myfunc<Ret(Args...)>;
+};
+
+// Used for make_myfunc with inc.
+template <typename Cls, typename Ret, typename... Args>
+struct to_myfunc_type<Ret (Cls::*)(Args...) const> {
+  using type = myfunc<Ret(Args...)>;
+};
+
+// TODO(yunabe): Is there any pattern where lambda expressions generate
+// following patterns?
+// <Ret (Cls::*)(Args...)&> and <Ret (Cls::*)(Args...) const&>
+
+// Why typename before to_myfunc_type is necessary?
+template <typename F>
+typename to_myfunc_type<decltype(&F::operator())>::type
+make_myfunc(F f) { return f; }
+
 void play_with_custom_function() {
   std::cout << "=== play_with_custom_function ===" << std::endl;
   // #include <functional>
   // std::function<int(int, int)> sum = [](int x, int y) {return x + y;};
   myfunc<int(int, int)> sum = [](int x, int y) {return x + y;};
   std::cout << "sum(3, 4) == " << sum(3, 4) << std::endl;
+
+  auto mul = make_myfunc([](double x, double y) { return x * y; });
+  std::cout << "mul(1.1, 1.1) == " << mul(1.1, 1.1) << std::endl;
+
+  int counter = 0;
+  auto inc = make_myfunc([counter]()mutable{ return ++counter; });
+  for (int i = 0; i < 100; i++) {
+    inc();
+  }
+  std::cout << "inc() == " << inc() << std::endl;
 }
 
 int main(int argc, char** argv) {
