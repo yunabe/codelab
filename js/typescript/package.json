@@ -1,0 +1,14 @@
+{
+  "name": "typescript-codelab",
+  "version": "1.0.0",
+  "description": "TypeScript codelab",
+  "main": "index.js",
+  "author": "Yu Watanabe",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jasmine": "^3.3.8",
+    "gulp": "^4.0.0",
+    "jasmine": "^3.3.1",
+    "typescript": "^3.2.4"
+  }
+}
