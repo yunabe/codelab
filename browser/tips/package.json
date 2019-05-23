@@ -1,0 +1,15 @@
+{
+  "name": "browser-tips",
+  "version": "1.0.0",
+  "description": "Example of pages to test browser specs",
+  "main": "index.js",
+  "repository": "https://github.com/yunabe/codelab/tree/master/browser/tips",
+  "author": "Yu Watanabe",
+  "license": "MIT",
+  "devDependencies": {
+    "firebase-tools": "^6.10.0"
+  },
+  "scripts": {
+    "deploy": "firebase deploy"
+  }
+}

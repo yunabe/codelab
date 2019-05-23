@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      content="width=device-width,maximum-scale=1.0,initial-scale=1.0,minimum-scale=1.0,user-scalable=yes"
+      name="viewport"
+    />
+    <meta charset="UTF-8" />
+  </head>
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
+  <body>
+    <script>
+      ;(() => {
+        for (let i = 0; i < 100; i++) {
+          const div = document.createElement("div")
+          div.style.width = "100%"
+          div.style.height = "50px"
+          div.style.border = "1px solid black"
+          div.style.boxSizing = "border-box"
+          document.body.appendChild(div)
+        }
+        const box = document.createElement('div');
+        box.style.position = 'fixed';
+        box.style.top = '40px';
+        box.style.left = '40px';
+        box.style.right = '40px';
+        box.style.backgroundColor = '#fff';
+        box.style.border = '1px solid black';
+        document.body.appendChild(box);
+        setInterval(()=>{
+            while (box.firstChild) {
+                box.removeChild(box.firstChild);
+            }
+            let div0 = document.createElement('div');
+            div0.textContent = 'window.innerHeight: ' + window.innerHeight;
+            box.appendChild(div0);
+            let div1 = document.createElement('div');
+            div1.textContent = 'document.documentElement.clientHeight: ' + document.documentElement.clientHeight;
+            box.appendChild(div1);
+        }, 1000);
+      })()
+    </script>
+  </body>
+</html>
