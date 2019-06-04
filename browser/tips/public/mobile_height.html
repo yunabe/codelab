@@ -23,25 +23,27 @@
           div.style.boxSizing = "border-box"
           document.body.appendChild(div)
         }
-        const box = document.createElement('div');
-        box.style.position = 'fixed';
-        box.style.top = '40px';
-        box.style.left = '40px';
-        box.style.right = '40px';
-        box.style.backgroundColor = '#fff';
-        box.style.border = '1px solid black';
-        document.body.appendChild(box);
-        setInterval(()=>{
-            while (box.firstChild) {
-                box.removeChild(box.firstChild);
-            }
-            let div0 = document.createElement('div');
-            div0.textContent = 'window.innerHeight: ' + window.innerHeight;
-            box.appendChild(div0);
-            let div1 = document.createElement('div');
-            div1.textContent = 'document.documentElement.clientHeight: ' + document.documentElement.clientHeight;
-            box.appendChild(div1);
-        }, 1000);
+        const box = document.createElement("div")
+        box.style.position = "fixed"
+        box.style.top = "40px"
+        box.style.left = "40px"
+        box.style.right = "40px"
+        box.style.backgroundColor = "#fff"
+        box.style.border = "1px solid black"
+        document.body.appendChild(box)
+        setInterval(() => {
+          while (box.firstChild) {
+            box.removeChild(box.firstChild)
+          }
+          let div0 = document.createElement("div")
+          div0.textContent = "window.innerHeight: " + window.innerHeight
+          box.appendChild(div0)
+          let div1 = document.createElement("div")
+          div1.textContent =
+            "document.documentElement.clientHeight: " +
+            document.documentElement.clientHeight
+          box.appendChild(div1)
+        }, 1000)
       })()
     </script>
   </body>

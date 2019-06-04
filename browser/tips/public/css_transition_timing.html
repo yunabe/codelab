@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta
+      content="width=device-width,maximum-scale=1.0,initial-scale=1.0,minimum-scale=1.0,user-scalable=yes"
+      name="viewport"
+    />
+    <meta charset="UTF-8" />
+  </head>
+  <style>
+    body {
+      margin: 0 16px;
+    }
+  </style>
+  <body>
+    <h2>Set transition and transform at the same time</h2>
+    <div style="width:100%">
+      <div
+        id="box1"
+        style="width:100px;height:100px;background-color: red"
+      ></div>
+      <button id="btn1">Go</button>
+    </div>
+    <script id="code1">
+      document.getElementById("btn1").addEventListener("click", () => {
+        const box = document.getElementById("box1")
+        box.style["transition"] = "transform 700ms ease-in"
+        box.style["transform"] = "translate(300px, 0)"
+      })
+    </script>
+
+    <h2>Remove transition then add transform</h2>
+    <div style="width:100%">
+      <div
+        id="box2"
+        style="width:100px;height:100px;background-color: blue;transition: transform 700ms ease-in"
+      ></div>
+      <button id="btn2">Go</button>
+    </div>
+    <script id="code2">
+      document.getElementById("btn2").addEventListener("click", () => {
+        const box = document.getElementById("box2")
+        box.style["transition"] = ""
+        box.style["transform"] = "translate(300px, 0)"
+      })
+    </script>
+
+    <h2>Move then animation</h2>
+    <p>
+      It's important to set transition and the second transform after one paint event.
+      Without requestAnimationFrame, this animation does not work when the machine is slow
+      (e.g. When you show "Layers" in Chrome Devtool)
+    </p>
+    <div style="width:100%">
+      <div
+        id="box3"
+        style="width:100px;height:100px;background-color: orange"
+      ></div>
+      <button id="btn3">Go</button>
+    </div>
+    <script id="code3">
+      ;(function() {
+        const box = document.getElementById("box3")
+        document.getElementById("btn3").addEventListener("click", () => {
+          const box = document.getElementById("box3")
+          box.style["transform"] = "translate(300px, 0)"
+          requestAnimationFrame(() => {
+            console.log("request animation frame for box3")
+            setTimeout(() => {
+              console.log("setTimeout(0) for box3")
+              box.style["transition"] = "transform 700ms ease-in"
+              box.style["transform"] = "translate(0, 0)"
+            }, 0)
+          })
+        })
+        box.addEventListener("transitionend", () => {
+          console.log("transition end for box3")
+          box.style["transition"] = ""
+        })
+      })()
+    </script>
+  </body>
+</html>
