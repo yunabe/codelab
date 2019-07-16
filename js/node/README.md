@@ -8,3 +8,8 @@
 - You can hook `SIGINT` with `process.on('SIGINT', ...)`. But it does not interrupt a runninng task (e.g. an infinite loop).
     - `node ./dist/sigint1.js`
     - `node ./dist/sigint2.js`
+
+## Misc
+
+- `.vscode/settings.json`
+  - In mac, the user config is available on `~/Library/Application Support/Code/User/settings.json`

@@ -1,18 +1,18 @@
-process.on('beforeExit', () => {
-    console.log('on beforeExit');
+process.on("beforeExit", () => {
+  console.log("on beforeExit");
 });
 
-process.on('exit', () => {
-    console.log('on exit');
-})
+process.on("exit", () => {
+  console.log("on exit");
+});
 
-process.on('SIGINT', () => {
-    console.log('Received SIGINT');
+process.on("SIGINT", () => {
+  console.log("Received SIGINT");
 });
 
 try {
-    console.log('Entering an infinite loop.');
-    while (true) { }
+  console.log("Entering an infinite loop.");
+  while (true) {}
 } finally {
-    console.log('Exited an infinite loop.');
+  console.log("Exited an infinite loop.");
 }
