@@ -1,3 +1,5 @@
+export {};
+
 process.on("beforeExit", () => {
   console.log("on beforeExit");
 });

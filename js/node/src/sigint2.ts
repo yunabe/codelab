@@ -1,4 +1,4 @@
-import { promisify } from "util";
+export {};
 
 process.on("beforeExit", () => {
   console.log("on beforeExit");
