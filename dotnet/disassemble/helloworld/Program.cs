@@ -1,5 +1,5 @@
 ﻿namespace helloworld;
-static class Program
+class Program
 {
     static void Main(string[] args)
     {

@@ -37,13 +37,13 @@
   .ver 1:0:0:0
 }
 .module helloworld.dll
-// MVID: {8d3fdee1-aa80-42c9-b37d-902ae62156ce}
+// MVID: {ff21a816-d9cd-416f-8b05-0de6ee33480c}
 .imagebase 0x00400000
 .file alignment 0x00000200
 .stackreserve 0x00100000
 .subsystem 0x0003       // WINDOWS_CUI
 .corflags 0x00000001    //  ILONLY
-// Image base: 0x00007FBD98CA7000
+// Image base: 0x00007FC016583000
 
 
 // =============== CLASS MEMBERS DECLARATION ===================
@@ -131,7 +131,7 @@
 
 } // end of class System.Runtime.CompilerServices.NullableContextAttribute
 
-.class private abstract auto ansi sealed beforefieldinit helloworld.Program
+.class private auto ansi beforefieldinit helloworld.Program
        extends [System.Runtime]System.Object
 {
   .method private hidebysig static void  Main(string[] args) cil managed
@@ -144,6 +144,16 @@
     IL_0005:  call       void [System.Console]System.Console::WriteLine(string)
     IL_000a:  ret
   } // end of method Program::Main
+
+  .method public hidebysig specialname rtspecialname 
+          instance void  .ctor() cil managed
+  {
+    // Code size       7 (0x7)
+    .maxstack  8
+    IL_0000:  ldarg.0
+    IL_0001:  call       instance void [System.Runtime]System.Object::.ctor()
+    IL_0006:  ret
+  } // end of method Program::.ctor
 
 } // end of class helloworld.Program
 
