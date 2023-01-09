@@ -144,6 +144,8 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
 
     // Create type definition for the special <Module> type that holds global functions
     // TODO(yunabe): Understand why this is necessary.
+    // This defines an empty <Module> type (begin: mainMethodDef, end: mainMethodDef).
+    // Probably, <Module> must be defined in a DLL though I did not find such a rule in ECMA-335 spec.
     metadata.AddTypeDefinition(
         default(TypeAttributes),
         default(StringHandle),
@@ -160,7 +162,6 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
         baseType: systemObjectTypeRef,
         fieldList: MetadataTokens.FieldDefinitionHandle(1),
         methodList: mainMethodDef);
-    
     return mainMethodDef;
 }
 
