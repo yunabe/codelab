@@ -37,13 +37,13 @@
   .ver 1:0:0:0
 }
 .module helloworld.dll
-// MVID: {ff21a816-d9cd-416f-8b05-0de6ee33480c}
+// MVID: {be1f2804-c8b7-49fd-963a-63d82f0e7abe}
 .imagebase 0x00400000
 .file alignment 0x00000200
 .stackreserve 0x00100000
 .subsystem 0x0003       // WINDOWS_CUI
 .corflags 0x00000001    //  ILONLY
-// Image base: 0x00007FC016583000
+// Image base: 0x00007F44FBA3A000
 
 
 // =============== CLASS MEMBERS DECLARATION ===================
@@ -134,15 +134,55 @@
 .class private auto ansi beforefieldinit helloworld.Program
        extends [System.Runtime]System.Object
 {
+  .method private hidebysig static int64 
+          NaiveFib(int64 n) cil managed
+  {
+    // Code size       27 (0x1b)
+    .maxstack  8
+    IL_0000:  ldarg.0
+    IL_0001:  ldc.i4.1
+    IL_0002:  conv.i8
+    IL_0003:  bgt.s      IL_0007
+
+    IL_0005:  ldarg.0
+    IL_0006:  ret
+
+    IL_0007:  ldarg.0
+    IL_0008:  ldc.i4.1
+    IL_0009:  conv.i8
+    IL_000a:  sub
+    IL_000b:  call       int64 helloworld.Program::NaiveFib(int64)
+    IL_0010:  ldarg.0
+    IL_0011:  ldc.i4.2
+    IL_0012:  conv.i8
+    IL_0013:  sub
+    IL_0014:  call       int64 helloworld.Program::NaiveFib(int64)
+    IL_0019:  add
+    IL_001a:  ret
+  } // end of method Program::NaiveFib
+
   .method private hidebysig static void  Main(string[] args) cil managed
   {
     .entrypoint
     .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = ( 01 00 01 00 00 ) 
-    // Code size       11 (0xb)
-    .maxstack  8
+    // Code size       42 (0x2a)
+    .maxstack  3
+    .locals init (int64 V_0)
     IL_0000:  ldstr      "Hello, World!"
     IL_0005:  call       void [System.Console]System.Console::WriteLine(string)
-    IL_000a:  ret
+    IL_000a:  ldc.i4.s   40
+    IL_000c:  conv.i8
+    IL_000d:  stloc.0
+    IL_000e:  ldstr      "NaiveFib({0}) = {1}"
+    IL_0013:  ldloc.0
+    IL_0014:  box        [System.Runtime]System.Int64
+    IL_0019:  ldloc.0
+    IL_001a:  call       int64 helloworld.Program::NaiveFib(int64)
+    IL_001f:  box        [System.Runtime]System.Int64
+    IL_0024:  call       void [System.Console]System.Console::WriteLine(string,
+                                                                        object,
+                                                                        object)
+    IL_0029:  ret
   } // end of method Program::Main
 
   .method public hidebysig specialname rtspecialname 
