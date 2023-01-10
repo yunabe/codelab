@@ -2,7 +2,7 @@
 
 using cil_compiler;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
+using System.Reflection.Emit;
 
 void Main(string[] args)
 {
@@ -37,18 +37,15 @@ void Main(string[] args)
     var ast = parser.Program();
     // Generate CIL instructions
     var assemblyName = Path.GetFileNameWithoutExtension(outputFile);
-    var builder = new MetadataBuilder();
-    var moduleBuilder = builder.AddModule(assemblyName, default);
-    var typeBuilder = moduleBuilder.AddType("Program");
-    var methodBuilder = typeBuilder.AddMethod("Main", MethodAttributes.Public | MethodAttributes.Static, default, new Type[0]);
+    var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Save);
+    var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName, outputFile);
+    var typeBuilder = moduleBuilder.DefineType("Program");
+    var methodBuilder = typeBuilder.DefineMethod("Main", MethodAttributes.Public | MethodAttributes.Static, typeof(void), new Type[0]);
     var generator = new InstructionGenerator(typeBuilder, methodBuilder);
     generator.Generate(ast);
-    moduleBuilder.SetEntryPoint(methodBuilder);
-    // Save assembly to file
-    using (var stream = File.Create(outputFile))
-    {
-        builder.Save(stream);
-    }
+    typeBuilder.CreateType();
+    assemblyBuilder.SetEntryPoint(methodBuilder);
+    assemblyBuilder.Save(outputFile);
 }
 
 Main(args);
