@@ -52,6 +52,58 @@ MethodDefinitionHandle DefineConstructor(
 }
 
 MethodDefinitionHandle DefineMainMethod(
+    ModuleDefinitionHandle moduleDef,
+    AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
+        moduleDef,
+        metadata.GetOrAddString("ConsoleApplication"),
+        metadata.GetOrAddString("Program"));
+
+    // Get reference to Console.WriteLine(string) method.
+    var sayHelloSignature = new BlobBuilder();
+
+    // Create signature for "void SayHello()" method.
+    new BlobEncoder(sayHelloSignature).
+        MethodSignature().
+        Parameters(0,
+            returnType => returnType.Void(),
+            parameters => {});
+
+    MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("SayHello"),
+        metadata.GetOrAddBlob(sayHelloSignature));
+
+    // Emit IL for Program::Main
+    var flowBuilder = new ControlFlowBuilder();
+    InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
+
+    // call void [mscorlib]System.Console::WriteLine(string)
+    il.Call(consoleWriteLineMemberRef);
+
+    // ret
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    BlobBuilder signature = new BlobBuilder();
+    new BlobEncoder(signature).
+        MethodSignature().
+        Parameters(0, returnType => returnType.Void(), parameters => { });
+
+    // Create method definition for Program::Main
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("Main"),
+        metadata.GetOrAddBlob(signature),
+        offset,
+        parameterList: default(ParameterHandle));
+ }
+
+// An example of a static method without parameters or the return value.
+MethodDefinitionHandle DefineSayHello(
     AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
     TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
         sysConsoleAssemblyRef,
@@ -98,7 +150,7 @@ MethodDefinitionHandle DefineMainMethod(
     return metadata.AddMethodDefinition(
         MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
         MethodImplAttributes.IL,
-        metadata.GetOrAddString("Main"),
+        metadata.GetOrAddString("SayHello"),
         metadata.GetOrAddBlob(signature),
         offset,
         parameterList: default(ParameterHandle));
@@ -108,7 +160,7 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
 {
     Guid mvid = Guid.NewGuid();
     // Create module and assembly for a console application.
-    metadata.AddModule(
+    ModuleDefinitionHandle moduleDef = metadata.AddModule(
         0,
         metadata.GetOrAddString("myprogram.dll"),
         metadata.GetOrAddGuid(mvid),
@@ -147,7 +199,8 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
 
     var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
     var codeBuilder = new BlobBuilder();
-    MethodDefinitionHandle mainMethodDef = DefineMainMethod(sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    MethodDefinitionHandle mainMethodDef = DefineMainMethod(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    DefineSayHello(sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     MethodDefinitionHandle ctorDef = DefineConstructor(systemObjectTypeRef, metadata, codeBuilder,  methodBodyStream);
 
     // Create type definition for the special <Module> type that holds global functions
