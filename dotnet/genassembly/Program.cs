@@ -7,6 +7,103 @@ using System.Reflection.PortableExecutable;
 
 // https://learn.microsoft.com/ja-jp/dotnet/api/system.reflection.metadata.ecma335.metadatabuilder?view=net-7.0
 
+MethodDefinitionHandle DefineConstructor(
+    TypeReferenceHandle systemObjectTypeRef, MetadataBuilder metadata, BlobBuilder codeBuilder, MethodBodyStreamEncoder methodBodyStream) {
+
+
+    // Get reference to Object's constructor.
+    var parameterlessCtorSignature = new BlobBuilder();
+
+    new BlobEncoder(parameterlessCtorSignature).
+        MethodSignature(isInstanceMethod: true).
+        Parameters(0, returnType => returnType.Void(), parameters => { });
+
+    BlobHandle parameterlessCtorBlobIndex = metadata.GetOrAddBlob(parameterlessCtorSignature);
+
+    MemberReferenceHandle objectCtorMemberRef = metadata.AddMemberReference(
+        systemObjectTypeRef,
+        metadata.GetOrAddString(".ctor"),
+        parameterlessCtorBlobIndex);
+
+    // Emit IL for Program::.ctor
+    InstructionEncoder il = new InstructionEncoder(codeBuilder);
+
+    // ldarg.0
+    il.LoadArgument(0); 
+
+    // call instance void [mscorlib]System.Object::.ctor()
+    il.Call(objectCtorMemberRef);
+
+    // ret
+    il.OpCode(ILOpCode.Ret);
+
+    int ctorBodyOffset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    // Create method definition for Program::.ctor
+    // Note: It seems like we can omit .ctor (and mark the class static?) if we want.
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString(".ctor"),
+        parameterlessCtorBlobIndex,
+        ctorBodyOffset,
+        parameterList: default(ParameterHandle));
+}
+
+MethodDefinitionHandle DefineMainMethod(
+    AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
+        sysConsoleAssemblyRef,
+        metadata.GetOrAddString("System"),
+        metadata.GetOrAddString("Console"));
+
+    // Get reference to Console.WriteLine(string) method.
+    var consoleWriteLineSignature = new BlobBuilder();
+
+    // Create signature for "void Main()" method.
+    new BlobEncoder(consoleWriteLineSignature).
+        MethodSignature().
+        Parameters(1,
+            returnType => returnType.Void(),
+            parameters => parameters.AddParameter().Type().String());
+
+    MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
+        systemConsoleTypeRefHandle,
+        metadata.GetOrAddString("WriteLine"),
+        metadata.GetOrAddBlob(consoleWriteLineSignature));
+
+    // Emit IL for Program::Main
+    var flowBuilder = new ControlFlowBuilder();
+    InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
+
+    // ldstr "hello"
+    il.LoadString(metadata.GetOrAddUserString("Hello, world!"));
+
+    // call void [mscorlib]System.Console::WriteLine(string)
+    il.Call(consoleWriteLineMemberRef);
+
+    // ret
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    BlobBuilder signature = new BlobBuilder();
+    new BlobEncoder(signature).
+        MethodSignature().
+        Parameters(0, returnType => returnType.Void(), parameters => { });
+
+    // Create method definition for Program::Main
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("Main"),
+        metadata.GetOrAddBlob(signature),
+        offset,
+        parameterList: default(ParameterHandle));
+ }
+
 MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBuilder)
 {
     Guid mvid = Guid.NewGuid();
@@ -42,105 +139,16 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
         flags: default(AssemblyFlags),
         hashValue: default(BlobHandle));
 
+
     TypeReferenceHandle systemObjectTypeRef = metadata.AddTypeReference(
         sysRuntimeAssemblyRef,
         metadata.GetOrAddString("System"),
         metadata.GetOrAddString("Object"));
 
-    TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
-        sysConsoleAssemblyRef,
-        metadata.GetOrAddString("System"),
-        metadata.GetOrAddString("Console"));
-
-    // Get reference to Console.WriteLine(string) method.
-    var consoleWriteLineSignature = new BlobBuilder();
-
-    new BlobEncoder(consoleWriteLineSignature).
-        MethodSignature().
-        Parameters(1,
-            returnType => returnType.Void(),
-            parameters => parameters.AddParameter().Type().String());
-
-    MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
-        systemConsoleTypeRefHandle,
-        metadata.GetOrAddString("WriteLine"),
-        metadata.GetOrAddBlob(consoleWriteLineSignature));
-
-    // Get reference to Object's constructor.
-    var parameterlessCtorSignature = new BlobBuilder();
-
-    new BlobEncoder(parameterlessCtorSignature).
-        MethodSignature(isInstanceMethod: true).
-        Parameters(0, returnType => returnType.Void(), parameters => { });
-
-    BlobHandle parameterlessCtorBlobIndex = metadata.GetOrAddBlob(parameterlessCtorSignature);
-
-    MemberReferenceHandle objectCtorMemberRef = metadata.AddMemberReference(
-        systemObjectTypeRef,
-        metadata.GetOrAddString(".ctor"),
-        parameterlessCtorBlobIndex);
-
-    // Create signature for "void Main()" method.
-    var mainSignature = new BlobBuilder();
-
-    new BlobEncoder(mainSignature).
-        MethodSignature().
-        Parameters(0, returnType => returnType.Void(), parameters => { });
-
     var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
-
     var codeBuilder = new BlobBuilder();
-    InstructionEncoder il;
-    
-    // Emit IL for Program::.ctor
-    il = new InstructionEncoder(codeBuilder);
-
-    // ldarg.0
-    il.LoadArgument(0); 
-
-    // call instance void [mscorlib]System.Object::.ctor()
-    il.Call(objectCtorMemberRef);
-
-    // ret
-    il.OpCode(ILOpCode.Ret);
-
-    int ctorBodyOffset = methodBodyStream.AddMethodBody(il);
-    codeBuilder.Clear();
-
-    // Emit IL for Program::Main
-    var flowBuilder = new ControlFlowBuilder();
-    il = new InstructionEncoder(codeBuilder, flowBuilder);
-
-    // ldstr "hello"
-    il.LoadString(metadata.GetOrAddUserString("Hello, world!"));
-
-    // call void [mscorlib]System.Console::WriteLine(string)
-    il.Call(consoleWriteLineMemberRef);
-
-    // ret
-    il.OpCode(ILOpCode.Ret);
-
-    int mainBodyOffset = methodBodyStream.AddMethodBody(il);
-    codeBuilder.Clear();
-
-    // Create method definition for Program::Main
-    MethodDefinitionHandle mainMethodDef = metadata.AddMethodDefinition(
-        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-        MethodImplAttributes.IL,
-        metadata.GetOrAddString("Main"),
-        metadata.GetOrAddBlob(mainSignature),
-        mainBodyOffset,
-        parameterList: default(ParameterHandle));
-
-    // Create method definition for Program::.ctor
-    // Note: It seems like we can omit .ctor (and mark the class static?) if we want.
-    MethodDefinitionHandle ctorDef = metadata.AddMethodDefinition(
-        MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-        MethodImplAttributes.IL,
-        metadata.GetOrAddString(".ctor"),
-        parameterlessCtorBlobIndex,
-        ctorBodyOffset,
-        parameterList: default(ParameterHandle));
+    MethodDefinitionHandle mainMethodDef = DefineMainMethod(sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    MethodDefinitionHandle ctorDef = DefineConstructor(systemObjectTypeRef, metadata, codeBuilder,  methodBodyStream);
 
     // Create type definition for the special <Module> type that holds global functions
     // TODO(yunabe): Understand why this is necessary.
