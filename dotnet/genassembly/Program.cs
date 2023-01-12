@@ -10,7 +10,6 @@ using System.Reflection.PortableExecutable;
 MethodDefinitionHandle DefineConstructor(
     TypeReferenceHandle systemObjectTypeRef, MetadataBuilder metadata, BlobBuilder codeBuilder, MethodBodyStreamEncoder methodBodyStream) {
 
-
     // Get reference to Object's constructor.
     var parameterlessCtorSignature = new BlobBuilder();
 
@@ -104,6 +103,7 @@ MethodDefinitionHandle DefineMainMethod(
 
 // An example of a static method without parameters or the return value.
 MethodDefinitionHandle DefineSayHello(
+    ModuleDefinitionHandle moduleDef,
     AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
     TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
         sysConsoleAssemblyRef,
@@ -125,12 +125,33 @@ MethodDefinitionHandle DefineSayHello(
         metadata.GetOrAddString("WriteLine"),
         metadata.GetOrAddBlob(consoleWriteLineSignature));
 
+    TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
+        moduleDef,
+        metadata.GetOrAddString("ConsoleApplication"),
+        metadata.GetOrAddString("Program"));
+
+    // Get reference to Console.WriteLine(string) method.
+    var getHellobSignature = new BlobBuilder();
+
+    // Create signature for "void SayHello()" method.
+    new BlobEncoder(getHellobSignature).
+        MethodSignature().
+        Parameters(0,
+            returnType => returnType.Type().String(),
+            parameters => {});
+
+    MemberReferenceHandle getHelloMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("GetHello"),
+        metadata.GetOrAddBlob(getHellobSignature));
+
+
     // Emit IL for Program::Main
     var flowBuilder = new ControlFlowBuilder();
     InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
 
-    // ldstr "hello"
-    il.LoadString(metadata.GetOrAddUserString("Hello, world!"));
+    // Load a message by calling GetHello.
+    il.Call(getHelloMemberRef);
 
     // call void [mscorlib]System.Console::WriteLine(string)
     il.Call(consoleWriteLineMemberRef);
@@ -151,6 +172,36 @@ MethodDefinitionHandle DefineSayHello(
         MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
         MethodImplAttributes.IL,
         metadata.GetOrAddString("SayHello"),
+        metadata.GetOrAddBlob(signature),
+        offset,
+        parameterList: default(ParameterHandle));
+ }
+
+ // An example of a static method without parameters or the return value.
+MethodDefinitionHandle DefineGetHello(
+    MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    // Emit IL for Program::Main
+    InstructionEncoder il = new InstructionEncoder(codeBuilder);
+
+    // ldstr "hello"
+    il.LoadString(metadata.GetOrAddUserString("Hello, world from GetHello!"));
+
+    // ret
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    BlobBuilder signature = new BlobBuilder();
+    new BlobEncoder(signature).
+        MethodSignature().
+        Parameters(0, returnType => returnType.Type().String(), parameters => { });
+
+    // Create method definition for Program::Main
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("GetHello"),
         metadata.GetOrAddBlob(signature),
         offset,
         parameterList: default(ParameterHandle));
@@ -200,7 +251,8 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
     var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
     var codeBuilder = new BlobBuilder();
     MethodDefinitionHandle mainMethodDef = DefineMainMethod(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
-    DefineSayHello(sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    DefineSayHello(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    DefineGetHello(metadata, codeBuilder,  methodBodyStream);
     MethodDefinitionHandle ctorDef = DefineConstructor(systemObjectTypeRef, metadata, codeBuilder,  methodBodyStream);
 
     // Create type definition for the special <Module> type that holds global functions

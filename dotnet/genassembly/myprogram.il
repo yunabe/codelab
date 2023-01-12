@@ -17,13 +17,13 @@
   .ver 1:0:0:0
 }
 .module myprogram.dll
-// MVID: {30a9c714-c407-40fb-bdf3-9f389cdf1016}
+// MVID: {31543602-e1ff-4b22-9c84-55ed0e7f6182}
 .imagebase 0x00400000
 .file alignment 0x00000200
 .stackreserve 0x00100000
 .subsystem 0x0003       // WINDOWS_CUI
 .corflags 0x00000001    //  ILONLY
-// Image base: 0x00007F2EB404F000
+// Image base: 0x00007F6CE7E77000
 
 
 // =============== CLASS MEMBERS DECLARATION ===================
@@ -44,10 +44,19 @@
   {
     // Code size       11 (0xb)
     .maxstack  8
-    IL_0000:  ldstr      "Hello, world!"
+    IL_0000:  call       string ConsoleApplication.Program::GetHello()
     IL_0005:  call       void [System.Console]System.Console::WriteLine(string)
     IL_000a:  ret
   } // end of method Program::SayHello
+
+  .method public hidebysig static string 
+          GetHello() cil managed
+  {
+    // Code size       6 (0x6)
+    .maxstack  8
+    IL_0000:  ldstr      "Hello, world from GetHello!"
+    IL_0005:  ret
+  } // end of method Program::GetHello
 
   .method public hidebysig specialname rtspecialname 
           instance void  .ctor() cil managed
