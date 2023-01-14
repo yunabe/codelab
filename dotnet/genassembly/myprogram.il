@@ -17,13 +17,13 @@
   .ver 1:0:0:0
 }
 .module myprogram.dll
-// MVID: {2d32f6e0-2a00-446c-970f-99c615a1c299}
+// MVID: {b73634db-12b6-43a4-ab39-c46e1f376d11}
 .imagebase 0x00400000
 .file alignment 0x00000200
 .stackreserve 0x00100000
 .subsystem 0x0003       // WINDOWS_CUI
 .corflags 0x00000001    //  ILONLY
-// Image base: 0x00007F72A6EC1000
+// Image base: 0x00007F261735C000
 
 
 // =============== CLASS MEMBERS DECLARATION ===================
@@ -34,17 +34,24 @@
   .method public hidebysig static void  Main() cil managed
   {
     .entrypoint
-    // Code size       28 (0x1c)
+    // Code size       40 (0x28)
     .maxstack  8
     IL_0000:  call       void ConsoleApplication.Program::SayHello()
-    IL_0005:  ldstr      "IntSum(7, 8) = "
-    IL_000a:  call       void [System.Console]System.Console::Write(string)
-    IL_000f:  ldc.i4.7
+    IL_0005:  ldstr      "IntSum({0}, {1}) = {2}"
+    IL_000a:  ldc.i4.7
+    IL_000b:  box        [System.Runtime]System.Int32
     IL_0010:  ldc.i4.8
-    IL_0011:  call       int32 ConsoleApplication.Program::IntSum(int32,
+    IL_0011:  box        [System.Runtime]System.Int32
+    IL_0016:  ldc.i4.7
+    IL_0017:  ldc.i4.8
+    IL_0018:  call       int32 ConsoleApplication.Program::IntSum(int32,
                                                                   int32)
-    IL_0016:  call       void [System.Console]System.Console::WriteLine(int32)
-    IL_001b:  ret
+    IL_001d:  box        [System.Runtime]System.Int32
+    IL_0022:  call       void [System.Console]System.Console::WriteLine(string,
+                                                                        object,
+                                                                        object,
+                                                                        object)
+    IL_0027:  ret
   } // end of method Program::Main
 
   .method public hidebysig static void  SayHello() cil managed

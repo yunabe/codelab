@@ -191,7 +191,8 @@ MethodDefinitionHandle DefineIntSum(
 
 MethodDefinitionHandle DefineMainMethod(
     ModuleDefinitionHandle moduleDef,
-    AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    AssemblyReferenceHandle sysConsoleAssemblyRef, AssemblyReferenceHandle sysRuntimeAssemblyRef,
+    MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
     TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
         moduleDef,
         metadata.GetOrAddString("ConsoleApplication"),
@@ -219,30 +220,50 @@ MethodDefinitionHandle DefineMainMethod(
     ////////////////////
     // Call IntSum() ///
     ////////////////////
-    var consoleWriteSignature = new BlobBuilder();
+    // This is an example of how to call functions with paramters and
+    // how to Box primitive values.
+
+    // Prepare [System.Runtime]System.Int32 for boxing.
+    TypeReferenceHandle int32TypeRefHandle = metadata.AddTypeReference(
+        sysRuntimeAssemblyRef,
+        metadata.GetOrAddString("System"),
+        metadata.GetOrAddString("Int32"));
+
+    var consoleWriteLineSignature = new BlobBuilder();
     TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
         sysConsoleAssemblyRef,
         metadata.GetOrAddString("System"),
         metadata.GetOrAddString("Console"));
-    new BlobEncoder(consoleWriteSignature).
+    new BlobEncoder(consoleWriteLineSignature).
         MethodSignature().
-        Parameters(1,
+        Parameters(4,
             returnType => returnType.Void(),
-            parameters => parameters.AddParameter().Type().String());
+            parameters => {
+                parameters.AddParameter().Type().String();
+                parameters.AddParameter().Type().Object();
+                parameters.AddParameter().Type().Object();
+                parameters.AddParameter().Type().Object();
+            });
 
-    int intSumArg0 = 7, intSumArg1 = 8;
-    MemberReferenceHandle consoleWriteMemberRef = metadata.AddMemberReference(
+    
+    MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
         systemConsoleTypeRefHandle,
-        metadata.GetOrAddString("Write"),
-        metadata.GetOrAddBlob(consoleWriteSignature));
+        metadata.GetOrAddString("WriteLine"),
+        metadata.GetOrAddBlob(consoleWriteLineSignature));
 
-    il.LoadString(metadata.GetOrAddUserString(string.Format("IntSum({0}, {1}) = ", intSumArg0, intSumArg1)));
-    il.Call(consoleWriteMemberRef);
+    il.LoadString(metadata.GetOrAddUserString("IntSum({0}, {1}) = {2}"));
+    int intSumArg0 = 7, intSumArg1 = 8;
 
+    // Load int32 constants and box them.
+    il.LoadConstantI4(intSumArg0);
+    il.OpCode(ILOpCode.Box);
+    il.Token(int32TypeRefHandle);
+    il.LoadConstantI4(intSumArg1);
+    il.OpCode(ILOpCode.Box);
+    il.Token(int32TypeRefHandle);
 
-    // Get reference to IntSum(a, b) method.
-    var intSumSignature = new BlobBuilder();
     // Create signature for "void SayHello()" method.
+    var intSumSignature = new BlobBuilder();
     new BlobEncoder(intSumSignature).
         MethodSignature().
         Parameters(2,
@@ -259,20 +280,11 @@ MethodDefinitionHandle DefineMainMethod(
     il.LoadConstantI4(intSumArg0);
     il.LoadConstantI4(intSumArg1);
     il.Call(intSumMemberRef);
+    // Box the output
+    il.OpCode(ILOpCode.Box);
+    il.Token(int32TypeRefHandle);
 
-    var consoleWriteLineInt32Signature = new BlobBuilder();
-    new BlobEncoder(consoleWriteLineInt32Signature).
-        MethodSignature().
-        Parameters(1,
-            returnType => returnType.Void(),
-            parameters => parameters.AddParameter().Type().Int32());
-
-    MemberReferenceHandle consoleWriteLineInt32MemberRef = metadata.AddMemberReference(
-        systemConsoleTypeRefHandle,
-        metadata.GetOrAddString("WriteLine"),
-        metadata.GetOrAddBlob(consoleWriteLineInt32Signature));
-
-    il.Call(consoleWriteLineInt32MemberRef);
+    il.Call(consoleWriteLineMemberRef);
 
     // ret
     il.OpCode(ILOpCode.Ret);
@@ -338,7 +350,7 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
 
     var methodBodyStream = new MethodBodyStreamEncoder(ilBuilder);
     var codeBuilder = new BlobBuilder();
-    MethodDefinitionHandle mainMethodDef = DefineMainMethod(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
+    MethodDefinitionHandle mainMethodDef = DefineMainMethod(moduleDef, sysConsoleAssemblyRef, sysRuntimeAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     DefineSayHello(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     DefineGetHello(metadata, codeBuilder,  methodBodyStream);
     DefineIntSum(metadata, codeBuilder, methodBodyStream);
