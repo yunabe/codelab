@@ -50,57 +50,6 @@ MethodDefinitionHandle DefineConstructor(
         parameterList: default(ParameterHandle));
 }
 
-MethodDefinitionHandle DefineMainMethod(
-    ModuleDefinitionHandle moduleDef,
-    AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
-    TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
-        moduleDef,
-        metadata.GetOrAddString("ConsoleApplication"),
-        metadata.GetOrAddString("Program"));
-
-    // Get reference to Console.WriteLine(string) method.
-    var sayHelloSignature = new BlobBuilder();
-
-    // Create signature for "void SayHello()" method.
-    new BlobEncoder(sayHelloSignature).
-        MethodSignature().
-        Parameters(0,
-            returnType => returnType.Void(),
-            parameters => {});
-
-    MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
-        programTypeRefHandle,
-        metadata.GetOrAddString("SayHello"),
-        metadata.GetOrAddBlob(sayHelloSignature));
-
-    // Emit IL for Program::Main
-    var flowBuilder = new ControlFlowBuilder();
-    InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
-
-    // call void [mscorlib]System.Console::WriteLine(string)
-    il.Call(consoleWriteLineMemberRef);
-
-    // ret
-    il.OpCode(ILOpCode.Ret);
-
-    int offset = methodBodyStream.AddMethodBody(il);
-    codeBuilder.Clear();
-
-    BlobBuilder signature = new BlobBuilder();
-    new BlobEncoder(signature).
-        MethodSignature().
-        Parameters(0, returnType => returnType.Void(), parameters => { });
-
-    // Create method definition for Program::Main
-    return metadata.AddMethodDefinition(
-        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
-        MethodImplAttributes.IL,
-        metadata.GetOrAddString("Main"),
-        metadata.GetOrAddBlob(signature),
-        offset,
-        parameterList: default(ParameterHandle));
- }
-
 // An example of a static method without parameters or the return value.
 MethodDefinitionHandle DefineSayHello(
     ModuleDefinitionHandle moduleDef,
@@ -207,6 +156,145 @@ MethodDefinitionHandle DefineGetHello(
         parameterList: default(ParameterHandle));
  }
 
+// An example of a static method without parameters or the return value.
+MethodDefinitionHandle DefineIntSum(
+    MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    // Emit IL for Program::Main
+    InstructionEncoder il = new InstructionEncoder(codeBuilder);
+
+    il.LoadArgument(0);
+    il.LoadArgument(1);
+    il.OpCode(ILOpCode.Add);
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    BlobBuilder signature = new BlobBuilder();
+    new BlobEncoder(signature).
+        MethodSignature().
+        Parameters(2, returnType => returnType.Type().Int32(), parameters => {
+            parameters.AddParameter().Type().Int32();
+            parameters.AddParameter().Type().Int32();
+        });
+
+    // TODO(yunabe): Name parameters by metadata.AddParameter and parameterList param.
+    // Create method definition for Program::Main
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("IntSum"),
+        metadata.GetOrAddBlob(signature),
+        offset,
+        parameterList: default(ParameterHandle));
+ }
+
+MethodDefinitionHandle DefineMainMethod(
+    ModuleDefinitionHandle moduleDef,
+    AssemblyReferenceHandle sysConsoleAssemblyRef, MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
+        moduleDef,
+        metadata.GetOrAddString("ConsoleApplication"),
+        metadata.GetOrAddString("Program"));
+
+    // Emit IL for Program::Main
+    var flowBuilder = new ControlFlowBuilder();
+    InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
+
+    /////////////////////////////////////////////////////////
+    // Call a method without a return value or parameters. //
+    /////////////////////////////////////////////////////////
+    var sayHelloSignature = new BlobBuilder();
+    new BlobEncoder(sayHelloSignature).
+        MethodSignature().
+        Parameters(0,
+            returnType => returnType.Void(),
+            parameters => {});
+    MemberReferenceHandle sayHelloMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("SayHello"),
+        metadata.GetOrAddBlob(sayHelloSignature));
+    il.Call(sayHelloMemberRef);
+
+    ////////////////////
+    // Call IntSum() ///
+    ////////////////////
+    var consoleWriteSignature = new BlobBuilder();
+    TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
+        sysConsoleAssemblyRef,
+        metadata.GetOrAddString("System"),
+        metadata.GetOrAddString("Console"));
+    new BlobEncoder(consoleWriteSignature).
+        MethodSignature().
+        Parameters(1,
+            returnType => returnType.Void(),
+            parameters => parameters.AddParameter().Type().String());
+
+    int intSumArg0 = 7, intSumArg1 = 8;
+    MemberReferenceHandle consoleWriteMemberRef = metadata.AddMemberReference(
+        systemConsoleTypeRefHandle,
+        metadata.GetOrAddString("Write"),
+        metadata.GetOrAddBlob(consoleWriteSignature));
+
+    il.LoadString(metadata.GetOrAddUserString(string.Format("IntSum({0}, {1}) = ", intSumArg0, intSumArg1)));
+    il.Call(consoleWriteMemberRef);
+
+
+    // Get reference to IntSum(a, b) method.
+    var intSumSignature = new BlobBuilder();
+    // Create signature for "void SayHello()" method.
+    new BlobEncoder(intSumSignature).
+        MethodSignature().
+        Parameters(2,
+            returnType => returnType.Type().Int32(),
+            parameters => {
+                parameters.AddParameter().Type().Int32();
+                parameters.AddParameter().Type().Int32();
+            });
+    MemberReferenceHandle intSumMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("IntSum"),
+        metadata.GetOrAddBlob(intSumSignature));
+
+    il.LoadConstantI4(intSumArg0);
+    il.LoadConstantI4(intSumArg1);
+    il.Call(intSumMemberRef);
+
+    var consoleWriteLineInt32Signature = new BlobBuilder();
+    new BlobEncoder(consoleWriteLineInt32Signature).
+        MethodSignature().
+        Parameters(1,
+            returnType => returnType.Void(),
+            parameters => parameters.AddParameter().Type().Int32());
+
+    MemberReferenceHandle consoleWriteLineInt32MemberRef = metadata.AddMemberReference(
+        systemConsoleTypeRefHandle,
+        metadata.GetOrAddString("WriteLine"),
+        metadata.GetOrAddBlob(consoleWriteLineInt32Signature));
+
+    il.Call(consoleWriteLineInt32MemberRef);
+
+    // ret
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    BlobBuilder signature = new BlobBuilder();
+    new BlobEncoder(signature).
+        MethodSignature().
+        Parameters(0, returnType => returnType.Void(), parameters => { });
+
+    // Create method definition for Program::Main
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("Main"),
+        metadata.GetOrAddBlob(signature),
+        offset,
+        parameterList: default(ParameterHandle));
+}
+
 MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBuilder)
 {
     Guid mvid = Guid.NewGuid();
@@ -253,6 +341,7 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
     MethodDefinitionHandle mainMethodDef = DefineMainMethod(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     DefineSayHello(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     DefineGetHello(metadata, codeBuilder,  methodBodyStream);
+    DefineIntSum(metadata, codeBuilder, methodBodyStream);
     MethodDefinitionHandle ctorDef = DefineConstructor(systemObjectTypeRef, metadata, codeBuilder,  methodBodyStream);
 
     // Create type definition for the special <Module> type that holds global functions
