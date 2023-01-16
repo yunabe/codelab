@@ -6,6 +6,8 @@ using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
 // https://learn.microsoft.com/ja-jp/dotnet/api/system.reflection.metadata.ecma335.metadatabuilder?view=net-7.0
+//
+// TODO(yunabe): Understand how to use StoreLocal and LoadLocal.
 
 MethodDefinitionHandle DefineConstructor(
     TypeReferenceHandle systemObjectTypeRef, MetadataBuilder metadata, BlobBuilder codeBuilder, MethodBodyStreamEncoder methodBodyStream) {
@@ -189,6 +191,75 @@ MethodDefinitionHandle DefineIntSum(
         parameterList: default(ParameterHandle));
  }
 
+// An example of a recursion call
+//
+// long NaiveFib(long n) {
+//    if (n <= 1) {
+//      return n;
+//    }
+//    return NaiveFib(n - 1) + NaiveFib(n - 2);
+// }
+MethodDefinitionHandle DefineNaiveFib(
+    ModuleDefinitionHandle moduleDef,
+    MetadataBuilder metadata, BlobBuilder codeBuilder,  MethodBodyStreamEncoder methodBodyStream) {
+    // Create reference for "long NaiveFib(long)" method.
+    TypeReferenceHandle programTypeRefHandle = metadata.AddTypeReference(
+        moduleDef,
+        metadata.GetOrAddString("ConsoleApplication"),
+        metadata.GetOrAddString("Program"));
+    var fibSignature = new BlobBuilder();
+    new BlobEncoder(fibSignature).
+        MethodSignature().
+        Parameters(1,
+            returnType => returnType.Type().Int64(),
+            parameters => {
+                parameters.AddParameter().Type().Int64();
+            });
+    MemberReferenceHandle fibMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("NaiveFib"),
+        metadata.GetOrAddBlob(fibSignature));
+
+    // Emit IL for NaiveFib
+    var flowBuilder = new ControlFlowBuilder();
+    InstructionEncoder il = new InstructionEncoder(codeBuilder, flowBuilder);
+    il.LoadArgument(0);
+    il.LoadConstantI4(1);
+    il.OpCode(ILOpCode.Conv_i8);
+    var elseLabel = il.DefineLabel();
+    il.Branch(ILOpCode.Bgt_s, elseLabel);
+
+    il.LoadArgument(0);
+    il.OpCode(ILOpCode.Ret);
+
+    il.MarkLabel(elseLabel);
+    il.LoadArgument(0);
+    il.LoadConstantI4(1);
+    il.OpCode(ILOpCode.Conv_i8);
+    il.OpCode(ILOpCode.Sub);
+    il.Call(fibMemberRef);
+
+    il.LoadArgument(0);
+    il.LoadConstantI4(2);
+    il.OpCode(ILOpCode.Conv_i8);
+    il.OpCode(ILOpCode.Sub);
+    il.Call(fibMemberRef);
+
+    il.OpCode(ILOpCode.Add);
+    il.OpCode(ILOpCode.Ret);
+
+    int offset = methodBodyStream.AddMethodBody(il);
+    codeBuilder.Clear();
+
+    return metadata.AddMethodDefinition(
+        MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
+        MethodImplAttributes.IL,
+        metadata.GetOrAddString("NaiveFib"),
+        metadata.GetOrAddBlob(fibSignature),
+        offset,
+        parameterList: default(ParameterHandle));
+ }
+
 MethodDefinitionHandle DefineMainMethod(
     ModuleDefinitionHandle moduleDef,
     AssemblyReferenceHandle sysConsoleAssemblyRef, AssemblyReferenceHandle sysRuntimeAssemblyRef,
@@ -229,11 +300,11 @@ MethodDefinitionHandle DefineMainMethod(
         metadata.GetOrAddString("System"),
         metadata.GetOrAddString("Int32"));
 
-    var consoleWriteLineSignature = new BlobBuilder();
     TypeReferenceHandle systemConsoleTypeRefHandle = metadata.AddTypeReference(
         sysConsoleAssemblyRef,
         metadata.GetOrAddString("System"),
         metadata.GetOrAddString("Console"));
+    var consoleWriteLineSignature = new BlobBuilder();
     new BlobEncoder(consoleWriteLineSignature).
         MethodSignature().
         Parameters(4,
@@ -243,9 +314,7 @@ MethodDefinitionHandle DefineMainMethod(
                 parameters.AddParameter().Type().Object();
                 parameters.AddParameter().Type().Object();
                 parameters.AddParameter().Type().Object();
-            });
-
-    
+            });    
     MemberReferenceHandle consoleWriteLineMemberRef = metadata.AddMemberReference(
         systemConsoleTypeRefHandle,
         metadata.GetOrAddString("WriteLine"),
@@ -286,6 +355,53 @@ MethodDefinitionHandle DefineMainMethod(
 
     il.Call(consoleWriteLineMemberRef);
 
+    // Call NaiveFib
+    TypeReferenceHandle int64TypeRefHandle = metadata.AddTypeReference(
+        sysRuntimeAssemblyRef,
+        metadata.GetOrAddString("System"),
+        metadata.GetOrAddString("Int64"));
+    var fibSignature = new BlobBuilder();
+    new BlobEncoder(fibSignature).
+        MethodSignature().
+        Parameters(1,
+            returnType => returnType.Type().Int64(),
+            parameters => {
+                parameters.AddParameter().Type().Int64();
+            });
+    MemberReferenceHandle fibMemberRef = metadata.AddMemberReference(
+        programTypeRefHandle,
+        metadata.GetOrAddString("NaiveFib"),
+        metadata.GetOrAddBlob(fibSignature));
+        var consoleWriteLine2Signature = new BlobBuilder();
+    new BlobEncoder(consoleWriteLine2Signature).
+        MethodSignature().
+        Parameters(3,
+            returnType => returnType.Void(),
+            parameters => {
+                parameters.AddParameter().Type().String();
+                parameters.AddParameter().Type().Object();
+                parameters.AddParameter().Type().Object();
+            });    
+    MemberReferenceHandle consoleWriteLine2MemberRef = metadata.AddMemberReference(
+        systemConsoleTypeRefHandle,
+        metadata.GetOrAddString("WriteLine"),
+        metadata.GetOrAddBlob(consoleWriteLine2Signature));
+
+    int fibArg = 40;
+    il.LoadString(metadata.GetOrAddUserString("NaiveFib({0}) = {1}"));
+    il.LoadConstantI4(fibArg);
+    il.OpCode(ILOpCode.Conv_i8);
+    il.OpCode(ILOpCode.Box);
+    il.Token(int64TypeRefHandle);
+
+    il.LoadConstantI4(fibArg);
+    il.Call(fibMemberRef);
+    il.OpCode(ILOpCode.Conv_i8);
+    il.OpCode(ILOpCode.Box);
+    il.Token(int64TypeRefHandle);
+
+    il.Call(consoleWriteLine2MemberRef);
+
     // ret
     il.OpCode(ILOpCode.Ret);
 
@@ -297,6 +413,7 @@ MethodDefinitionHandle DefineMainMethod(
         MethodSignature().
         Parameters(0, returnType => returnType.Void(), parameters => { });
 
+    metadata.AddLocalVariable(LocalVariableAttributes.None, 0, metadata.GetOrAddString("V_0"));
     // Create method definition for Program::Main
     return metadata.AddMethodDefinition(
         MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,
@@ -354,6 +471,7 @@ MethodDefinitionHandle EmitHelloWorld(MetadataBuilder metadata, BlobBuilder ilBu
     DefineSayHello(moduleDef, sysConsoleAssemblyRef, metadata, codeBuilder,  methodBodyStream);
     DefineGetHello(metadata, codeBuilder,  methodBodyStream);
     DefineIntSum(metadata, codeBuilder, methodBodyStream);
+    DefineNaiveFib(moduleDef, metadata, codeBuilder, methodBodyStream);
     MethodDefinitionHandle ctorDef = DefineConstructor(systemObjectTypeRef, metadata, codeBuilder,  methodBodyStream);
 
     // Create type definition for the special <Module> type that holds global functions
