@@ -372,7 +372,7 @@ MethodDefinitionHandle DefineMainMethod(
         programTypeRefHandle,
         metadata.GetOrAddString("NaiveFib"),
         metadata.GetOrAddBlob(fibSignature));
-        var consoleWriteLine2Signature = new BlobBuilder();
+    var consoleWriteLine2Signature = new BlobBuilder();
     new BlobEncoder(consoleWriteLine2Signature).
         MethodSignature().
         Parameters(3,
@@ -391,10 +391,12 @@ MethodDefinitionHandle DefineMainMethod(
     il.LoadString(metadata.GetOrAddUserString("NaiveFib({0}) = {1}"));
     il.LoadConstantI4(fibArg);
     il.OpCode(ILOpCode.Conv_i8);
+    il.StoreLocal(0);
+    il.LoadLocal(0);
     il.OpCode(ILOpCode.Box);
     il.Token(int64TypeRefHandle);
 
-    il.LoadConstantI4(fibArg);
+    il.LoadLocal(0);
     il.Call(fibMemberRef);
     il.OpCode(ILOpCode.Conv_i8);
     il.OpCode(ILOpCode.Box);
@@ -405,7 +407,14 @@ MethodDefinitionHandle DefineMainMethod(
     // ret
     il.OpCode(ILOpCode.Ret);
 
-    int offset = methodBodyStream.AddMethodBody(il);
+    // We need to define local variables to use StoreLocal/LoadLocal.
+    // Ref:
+    // https://github.com/dotnet/roslyn/blob/3b3124564a963dae015846ecb481859da8416138/src/Compilers/Core/Portable/PEWriter/MetadataWriter.cs#L2990
+    var localVarSig = new BlobBuilder();
+    new BlobEncoder(localVarSig).LocalVariableSignature(1).AddVariable().Type().Int64();
+    StandaloneSignatureHandle localVarSigHandle = metadata.AddStandaloneSignature(metadata.GetOrAddBlob(localVarSig));
+
+    int offset = methodBodyStream.AddMethodBody(il, localVariablesSignature: localVarSigHandle);
     codeBuilder.Clear();
 
     BlobBuilder signature = new BlobBuilder();
@@ -413,7 +422,6 @@ MethodDefinitionHandle DefineMainMethod(
         MethodSignature().
         Parameters(0, returnType => returnType.Void(), parameters => { });
 
-    metadata.AddLocalVariable(LocalVariableAttributes.None, 0, metadata.GetOrAddString("V_0"));
     // Create method definition for Program::Main
     return metadata.AddMethodDefinition(
         MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig,

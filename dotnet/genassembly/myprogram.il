@@ -17,13 +17,13 @@
   .ver 1:0:0:0
 }
 .module myprogram.dll
-// MVID: {0236c71f-4055-4740-b9e9-3dd644e2443c}
+// MVID: {95e51f41-b8af-4884-9ee7-7546eb8c8f7a}
 .imagebase 0x00400000
 .file alignment 0x00000200
 .stackreserve 0x00100000
 .subsystem 0x0003       // WINDOWS_CUI
 .corflags 0x00000001    //  ILONLY
-// Image base: 0x00007F32A10F1000
+// Image base: 0x00007FC01A06C000
 
 
 // =============== CLASS MEMBERS DECLARATION ===================
@@ -34,8 +34,9 @@
   .method public hidebysig static void  Main() cil managed
   {
     .entrypoint
-    // Code size       71 (0x47)
+    // Code size       72 (0x48)
     .maxstack  8
+    .locals init (int64 V_0)
     IL_0000:  call       void ConsoleApplication.Program::SayHello()
     IL_0005:  ldstr      "IntSum({0}, {1}) = {2}"
     IL_000a:  ldc.i4.7
@@ -54,15 +55,17 @@
     IL_0027:  ldstr      "NaiveFib({0}) = {1}"
     IL_002c:  ldc.i4.s   40
     IL_002e:  conv.i8
-    IL_002f:  box        [System.Runtime]System.Int64
-    IL_0034:  ldc.i4.s   40
-    IL_0036:  call       int64 ConsoleApplication.Program::NaiveFib(int64)
-    IL_003b:  conv.i8
-    IL_003c:  box        [System.Runtime]System.Int64
-    IL_0041:  call       void [System.Console]System.Console::WriteLine(string,
+    IL_002f:  stloc.0
+    IL_0030:  ldloc.0
+    IL_0031:  box        [System.Runtime]System.Int64
+    IL_0036:  ldloc.0
+    IL_0037:  call       int64 ConsoleApplication.Program::NaiveFib(int64)
+    IL_003c:  conv.i8
+    IL_003d:  box        [System.Runtime]System.Int64
+    IL_0042:  call       void [System.Console]System.Console::WriteLine(string,
                                                                         object,
                                                                         object)
-    IL_0046:  ret
+    IL_0047:  ret
   } // end of method Program::Main
 
   .method public hidebysig static void  SayHello() cil managed
