@@ -10,8 +10,11 @@ http_archive(
         "https://github.com/bazelbuild/rules_go/releases/download/v0.39.0/rules_go-v0.39.0.zip",
     ],
 )
+
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+
 go_rules_dependencies()
+
 go_register_toolchains(version = "1.20.2")
 
 # https://github.com/bazelbuild/rules_go#generating-build-files
@@ -24,5 +27,21 @@ http_archive(
         "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.30.0/bazel-gazelle-v0.30.0.tar.gz",
     ],
 )
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
+
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+go_repository(
+    name = "com_github_google_logger",
+    importpath = "github.com/google/logger",
+    sum = "h1:+6Z2geNxc9G+4D4oDO9njjjn2d0wN5d7uOo0vOIW1NQ=",
+    version = "v1.1.1",
+)
+
+go_repository(
+    name = "org_golang_x_sys",
+    importpath = "golang.org/x/sys",
+    sum = "h1:dXfMednGJh/SUUFjTLsWJz3P+TQt9qnR11GgeI3vWKs=",
+    version = "v0.0.0-20210426230700-d19ff857e887",
+)
+
 gazelle_dependencies()

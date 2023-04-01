@@ -1,11 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"io"
 
+	"github.com/google/logger"
 	"github.com/yunabe/codelab/bazel/golang/greetings"
 )
 
 func main() {
-	fmt.Println(greetings.Hello("world"))
+	logger.Init("hello", true, false, io.Discard)
+	logger.Infoln(greetings.Hello("world"))
 }

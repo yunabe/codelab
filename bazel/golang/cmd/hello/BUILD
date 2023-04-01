@@ -5,7 +5,10 @@ go_library(
     srcs = ["hello.go"],
     importpath = "github.com/yunabe/codelab/bazel/golang/cmd/hello",
     visibility = ["//visibility:private"],
-    deps = ["//golang/greetings"],
+    deps = [
+        "//golang/greetings",
+        "@com_github_google_logger//:logger",
+    ],
 )
 
 go_binary(
