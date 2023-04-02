@@ -18,3 +18,4 @@ Use https://github.com/bazelbuild/rules_go and https://github.com/bazelbuild/baz
 - Don't forget to set `# gazelle:prefix` to `gazelle(name = "gazelle")` rule.
   - As of 2023-04, `gazelle` does not use `go.mod`.
   - Thus, you need to define the module prefix in both `go.mod` and `# gazelle:prefix`.
+- Editor support: https://github.com/bazelbuild/rules_go/wiki/Editor-setup
