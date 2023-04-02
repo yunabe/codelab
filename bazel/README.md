@@ -11,6 +11,12 @@
 
 Use https://github.com/bazelbuild/rules_go and https://github.com/bazelbuild/bazel-gazelle.
 
+## gazelle
+
+- [Gazelle directives](https://github.com/bazelbuild/bazel-gazelle#directives)
+  - Use `# gazelle:proto mode` to control the behavior of `gazelle` for `.proto` files.
+  - Use [`go_package`](https://protobuf.dev/getting-started/gotutorial/#protocol-format) to change the package name.
+
 ## Tips & Pitfalls
 
 - Access `go` command used in `bazel`
@@ -19,3 +25,5 @@ Use https://github.com/bazelbuild/rules_go and https://github.com/bazelbuild/baz
   - As of 2023-04, `gazelle` does not use `go.mod`.
   - Thus, you need to define the module prefix in both `go.mod` and `# gazelle:prefix`.
 - Editor support: https://github.com/bazelbuild/rules_go/wiki/Editor-setup
+- It's not trivial to use `go.mod` with `bazel` if `bazel` autogenerates `.go` files, which is the main reason to use `bazel`.
+- Generated `.pb.go` files are in `./bazel-bin/proto/...`. Run `find bazel-bin -follow -name '*.pb.go'` to find `.pb.go` files.
