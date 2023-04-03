@@ -1,0 +1,5 @@
+# greetings_py_grpc requires this for some reason.
+#
+# external/com_google_absl/absl/base/policy_checks.h:79:2: error: #error "C++ versions less than C++14 are not supported."
+#    79 | #error "C++ versions less than C++14 are not supported."
+build --cxxopt=-std=c++14 --host_cxxopt=-std=c++14

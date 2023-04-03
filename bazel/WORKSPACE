@@ -57,7 +57,7 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.20.2")
+# go_register_toolchains(version = "1.20.2")
 
 # https://github.com/bazelbuild/rules_go#generating-build-files
 # https://github.com/bazelbuild/bazel-gazelle
@@ -70,6 +70,31 @@ http_archive(
     ],
 )
 
+
+########
+# gRPC #
+########
+http_archive(
+    name = "com_github_grpc_grpc",
+    sha256 = "9717ffc52120861136e478155c2ff3a9c21740e2244de52fa966f376d7471adf",
+    strip_prefix = "grpc-1.53.0",
+    urls = [
+        "https://github.com/grpc/grpc/archive/refs/tags/v1.53.0.tar.gz"
+    ],
+)
+
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+grpc_deps()
+
+load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")
+
+grpc_extra_deps()
+
+##########
+# Go (2) #
+##########
+# gazelle rules must be called after go_register_toolchains.
+# go_register_toolchains is called in grpc_extra_deps.
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 go_repository(

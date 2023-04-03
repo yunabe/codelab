@@ -27,6 +27,10 @@ Use https://github.com/bazelbuild/rules_go and https://github.com/bazelbuild/baz
 - Editor support: https://github.com/bazelbuild/rules_go/wiki/Editor-setup
 - It's not trivial to use `go.mod` with `bazel` if `bazel` autogenerates `.go` files, which is the main reason to use `bazel`.
 - Generated `.pb.go` files are in `./bazel-bin/proto/...`. Run `find bazel-bin -follow -name '*.pb.go'` to find `.pb.go` files.
+- go_rules_dependencies
+  - [doc](https://github.com/bazelbuild/rules_go/blob/master/go/dependencies.rst#go_rules_dependencies)
+  - [Overriding dependencies](https://github.com/bazelbuild/rules_go/blob/master/go/dependencies.rst#overriding-dependencies)
+  - *Some of the dependencies declared by go_rules_dependencies require additional patches*
 
 # Python and Bazel
 
@@ -41,3 +45,14 @@ Use https://github.com/bazelbuild/rules_go and https://github.com/bazelbuild/baz
   - We can check the path by printing `sys.path`.
   - `py_library` implicitly creates `__init__.py` to ancestor directories. Thus, we
     can import python modules with the absolute path from the workspace root.
+
+# gRPC
+
+- (option1) https://github.com/grpc/grpc
+  - **Important**: It has a custom `.bazelrc`
+  - We need to set `-std=c++14` with `--cxxopt` and `--host_cxxopt`.
+  - See [this issue too](https://github.com/bazelbuild/bazel/issues/16371#issuecomment-1347826838).
+  - Example usages
+    - [Minimal example of a python grpc server built with bazel](https://gist.github.com/ivankra/04f11961f7953549a45a82fc13ef3866)
+- (option2) https://rules-proto-grpc.com/en/latest/index.html
+  - I did not try this.
