@@ -10,7 +10,7 @@ class GreetingsServiceServicer(greetings_pb2_grpc.GreetingsServiceServicer):
     def Hello(self, req, context):
         """Missing associated documentation comment in .proto file."""
         res = greetings_pb2.GreetingResponse()
-        res.message = greetings.hello(req.name)
+        res.message = greetings.hello(req.name) + ' from Python gRPC'
         return res
 
 

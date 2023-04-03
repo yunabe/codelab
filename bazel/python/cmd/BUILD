@@ -20,7 +20,6 @@ py_binary(
     ],
 )
 
-
 py_binary(
     name = "greetings_server",
     srcs = ["greetings_server.py"],
