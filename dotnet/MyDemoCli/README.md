@@ -55,6 +55,50 @@ dotnet run --project src/CliApp2
 dotnet test
 ```
 
+## Adding a New Library and Unit Tests
+
+To add a new library and its unit tests to the project, follow these steps:
+
+1. Create a new library project:
+
+```sh
+dotnet new classlib -o src/NewLibrary
+```
+
+2. Add the new library project to the solution:
+
+```sh
+dotnet sln add src/NewLibrary/NewLibrary.csproj
+```
+
+3. Create a new unit test project:
+
+```sh
+dotnet new mstest -o tests/NewLibrary.Tests
+```
+
+4. Add the new unit test project to the solution:
+
+```sh
+dotnet sln add tests/NewLibrary.Tests/NewLibrary.Tests.csproj
+```
+
+5. Add a project reference to the new library in the unit test project file (`NewLibrary.Tests.csproj`):
+
+```xml
+<ItemGroup>
+  <ProjectReference Include="../../src/NewLibrary/NewLibrary.csproj" />
+</ItemGroup>
+```
+
+6. Write unit tests for the new library in the `tests/NewLibrary.Tests` directory.
+
+7. Run the tests to verify they work:
+
+```sh
+dotnet test
+```
+
 ## Documentation
 
 - **ChatHistory.md**: A markdown file to record chat history with GitHub Copilot.
