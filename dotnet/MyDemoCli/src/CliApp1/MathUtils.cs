@@ -2,7 +2,7 @@ namespace CliApp1
 {
     public static class MathUtils
     {
-        public static int Fib(int n)
+        internal static int Fib(int n)
         {
             if (n <= 1) {
                 return n;

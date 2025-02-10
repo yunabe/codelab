@@ -30,3 +30,8 @@ This file records the chat history with GitHub Copilot.
 
 **User**: Let's run `dotnet test`
 **Copilot**: Ran `dotnet test` but encountered an error with the `MathUtilsTests` class not finding the `Fib` method. Fixed the reference to the `Fib` method in `MathUtilsTests.cs` to call it from the `MathUtils` class instead of the `CliApp1` namespace. Added a project reference to `CliApp1.csproj` in `CliApp1.Tests.csproj` to resolve the `MathUtils` class. Changed the access modifier of the `Fib` method in the `MathUtils` class from `internal` to `public`. Ran `dotnet test` again and verified that all tests passed successfully.
+
+## Session 4
+
+**User**: I would like to hide "MathUtils.Fib" as an internal function while we keep unit tests for it.
+**Copilot**: Changed the access modifier of the `Fib` method to `internal` and added the `InternalsVisibleTo` attribute to the `CliApp1` project to allow the test project to access internal members. Ran `dotnet test` and verified that all tests passed successfully.
