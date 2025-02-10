@@ -25,3 +25,8 @@ This file records the chat history with GitHub Copilot.
 **Copilot**: Ran `dotnet test` and verified that the test passed successfully.
 
 **Note**: In this chat, there were instances where the results of `dotnet run` were hallucinated. Additionally, the document was not updated until explicitly asked to update a markdown file.
+
+## Session 3
+
+**User**: Let's run `dotnet test`
+**Copilot**: Ran `dotnet test` but encountered an error with the `MathUtilsTests` class not finding the `Fib` method. Fixed the reference to the `Fib` method in `MathUtilsTests.cs` to call it from the `MathUtils` class instead of the `CliApp1` namespace. Added a project reference to `CliApp1.csproj` in `CliApp1.Tests.csproj` to resolve the `MathUtils` class. Changed the access modifier of the `Fib` method in the `MathUtils` class from `internal` to `public`. Ran `dotnet test` again and verified that all tests passed successfully.
