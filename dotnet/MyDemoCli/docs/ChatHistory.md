@@ -35,3 +35,8 @@ This file records the chat history with GitHub Copilot.
 
 **User**: I would like to hide "MathUtils.Fib" as an internal function while we keep unit tests for it.
 **Copilot**: Changed the access modifier of the `Fib` method to `internal` and added the `InternalsVisibleTo` attribute to the `CliApp1` project to allow the test project to access internal members. Ran `dotnet test` and verified that all tests passed successfully.
+
+## Session 5
+
+**User**: Add a new library that computes a standard deviation of a float value list input in MyLibrary. To demonstrate how to use an external package with .NET, we want to use MathNet.
+**Copilot**: Added the MathNet.Numerics package to the MyLibrary project. Created a new class StatisticsUtils in MyLibrary to compute the standard deviation of a list of float values using MathNet.Numerics. Created a new test class StatisticsUtilsTests in MyLibrary.Tests to test the ComputeStandardDeviation method. Ran `dotnet test` and verified that all tests passed successfully.
